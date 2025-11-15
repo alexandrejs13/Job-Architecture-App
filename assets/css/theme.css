@@ -1,0 +1,17 @@
+
+@font-face {font-family:'SIGFlow';src:url('../fonts/PPSIGFlow-Regular.otf');font-weight:400;}
+@font-face {font-family:'SIGFlow';src:url('../fonts/PPSIGFlow-SemiBold.otf');font-weight:600;}
+@font-face {font-family:'SIGFlow';src:url('../fonts/PPSIGFlow-Bold.otf');font-weight:700;}
+
+html, body, p, span, div {
+    font-family:'SIGFlow',sans-serif!important;
+    font-size:18px!important;
+    font-weight:400!important;
+    color:#555!important;
+    line-height:1.5!important;
+}
+
+h1, .page-title {font-size:44px!important;font-weight:700!important;color:#000!important;}
+h2 {font-size:32px!important;font-weight:600!important;color:#222!important;margin-top:24px!important;}
+h3 {font-size:24px!important;font-weight:600!important;color:#333!important;}
+h4 {font-size:20px!important;font-weight:400!important;color:#444!important;}
