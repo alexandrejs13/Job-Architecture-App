@@ -1,2 +1,2 @@
 import streamlit as st
-st.title('2 Job Families')
+st.write('Job_Families')
