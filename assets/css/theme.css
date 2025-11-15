@@ -1,1 +1,126 @@
-/* Placeholder theme file */
+/* ============================
+   FONTES (SIGFlow)
+   ============================ */
+@font-face {
+    font-family: "SIGFlow";
+    src: url("../fonts/PPSIGFlow-Regular.otf");
+    font-weight: 400;
+}
+@font-face {
+    font-family: "SIGFlow";
+    src: url("../fonts/PPSIGFlow-SemiBold.otf");
+    font-weight: 600;
+}
+@font-face {
+    font-family: "SIGFlow";
+    src: url("../fonts/PPSIGFlow-Bold.otf");
+    font-weight: 700;
+}
+
+/* ============================
+   ESTILOS GERAIS
+   ============================ */
+html, body, p, div, span {
+    font-family: "SIGFlow", sans-serif !important;
+    color: #555 !important;
+    font-size: 18px !important;
+    line-height: 1.5 !important;
+}
+
+/* ============================
+   SIDEBAR
+   ============================ */
+[data-testid="stSidebar"] {
+    background-color: #f2efeb !important; /* SIG Sand 1 */
+}
+
+[data-testid="stSidebarNav"] a {
+    color: #555 !important;
+    font-size: 17px !important;
+}
+
+/* item selecionado */
+[data-testid="stSidebarNav"] a[aria-current="page"] {
+    background-color: #145efc !important; /* SIG Sky */
+    color: white !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+
+/* hover */
+[data-testid="stSidebarNav"] a:hover {
+    background-color: #e8e6e2 !important;
+}
+
+/* renomear menu: app -> Home */
+[data-testid="stSidebarNav"] li:first-child a span {
+    visibility: hidden;
+    position: relative;
+}
+[data-testid="stSidebarNav"] li:first-child a span::after {
+    content: "Home";
+    visibility: visible;
+    position: absolute;
+    left: 0;
+    color: #555 !important;
+}
+
+/* ============================
+   HOME — centralização e ícones
+   ============================ */
+.home-center {
+    text-align: center;
+    padding-top: 20px;
+}
+
+.home-subtitle {
+    font-size: 20px;
+    color: #555;
+    margin-top: -10px;
+}
+
+.icon-grid {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 45px;
+    margin-top: 50px;
+}
+
+.icon-item {
+    text-align: center;
+    cursor: pointer;
+}
+
+.icon-item img {
+    width: 85px;
+}
+
+.icon-label {
+    margin-top: 10px;
+    font-size: 17px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* ============================
+   TÍTULOS DAS PÁGINAS
+   ============================ */
+.page-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.page-title-wrapper img {
+    width: 58px;
+}
+
+.page-title-wrapper h1 {
+    font-size: 40px;
+    font-weight: 700;
+    margin: 0;
+    padding: 0;
+    color: #111;
+}
