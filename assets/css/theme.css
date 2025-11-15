@@ -1,1 +1,18 @@
-/* theme placeholder - user will paste content manually */
+
+:root {
+    --sig-sand-1: #f2fefb;
+    --sig-sky: #145efc;
+    --text-color: #333333;
+}
+[data-testid="stSidebar"] {
+    background-color: var(--sig-sand-1) !important;
+}
+[data-testid="stSidebarNav"] a {
+    color: var(--text-color) !important;
+    font-size: 1.15rem !important;
+}
+[data-testid="stSidebarNav"] a[data-selected="true"] {
+    background-color: var(--sig-sky) !important;
+    color: white !important;
+    border-radius: 12px !important;
+}
