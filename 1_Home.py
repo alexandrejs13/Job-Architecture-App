@@ -1,5 +1,8 @@
 import streamlit as st
 
+st.markdown("<h1>Home</h1>", unsafe_allow_html=True)
+st.markdown("<h3>Bem-vindo.</h3>", unsafe_allow_html=True)
+
 st.set_page_config(
     page_title="Home | SIG Job Architecture",
     layout="wide"
