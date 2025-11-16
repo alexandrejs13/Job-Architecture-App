@@ -1,6 +1,6 @@
 # pages/4_Job_Maps.py
-# Versão Final – fullscreen funcional, botões SIG BLUE, cards 100px, GG 100px,
-# ordem de carreira, margens no fullscreen, layout intacto e perfeito.
+# Versão Final – fullscreen funcional, botões SIG BLUE abaixo da coluna GG,
+# cards 100px, coluna GG 100px, margens fullscreen, layout intacto e perfeito.
 
 import streamlit as st
 import pandas as pd
@@ -171,7 +171,7 @@ css = """
     line-height: 1.1;
 }
 
-/* BUTTONS — SIG BLUE */
+/* BUTTONS – SIG BLUE */
 .full-btn {
     background: var(--sig-blue) !important;
     color: white !important;
@@ -187,8 +187,9 @@ css = """
 .button-wrapper {
     position: sticky;
     left: 0;
-    margin-top: 18px;
     z-index: 50;
+    margin-top: 18px;
+    margin-bottom: 18px;
 }
 
 </style>
@@ -250,7 +251,6 @@ if path_filter != "Todas":
 @st.cache_data(ttl=600)
 def generate_map(df):
 
-    # ordenar famílias
     fam_max = (
         df.groupby("Job Family")["Global Grade"]
         .apply(lambda x: max(int(g) for g in x))
@@ -258,7 +258,6 @@ def generate_map(df):
     )
     families_order = fam_max.index.tolist()
 
-    # ordenar subfamílias
     submap_ordered = {}
     for fam in families_order:
         tmp = (
@@ -271,7 +270,6 @@ def generate_map(df):
 
     grades = sorted(df["Global Grade"].unique(), key=lambda x: int(x), reverse=True)
 
-    # colunas
     submap = {}
     col_index = 2
     for fam in families_order:
@@ -285,10 +283,8 @@ def generate_map(df):
     html = []
     html.append("<div class='map-wrapper'><div class='jobmap-grid'>")
 
-    # GG header
     html.append("<div class='gg-header' style='grid-column:1; grid-row:1 / span 2;'>GG</div>")
 
-    # famílias
     col = 2
     for fam in families_order:
         subs = submap_ordered[fam]
@@ -296,11 +292,9 @@ def generate_map(df):
         html.append(f"<div class='header-family' style='grid-column:{col} / span {span};'>{fam}</div>")
         col += span
 
-    # subfamílias
     for (fam, sub), c in submap.items():
         html.append(f"<div class='header-subfamily' style='grid-column:{c};'>{sub}</div>")
 
-    # linhas GG
     row = 3
     for g in grades:
         html.append(f"<div class='gg-cell' style='grid-row:{row};'>GG {g}</div>")
@@ -326,34 +320,40 @@ def generate_map(df):
     html.append("</div></div>")
     return "".join(html)
 
-# RENDER MAP
 content = generate_map(df_flt)
 
 # ==========================================================
-# FULLSCREEN BLUE – BOTÕES NA BASE DA COLUNA 1 (OPÇÃO B)
+# FULLSCREEN FINAL — BOTÕES ABAIXO DA COLUNA GG
 # ==========================================================
 if "fs" not in st.session_state:
     st.session_state.fs = False
 
 button_col = st.container()
 
+# ----------------------------------------------------------
+# ENTRAR EM TELA CHEIA
+# ----------------------------------------------------------
 if not st.session_state.fs:
+
     with button_col:
         st.markdown("""
         <div class='button-wrapper'>
-            <button class='full-btn' id='enterfs-btn'>Tela Cheia</button>
+            <form action="" method="post">
+                <button class='full-btn' name='enter' type='submit'>Tela Cheia</button>
+            </form>
         </div>
-
-        <script>
-        document.getElementById('enterfs-btn').onclick = () => {
-            window.parent.streamlitRerun();
-        }
-        </script>
         """, unsafe_allow_html=True)
-    st.session_state.fs = False
+
+    if "enter" in st.session_state.get("form_submit_button", {}):
+        st.session_state.fs = True
+
     st.markdown(content, unsafe_allow_html=True)
 
+# ----------------------------------------------------------
+# MODO TELA CHEIA
+# ----------------------------------------------------------
 else:
+
     st.markdown("<div class='fullscreen-container'>", unsafe_allow_html=True)
     st.markdown(content, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -361,12 +361,12 @@ else:
     with button_col:
         st.markdown("""
         <div class='button-wrapper'>
-            <button class='full-btn' id='exit-fullscreen-btn'>Sair</button>
+            <form action="" method="post">
+                <button class='full-btn' name='exit' type='submit'>Sair</button>
+            </form>
         </div>
-
-        <script>
-        document.getElementById('exit-fullscreen-btn').onclick = () => {
-            window.parent.location.reload();
-        }
-        </script>
         """, unsafe_allow_html=True)
+
+    if "exit" in st.session_state.get("form_submit_button", {}):
+        st.session_state.fs = False
+        st.rerun()
