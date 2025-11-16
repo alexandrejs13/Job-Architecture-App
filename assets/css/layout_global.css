@@ -1,0 +1,135 @@
+/* ======= GLOBAL LAYOUT SIG ======= */
+
+/* fundo branco */
+[data-testid="stAppViewContainer"] {
+    background: white !important;
+}
+
+/* sidebar fixa, sem redimensionar */
+[data-testid="stSidebar"] {
+    resize: none !important;
+    overflow: auto !important;
+    background: white !important;
+}
+
+/* impedir que a área principal estique infinito */
+.block-container {
+    max-width: 1500px;
+}
+
+/* botões SIG azul */
+.stButton > button {
+    background: #145efc !important;
+    color: white !important;
+    border-radius: 28px !important;
+    font-weight: 700 !important;
+    padding: 10px 22px !important;
+    border: none !important;
+}
+
+/* ======= CARDS DO JOB PROFILE ======= */
+
+.jp-grid {
+    display: grid;
+    gap: 22px;
+    width: 100%;
+}
+
+.jp-card {
+    background: #faf9f7;
+    border-radius: 14px;
+    border: 1px solid #e6e2db;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 650px;
+    overflow: hidden; /* evita stretching */
+    position: relative;
+}
+
+/* header fixo do card */
+.jp-header {
+    padding: 22px;
+    border-bottom: 1px solid #dfdad3;
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* scroll interno */
+.jp-scroll {
+    padding: 20px 24px;
+    overflow-y: auto;
+}
+
+/* títulos */
+.jp-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #222;
+    margin: 0 0 6px 0;
+}
+
+.jp-gg {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #145efc;
+}
+
+/* meta */
+.jp-meta-block {
+    margin-top: 15px;
+    padding: 16px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #ece7e0;
+}
+
+.jp-meta-row {
+    margin-bottom: 6px;
+    font-size: 0.92rem;
+}
+
+/* seções */
+.jp-section {
+    margin-top: 24px;
+    padding: 16px;
+    border-radius: 10px;
+    border-left: 6px solid #145efc22;
+}
+
+/* cores alternadas */
+.jp-section:nth-child(even) {
+    background: #fdfbf8;
+}
+.jp-section:nth-child(odd) {
+    background: #ffffff;
+}
+
+.jp-section-title {
+    font-weight: 800;
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+
+.jp-text {
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* ícone PDF */
+.jp-pdf-btn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    cursor: pointer;
+    z-index: 20;
+    width: 26px;
+    opacity: 0.85;
+    transition: 0.2s;
+}
+.jp-pdf-btn:hover {
+    opacity: 1;
+}
