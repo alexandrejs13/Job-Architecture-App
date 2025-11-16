@@ -1,23 +1,51 @@
-
 import streamlit as st
 
-st.set_page_config(page_title="Home", layout="wide")
+st.set_page_config(page_title="Job Architecture App", layout="wide")
 
-# Card SIG
-st.markdown("""
+# ----- CENTRALIZED CARD LAYOUT -----
+st.markdown("<div style='display:flex; justify-content:center; width:100%;'>", unsafe_allow_html=True)
 
-<div style='background-color:#f2efeb; border-radius:25px; padding:0; box-shadow:0px 4px 12px rgba(0,0,0,0.08);'>
-    <img src='assets/home/home_card.jpg' style='width:100%; border-top-left-radius:25px; border-top-right-radius:25px;'>
-    <div style='padding:30px;'>
-        <h2 style='font-family:PP SIG Flow, sans-serif; margin-bottom:10px;'>Job Architecture</h2>
-        <p style='font-size:18px; line-height:1.5;'>
-        Uma base única de descrições de cargos genéricas que serve como referência global para classificar,
-        harmonizar e padronizar todos os cargos da empresa. Aqui, você encontra títulos consistentes,
-        níveis claros e perfis alinhados internacionalmente — tudo pensado para que o gestor escolha apenas
-        o cargo local correto enquanto o sistema cuida do restante. Mais simplicidade no dia a dia,
-        menos dúvidas e uma estrutura organizacional totalmente integrada.
+with st.container():
+    st.markdown(
+        """
+        <div style='
+            max-width:900px;
+            width:100%;
+            margin-top:40px;
+            background-color:#f2efeb;
+            padding:30px;
+            border-radius:20px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.08);
+        '>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.image("assets/home/home_card.jpg", use_column_width=True)
+
+    st.markdown("<h1 style='font-size:42px; margin-top:25px;'>Job Architecture</h1>", unsafe_allow_html=True)
+
+    st.markdown(
+        """
+        <p style='font-size:20px; line-height:1.5; margin-top:10px;'>
+        A unified database of generic job descriptions that serves as a global reference for classifying, harmonizing, and standardizing all roles across the company. Here you will find consistent titles, clear levels, and internationally aligned profiles. This is designed so managers only need to select the correct local job while the system handles the rest. This creates simplicity in daily operations, reduces uncertainty, and promotes a fully integrated organizational structure.
         </p>
-        <p style='color:#145efc; font-size:18px; font-weight:600;'>Job Architecture →</p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        """
+        <a href="1_Job_Architecture" style='
+            font-size:20px;
+            color:#145efc;
+            text-decoration:none;
+            font-weight:600;
+        '>Job Architecture →</a>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
