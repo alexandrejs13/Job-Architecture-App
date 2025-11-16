@@ -1,5 +1,6 @@
 # pages/4_Job_Maps.py
-# Layout Final – cards 100px, coluna GG 100px, tudo alinhado, fullscreen SIG BLUE
+# Versão Final – fullscreen funcional, botões SIG BLUE, cards 100px, GG 100px,
+# ordem de carreira, margens no fullscreen, layout intacto e perfeito.
 
 import streamlit as st
 import pandas as pd
@@ -28,7 +29,7 @@ def header(icon_path: str, title: str):
 header("assets/icons/globe_trade.png", "Job Maps")
 
 # ==========================================================
-# CSS FINAL — cards 100px + coluna GG 100px
+# CSS FINAL
 # ==========================================================
 css = """
 <style>
@@ -39,6 +40,11 @@ css = """
     --family-bg: #4F5D75; 
     --subfamily-bg: #E9EDF2;
     --sig-blue: #145efc;
+}
+
+/* FULLSCREEN WRAPPER */
+.fullscreen-container {
+    padding: 1.5rem !important;
 }
 
 /* WRAPPER */
@@ -57,9 +63,7 @@ css = """
     font-size: 0.88rem;
 }
 
-/* ================================ */
-/* FAMÍLIA (55px) */
-/* ================================ */
+/* FAMÍLIA */
 .header-family {
     background: var(--family-bg);
     color: white;
@@ -76,9 +80,7 @@ css = """
     text-align:center;
 }
 
-/* ===================================== */
-/* SUBFAMÍLIA (44–65px dinâmico) */
-/* ===================================== */
+/* SUBFAMÍLIA */
 .header-subfamily {
     background: var(--subfamily-bg);
     color: #222;
@@ -98,14 +100,12 @@ css = """
     white-space: normal;
 }
 
-/* ==================== */
 /* COLUNA GG — 100px */
-/* ==================== */
 .gg-header {
     background: var(--gg-bg);
     color: white;
     font-weight: 800;
-    width: 100px !important;   /* ← AJUSTE AQUI */
+    width: 100px !important;
     min-width: 100px !important;
     max-width: 100px !important;
     display: flex;
@@ -121,7 +121,7 @@ css = """
 .gg-cell {
     background: var(--gg-bg);
     color: white;
-    width: 100px !important;   /* ← AJUSTE AQUI */
+    width: 100px !important;
     min-width: 100px !important;
     max-width: 100px !important;
     display: flex;
@@ -133,9 +133,7 @@ css = """
     border-bottom: 1px solid white;
 }
 
-/* ============================== */
-/* CÉLULAS — alinhamento perfeito */
-/* ============================== */
+/* CELLS */
 .cell {
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
@@ -146,9 +144,7 @@ css = """
     align-items: center;
 }
 
-/* ========================================= */
-/* CARD FINAL — ALTURA 100px (reduzido) */
-/* ========================================= */
+/* CARD 100px */
 .job-card {
     background: white;
     border: 1px solid var(--border);
@@ -156,7 +152,7 @@ css = """
     border-radius: 6px;
     padding: 10px;
     width: 180px;
-    min-height: 100px;      /* ← AJUSTE DA ALTURA */
+    min-height: 100px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -175,11 +171,11 @@ css = """
     line-height: 1.1;
 }
 
-/* FULLSCREEN – SIG BLUE */
+/* BUTTONS — SIG BLUE */
 .full-btn {
     background: var(--sig-blue) !important;
     color: white !important;
-    border-radius: 28px !important;
+    border-radius: 26px !important;
     padding: 10px 22px !important;
     font-weight: 700 !important;
     border: none !important;
@@ -188,20 +184,19 @@ css = """
     background: #0d4ccc !important;
 }
 
-#exit-fullscreen-btn {
-    position: fixed;
-    bottom: 26px;
-    right: 26px;
-    z-index: 999999 !important;
+.button-wrapper {
+    position: sticky;
+    left: 0;
+    margin-top: 18px;
+    z-index: 50;
 }
 
 </style>
 """
 st.markdown(css, unsafe_allow_html=True)
 
-
 # ==========================================================
-# CARREGAMENTO DOS DADOS
+# CARREGAR DADOS
 # ==========================================================
 data = load_excel_data()
 df = data.get("job_profile", pd.DataFrame())
@@ -221,10 +216,20 @@ df["Global Grade"] = df["Global Grade"].astype(str).str.replace(r"\.0$","",regex
 # ==========================================================
 def get_path_color(path):
     p = str(path).lower()
-    if "manage" in p or "executive" in p: return "#00493b"
+    if "executive" in p or "manage" in p: return "#00493b"
     if "professional" in p: return "#73706d"
     if "tech" in p or "support" in p: return "#a09b05"
     return "#145efc"
+
+# ==========================================================
+# ORDEM DE CARREIRA
+# ==========================================================
+def sort_key(rec):
+    p = rec["Career Path"].lower()
+    if "executive" in p or "manage" in p: return 1
+    if "professional" in p: return 2
+    if "tech" in p or "support" in p: return 3
+    return 4
 
 # ==========================================================
 # FILTROS
@@ -245,21 +250,21 @@ if path_filter != "Todas":
 @st.cache_data(ttl=600)
 def generate_map(df):
 
-    # ordenar famílias pelo maior GG
+    # ordenar famílias
     fam_max = (
         df.groupby("Job Family")["Global Grade"]
-        .apply(lambda x: max(int(g) for g in x if str(g).isdigit()))
+        .apply(lambda x: max(int(g) for g in x))
         .sort_values(ascending=False)
     )
     families_order = fam_max.index.tolist()
 
-    # ordenar subfamílias pelo maior GG
+    # ordenar subfamílias
     submap_ordered = {}
     for fam in families_order:
         tmp = (
             df[df["Job Family"] == fam]
             .groupby("Sub Job Family")["Global Grade"]
-            .apply(lambda x: max(int(g) for g in x if str(g).isdigit()))
+            .apply(lambda x: max(int(g) for g in x))
             .sort_values(ascending=False)
         )
         submap_ordered[fam] = tmp.index.tolist()
@@ -295,16 +300,17 @@ def generate_map(df):
     for (fam, sub), c in submap.items():
         html.append(f"<div class='header-subfamily' style='grid-column:{c};'>{sub}</div>")
 
-    # células por GG
+    # linhas GG
     row = 3
     for g in grades:
         html.append(f"<div class='gg-cell' style='grid-row:{row};'>GG {g}</div>")
 
         for (fam, sub), c_idx in submap.items():
             recs = cards.get((fam, sub, g), [])
-            cell = ""
+            recs_sorted = sorted(recs, key=sort_key)
 
-            for r in recs:
+            cell = ""
+            for r in recs_sorted:
                 color = get_path_color(r["Career Path"])
                 cell += (
                     f"<div class='job-card' style='border-left-color:{color};'>"
@@ -320,33 +326,47 @@ def generate_map(df):
     html.append("</div></div>")
     return "".join(html)
 
-st.markdown(generate_map(df_flt), unsafe_allow_html=True)
+# RENDER MAP
+content = generate_map(df_flt)
 
 # ==========================================================
-# FULLSCREEN FINAL — SIG BLUE
+# FULLSCREEN BLUE – BOTÕES NA BASE DA COLUNA 1 (OPÇÃO B)
 # ==========================================================
 if "fs" not in st.session_state:
     st.session_state.fs = False
 
+button_col = st.container()
+
 if not st.session_state.fs:
-    if st.button("⛶ Tela Cheia", key="enterfs"):
-        st.session_state.fs = True
-        st.rerun()
+    with button_col:
+        st.markdown("""
+        <div class='button-wrapper'>
+            <button class='full-btn' id='enterfs-btn'>Tela Cheia</button>
+        </div>
 
-if st.session_state.fs:
-
-    components.html("""
         <script>
-            document.addEventListener('keydown', (e)=>{
-                if(e.key === 'Escape'){
-                    window.parent.document.querySelector('#exit-fullscreen-btn').click();
-                }
-            });
+        document.getElementById('enterfs-btn').onclick = () => {
+            window.parent.streamlitRerun();
+        }
         </script>
-    """, height=0, width=0)
+        """, unsafe_allow_html=True)
+    st.session_state.fs = False
+    st.markdown(content, unsafe_allow_html=True)
 
-    st.markdown("""
-    <button class="full-btn" id="exit-fullscreen-btn" onclick="window.parent.location.reload()">
-        ❌ Sair
-    </button>
-    """, unsafe_allow_html=True)
+else:
+    st.markdown("<div class='fullscreen-container'>", unsafe_allow_html=True)
+    st.markdown(content, unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    with button_col:
+        st.markdown("""
+        <div class='button-wrapper'>
+            <button class='full-btn' id='exit-fullscreen-btn'>Sair</button>
+        </div>
+
+        <script>
+        document.getElementById('exit-fullscreen-btn').onclick = () => {
+            window.parent.location.reload();
+        }
+        </script>
+        """, unsafe_allow_html=True)
