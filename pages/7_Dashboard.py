@@ -1,13 +1,16 @@
-
 import streamlit as st
 st.set_page_config(page_title="Dashboard", layout="wide")
 
-col1, col2 = st.columns([0.12, 0.88])
-with col1:
-    st.image("assets/icons/data_2_perfromance.png", width=48)
-with col2:
-    st.title("Dashboard")
+def header(icon_path, title):
+    st.markdown(f"""
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:10px;">
+            <img src="{icon_path}" style="width:48px; height:48px;">
+            <h1 style="margin:0; padding:0; font-size:36px; font-weight:700;">
+                {title}
+            </h1>
+        </div>
+        <hr style="margin-top:5px;">
+    """, unsafe_allow_html=True)
 
-st.markdown("---")
+header("assets/icons/data_2_perfromance.png", "Dashboard")
 
-st.write("Conteúdo da página Dashboard.")
