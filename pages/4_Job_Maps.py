@@ -1,175 +1,186 @@
-# pages/4_Job_Maps.py — versão FINAL clean, sticky, merge, premium
+# ==========================================================
+# PARTE 2 — FUNÇÕES E PREPARAÇÃO DO DATAFRAME
+# ==========================================================
 
-import streamlit as st
-import pandas as pd
-import streamlit.components.v1 as components
-from utils.data_loader import load_excel_data
+# LOAD DATA
+data = load_excel_data()
+df = data.get("job_profile", pd.DataFrame())
 
-st.set_page_config(page_title="Job Maps", layout="wide")
+if df.empty:
+    st.error("Arquivo 'Job Profile.xlsx' não encontrado ou vazio.")
+    st.stop()
+
+# PREPARAÇÃO DO DATAFRAME
+df = df.copy()
+df["Job Family"] = df["Job Family"].astype(str).str.strip()
+df["Sub Job Family"] = df["Sub Job Family"].astype(str).str.strip().replace(['nan', 'None', '<NA>'], '-')
+df["Career Path"] = df["Career Path"].astype(str).str.strip()
+df["Global Grade"] = df["Global Grade"].astype(str).str.replace(r"\.0$", "", regex=True)
+
+df = df[(df["Job Family"] != "") & (df["Job Profile"] != "") & (df["Global Grade"] != "")]
+
 
 # ==========================================================
-# HEADER CLEAN (mesmo padrão do app novo)
+# CORES DISCRETAS POR CAMINHO (OPÇÃO 2)
 # ==========================================================
-def header():
-    col1, col2 = st.columns([0.08, 0.92])
-    with col1:
-        st.image("assets/icons/globe_trade.png", width=48)
-    with col2:
-        st.markdown(
-            "<h1 style='margin:0; padding:0; font-size:36px; font-weight:700;'>Job Maps</h1>",
-            unsafe_allow_html=True
+def get_path_color(path):
+    p = str(path).lower()
+    if "manage" in p or "executive" in p:
+        return "#4F5D75"      # management
+    if "professional" in p:
+        return "#2F2F2F"      # professional
+    if "tech" in p or "support" in p:
+        return "#7C7C7C"      # technical
+    return "#5F6C7A"          # project (default)
+
+
+# ==========================================================
+# FILTROS MINIMALISTAS
+# ==========================================================
+families = ["Todas"] + sorted(df["Job Family"].unique())
+paths = ["Todas"] + sorted(df["Career Path"].unique())
+
+colA, colB = st.columns(2)
+fam_filter = colA.selectbox("Job Family", families)
+path_filter = colB.selectbox("Career Path", paths)
+
+df_flt = df.copy()
+if fam_filter != "Todas":
+    df_flt = df_flt[df_flt["Job Family"] == fam_filter]
+if path_filter != "Todas":
+    df_flt = df_flt[df_flt["Career Path"] == path_filter]
+
+
+# ==========================================================
+# FUNÇÃO PRINCIPAL DO MAPA (COM MERGE VERTICAL)
+# ==========================================================
+@st.cache_data(ttl=600, show_spinner="Gerando mapa…")
+def generate_map_html(df):
+
+    families_order = sorted(df["Job Family"].unique())
+    grades = sorted(
+        df["Global Grade"].unique(),
+        key=lambda x: int(x) if x.isdigit() else 999,
+        reverse=True
+    )
+
+    # — MAPA DE SUBFAMÍLIAS —
+    submap = {}
+    col_index = 2
+    header_spans = {}
+
+    for fam in families_order:
+        subs = sorted(df[df["Job Family"] == fam]["Sub Job Family"].unique())
+        header_spans[fam] = len(subs)
+        for s in subs:
+            submap[(fam, s)] = col_index
+            col_index += 1
+
+    # — AGRUPAMENTO DOS CARDS —
+    grouped = df.groupby(["Job Family", "Sub Job Family", "Global Grade"])
+    cards = {k: v.to_dict("records") for k, v in grouped}
+
+    # — IDENTIFICA MERGE VERTICAL —
+    content_map = {}
+    span_map = {}
+    skip_set = set()
+
+    # conteúdo por célula
+    for g in grades:
+        for (fam, sf), c_idx in submap.items():
+            rec = cards.get((fam, sf, g), [])
+            if rec:
+                # assinatura do conteúdo
+                content_map[(g, c_idx)] = "|".join(
+                    sorted(set(r["Job Profile"] + r["Career Path"] for r in rec))
+                )
+            else:
+                content_map[(g, c_idx)] = None
+
+    # identificar spans
+    for (fam, sf), c_idx in submap.items():
+        for i, g in enumerate(grades):
+            if (g, c_idx) in skip_set:
+                continue
+
+            current = content_map[(g, c_idx)]
+            if current is None:
+                span_map[(g, c_idx)] = 1
+                continue
+
+            span = 1
+            for next_g in grades[i+1:]:
+                if content_map[(next_g, c_idx)] == current:
+                    span += 1
+                    skip_set.add((next_g, c_idx))
+                else:
+                    break
+
+            span_map[(g, c_idx)] = span
+
+    # — CONSTRUÇÃO DO HTML —
+    html = []
+    html.append("<div class='map-wrapper'><div class='jobmap-grid'>")
+
+    # GG HEADER (STICKY)
+    html.append(
+        "<div class='gg-header' style='grid-column:1; grid-row:1 / span 2; width:160px;'>GG</div>"
+    )
+
+    # FAMÍLIAS (STICKY)
+    col = 2
+    for fam in families_order:
+        span = header_spans[fam]
+        html.append(
+            f"<div class='header-family' style='grid-row:1; grid-column:{col} / span {span};'>{fam}</div>"
         )
-    st.markdown("<hr style='margin-top:5px;'>", unsafe_allow_html=True)
+        col += span
 
-header()
+    # SUBFAMÍLIAS (STICKY)
+    for (fam, sf), c_idx in submap.items():
+        html.append(
+            f"<div class='header-subfamily' style='grid-row:2; grid-column:{c_idx};'>{sf}</div>"
+        )
 
-# ==========================================================
-# CSS MODERNO CLEAN PREMIUM
-# ==========================================================
-css = """
-<style>
+    # LINHAS
+    row_idx = 3
+    for g in grades:
 
-:root {
-    --border: #d9d9d9;
-    --family-bg: #f0f0f0;
-    --subfamily-bg: #f8f8f8;
-    --gg-bg: #3c3c3c;
+        # GG COLUNA (STICKY)
+        html.append(
+            f"<div class='gg-cell' style='grid-row:{row_idx}; grid-column:1;'>GG {g}</div>"
+        )
 
-    /* cores discretas por carreira */
-    --mgmt: #4F5D75;
-    --prof: #2F2F2F;
-    --tech: #7C7C7C;
-    --proj: #5F6C7A;
-}
+        # CÉLULAS
+        for (fam, sf), c_idx in submap.items():
 
-/* WRAPPER DO MAPA */
-.map-wrapper {
-    height: 75vh;
-    overflow: auto;
-    border: 0.5px solid var(--border);
-    border-radius: 10px;
-    background: white;
-}
+            if (g, c_idx) in skip_set:
+                continue
 
-/* GRID */
-.jobmap-grid {
-    display: grid;
-    width: max-content;
-    border-collapse: collapse;
-    font-size: 0.88rem;
-    background: white;
-}
+            span = span_map.get((g, c_idx), 1)
+            row_span = (
+                f"grid-row:{row_idx} / span {span};"
+                if span > 1
+                else f"grid-row:{row_idx};"
+            )
 
-/*************** HEADERS STICKY ***************/
-.header-family {
-    background: var(--family-bg);
-    border-bottom: 0.5px solid var(--border);
-    border-right: 0.5px solid var(--border);
-    font-weight: 700;
-    text-align: center;
-    display:flex; align-items:center; justify-content:center;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-}
+            records = cards.get((fam, sf, g), [])
+            cell_html = ""
 
-.header-subfamily {
-    background: var(--subfamily-bg);
-    border-bottom: 0.5px solid var(--border);
-    border-right: 0.5px solid var(--border);
-    font-weight: 600;
-    text-align: center;
-    display:flex; align-items:center; justify-content:center;
-    position: sticky;
-    top: 45px;
-    z-index: 40;
-}
+            for rec in records:
+                color = get_path_color(rec["Career Path"])
+                cell_html += (
+                    f"<div class='job-card' style='border-left-color:{color};'>"
+                    f"<b>{rec['Job Profile']}</b>"
+                    f"<span>{rec['Career Path']}</span>"
+                    "</div>"
+                )
 
-/*************** PRIMEIRA COLUNA STICKY ***************/
-.gg-header {
-    background: var(--gg-bg);
-    color: white;
-    font-weight: 800;
-    display:flex; align-items:center; justify-content:center;
-    position: sticky;
-    left: 0;
-    top: 0;
-    z-index: 100;
-}
+            html.append(
+                f"<div class='cell' style='grid-column:{c_idx}; {row_span}'>{cell_html}</div>"
+            )
 
-.gg-cell {
-    background: var(--gg-bg);
-    color: white;
-    font-weight: 700;
-    display:flex; align-items:center; justify-content:center;
-    position: sticky;
-    left: 0;
-    z-index: 90;
-}
+        row_idx += 1
 
-/*************** CÉLULAS ***************/
-.cell {
-    border-bottom: 0.5px solid var(--border);
-    border-right: 0.5px solid var(--border);
-    padding: 6px;
-    display:flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-/*************** CARDS CLEAN ***************/
-.job-card {
-    background: white;
-    border: 0.5px solid var(--border);
-    border-left-width: 4px !important;
-    border-radius: 6px;
-    padding: 6px 8px;
-    width: 135px;
-    height: 75px;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    box-shadow:0 1px 3px rgba(0,0,0,0.06);
-    transition: 0.20s ease;
-}
-
-.job-card:hover {
-    transform: translateY(-3px);
-    box-shadow:0 4px 12px rgba(0,0,0,0.12);
-}
-
-.job-card b {
-    font-size:0.78rem;
-    margin-bottom:3px;
-    color:#333;
-}
-
-.job-card span {
-    font-size:0.7rem;
-    color:#666;
-}
-
-/*************** FULLSCREEN — BOTÃO PRETO FOSCO ***************/
-#exit-fullscreen-btn {
-    position: fixed;
-    bottom: 28px;
-    right: 28px;
-    z-index: 999999 !important;
-    background: #111 !important;
-    color: white !important;
-    border-radius: 28px !important;
-    padding: 12px 28px !important;
-    border: none !important;
-    font-weight: 700 !important;
-    font-size: 15px !important;
-    box-shadow: 0px 4px 16px rgba(0,0,0,0.35) !important;
-    cursor: pointer;
-}
-#exit-fullscreen-btn:hover {
-    transform: scale(1.06);
-}
-
-</style>
-"""
-
-st.markdown(css, unsafe_allow_html=True)
+    html.append("</div></div>")
+    return "".join(html)
