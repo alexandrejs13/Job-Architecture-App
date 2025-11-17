@@ -81,7 +81,10 @@ html, body, [data-testid="stAppViewContainer"] {
     overflow: visible !important;
 }
 
-/* 🔥 CABEÇALHO FIXO (fixo NA PÁGINA e sem texto aparecendo atrás!) */
+/* ==========================================================
+   🔥 CABEÇALHO FIXO (agora com “teto invisível” para evitar
+   que o texto suba e invada o cabeçalho)
+   ========================================================== */
 .jp-card-header {
     position: sticky;
     top: 90px;
@@ -90,6 +93,19 @@ html, body, [data-testid="stAppViewContainer"] {
     z-index: 50;
     border-bottom: 1px solid #eee;
     box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+}
+
+/* 🔥 TRUQUE DO TETO: cria área branca acima do cabeçalho,
+   garantindo que nenhum texto apareça por trás dele. */
+.jp-card-header::before {
+    content: "";
+    position: absolute;
+    top: -60px;     /* tamanho do teto */
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #ffffff;
+    z-index: -1;
 }
 
 /* Títulos */
@@ -237,7 +253,6 @@ grid_template = f"grid-template-columns: repeat({num}, 1fr);"
 st.markdown("---")
 st.markdown("### ✨ Comparativo de Perfis Selecionados")
 
-# Ícones
 icons = {
     "Sub Job Family Description": "Hierarchy.svg",
     "Job Profile Description": "File_Clipboard_Text.svg",
@@ -270,7 +285,7 @@ for card in rows:
     card_html = []
     card_html.append('<div class="jp-card">')
 
-    # CABEÇALHO FIXO
+    # HEADER FIXO
     card_html.append('<div class="jp-card-header">')
     card_html.append(f'<div class="jp-title">{job}</div>')
     card_html.append(f'<div class="jp-gg">GG {gg}</div>')
@@ -280,7 +295,7 @@ for card in rows:
     card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
     card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
     card_html.append("</div>")
-    card_html.append("</div>")  # header
+    card_html.append("</div>")
 
     # SEÇÕES
     for i, sec in enumerate(sections_order):
@@ -298,15 +313,15 @@ for card in rows:
         card_html.append(f'<div class="jp-text">{html.escape(content)}</div>')
         card_html.append("</div>")
 
-    # FOOTER
+    # FOOTER PDF
     card_html.append('<div class="jp-footer">')
     card_html.append('<img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">')
     card_html.append("</div>")
 
-    card_html.append("</div>")  # card wrapper
+    card_html.append("</div>")
 
     html_parts.append("".join(card_html))
 
-html_parts.append("</div>")  # grid
+html_parts.append("</div>")
 
 st.markdown("".join(html_parts), unsafe_allow_html=True)
