@@ -5,7 +5,6 @@ import streamlit as st
 import pandas as pd
 import html
 from pathlib import Path
-import base64
 
 # ==========================================================
 # CONFIG DA PÁGINA
@@ -33,7 +32,7 @@ def header(icon_path, title):
 header("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
 # ==========================================================
-# CSS GLOBAL (com fonte PP SIG Flow + layout executivo)
+# CSS GLOBAL
 # ==========================================================
 custom_css = """
 <style>
@@ -60,46 +59,37 @@ html, body, [data-testid="stAppViewContainer"] {
     color: #222 !important;
 }
 
-/* Sidebar fixa */
-[data-testid="stSidebar"] {
-    width: 300px !important;
-    min-width: 300px !important;
-    max-width: 300px !important;
-}
-
-/* Conteúdo central limitado */
 .block-container {
     max-width: 1600px !important;
     padding-top: 1rem !important;
 }
 
-/* GRID principal — 1,2,3 colunas */
+/* GRID */
 .jp-comparison-grid {
     display: grid;
     gap: 24px;
 }
 
-/* CARD — agora SEM scroll e SEM height */
+/* CARD */
 .jp-card {
     background: #ffffff;
     border: 1px solid #e6e6e6;
     border-radius: 14px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     padding: 0;
-    display: flex;
-    flex-direction: column;
     position: relative;
-    overflow: visible !important;   /* garante que nenhum componente crie scroll */
+    overflow: visible !important; 
 }
 
-/* HEADER FIXO NO CARD */
+/* 🔥 CABEÇALHO FIXO (agora fixo NA PÁGINA) */
 .jp-card-header {
     position: sticky;
-    top: 0;
+    top: 80px;                       /* ajuste fino p/ não bater no topo */
     background: #ffffff;
     padding: 18px 22px 14px 22px;
-    z-index: 10;
+    z-index: 50;
     border-bottom: 1px solid #eee;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
 }
 
 .jp-title {
@@ -113,7 +103,7 @@ html, body, [data-testid="stAppViewContainer"] {
     margin-bottom: 12px;
 }
 
-/* BLOCO META */
+/* META BLOCK */
 .jp-meta-block {
     background: #f5f4f1;
     border-radius: 10px;
@@ -121,14 +111,16 @@ html, body, [data-testid="stAppViewContainer"] {
     font-size: 0.9rem;
 }
 
-/* SEÇÕES DO CARD */
+/* SEÇÕES */
 .jp-section {
     padding: 14px 22px;
     border-bottom: 1px solid #f0f0f0;
 }
+
 .jp-section.alt {
     background: #fafafa;
 }
+
 .jp-section-title {
     font-weight: 700;
     font-size: 0.92rem;
@@ -137,17 +129,19 @@ html, body, [data-testid="stAppViewContainer"] {
     align-items: center;
     gap: 8px;
 }
+
 .jp-section-title img {
     width: 20px;
     opacity: 0.9;
 }
+
 .jp-text {
     line-height: 1.45;
     font-size: 0.9rem;
     white-space: pre-wrap;
 }
 
-/* FOOTER DO CARD */
+/* FOOTER PDF */
 .jp-footer {
     padding: 15px;
     text-align: right;
@@ -166,7 +160,7 @@ html, body, [data-testid="stAppViewContainer"] {
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================================
-# CARREGAR DADOS
+# LOAD JOB PROFILE
 # ==========================================================
 @st.cache_data(ttl=600)
 def load_job_profile():
@@ -231,7 +225,6 @@ if not selecionados_labels:
     st.stop()
 
 selecionados = [label_to_profile[l] for l in selecionados_labels]
-
 rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selecionados]
 
 num = len(rows)
@@ -267,27 +260,28 @@ for card in rows:
     card_html = []
     card_html.append('<div class="jp-card">')
 
-    # HEADER FIXO
+    # CABEÇALHO FIXO
     card_html.append('<div class="jp-card-header">')
     card_html.append(f'<div class="jp-title">{job}</div>')
     card_html.append(f'<div class="jp-gg">GG {gg}</div>')
 
-    # Meta-block
     card_html.append('<div class="jp-meta-block">')
     card_html.append(f"<div><b>Job Family:</b> {jf}</div>")
     card_html.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
     card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
     card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
     card_html.append("</div>")
-    card_html.append("</div>")  # fecha header
+    card_html.append("</div>")
 
     # SEÇÕES
     for i, sec in enumerate(sections_order):
         content = str(card.get(sec,"")).strip()
         if not content or content.lower()=="nan":
             continue
+
         icon = icons[sec]
         alt = " alt" if i%2==1 else ""
+
         card_html.append(f'<div class="jp-section{alt}">')
         card_html.append(
             f'<div class="jp-section-title">'
@@ -302,7 +296,7 @@ for card in rows:
     card_html.append('<img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">')
     card_html.append('</div>')
 
-    card_html.append("</div>")  # card
+    card_html.append("</div>")
     html_parts.append("".join(card_html))
 
 html_parts.append("</div>")
