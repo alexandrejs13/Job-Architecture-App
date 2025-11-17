@@ -32,7 +32,7 @@ def header(icon_path, title):
 header("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
 # ==========================================================
-# CSS GLOBAL — CORRIGIDO
+# CSS GLOBAL — VERSÃO FINAL
 # ==========================================================
 custom_css = """
 <style>
@@ -59,6 +59,10 @@ html, body, [data-testid="stAppViewContainer"] {
     color: #222 !important;
 }
 
+:root {
+    --sticky-top-offset: 82px; /* autoajustável e seguro */
+}
+
 .block-container {
     max-width: 1600px !important;
     padding-top: 1rem !important;
@@ -70,32 +74,28 @@ html, body, [data-testid="stAppViewContainer"] {
     gap: 24px;
 }
 
-/* ==========================================================
-   CARD – bordas corrigidas e preservadas
-   ========================================================== */
+/* CARD - bordas SEMPRE preservadas */
 .jp-card {
     background: #ffffff;
     border: 1px solid #e6e6e6;
     border-radius: 14px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     padding: 0;
-    overflow: hidden !important;  /* 🔥 GARANTE QUE NADA ULTRAPASSE A BORDA */
     position: relative;
+    overflow: visible !important;
     z-index: 1;
 }
 
-/* ==========================================================
-   HEADER FIXO — corrigido sem ::before
-   ========================================================== */
+/* STICKY HEADER SUPER ESTÁVEL */
 .jp-card-header {
     position: sticky;
-    top: 90px;
+    top: var(--sticky-top-offset);
     background: #ffffff;
     padding: 18px 22px 14px 22px;
-    z-index: 10;
+    z-index: 20;
 
-    /* sombra suave inferior */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    /* sombra suave apenas na parte inferior */
+    box-shadow: 0 6px 10px rgba(0,0,0,0.05);
 }
 
 /* TITULOS */
@@ -165,18 +165,18 @@ html, body, [data-testid="stAppViewContainer"] {
     opacity: 1;
 }
 
-/* ==========================================================
-   TÍTULO DO COMPARATIVO — sempre acima dos cards
-   ========================================================== */
+/* TÍTULO ACIMA DOS CARDS */
 .comparison-title {
     position: relative;
     z-index: 200;
     background: #ffffff;
-    padding-top: 6px;
+    margin-bottom: 14px;
+    padding-top: 4px;
 }
 
 </style>
 """
+
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================================
@@ -251,7 +251,11 @@ num = len(rows)
 grid_template = f"grid-template-columns: repeat({num}, 1fr);"
 
 st.markdown("---")
-st.markdown('<h3 class="comparison-title">✨ Comparativo de Perfis Selecionados</h3>', unsafe_allow_html=True)
+
+st.markdown(
+    '<h3 class="comparison-title">✨ Comparativo de Perfis Selecionados</h3>',
+    unsafe_allow_html=True
+)
 
 # Ícones
 icons = {
@@ -286,7 +290,7 @@ for card in rows:
     card_html = []
     card_html.append('<div class="jp-card">')
 
-    # HEADER FIXO
+    # HEADER FIXO CORRIGIDO
     card_html.append('<div class="jp-card-header">')
     card_html.append(f'<div class="jp-title">{job}</div>')
     card_html.append(f'<div class="jp-gg">GG {gg}</div>')
@@ -295,8 +299,8 @@ for card in rows:
     card_html.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
     card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
     card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
-    card_html.append("</div>")
-    card_html.append("</div>")  # header close
+    card_html.append("</div>")   # meta block
+    card_html.append("</div>")   # header
 
     # SEÇÕES
     for i, sec in enumerate(sections_order):
@@ -318,11 +322,10 @@ for card in rows:
     card_html.append('<div class="jp-footer">')
     card_html.append('<img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">')
     card_html.append("</div>")
-
     card_html.append("</div>")  # card wrapper
 
     html_parts.append("".join(card_html))
 
-html_parts.append("</div>")  # grid
+html_parts.append("</div>")  # grid container
 
 st.markdown("".join(html_parts), unsafe_allow_html=True)
