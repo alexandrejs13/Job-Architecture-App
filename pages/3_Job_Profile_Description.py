@@ -1,5 +1,5 @@
 # pages/3_Job_Profile_Description.py
-# Job Profile Description – Comparação de até 3 perfis (SIG Design System)
+# Job Profile Description – Comparação com design SIG, ícones SVG inline e cards alinhados
 
 import streamlit as st
 import pandas as pd
@@ -12,378 +12,188 @@ from pathlib import Path
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ==========================================================
-# CSS GLOBAL (fonte SIG + layout + sidebar fixa)
+# FUNÇÃO: HEADER COM PNG HD
 # ==========================================================
-GLOBAL_CSS = """
-<style>
-/* ---------- FONTES SIG ---------- */
-@font-face {
-    font-family: 'PPSIGFlow';
-    src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
-    font-weight: 400;
-}
-@font-face {
-    font-family: 'PPSIGFlow';
-    src: url('assets/css/fonts/PPSIGFlow-SemiBold.otf') format('opentype');
-    font-weight: 600;
-}
-@font-face {
-    font-family: 'PPSIGFlow';
-    src: url('assets/css/fonts/PPSIGFlow-Bold.otf') format('opentype');
-    font-weight: 700;
-}
+def header_hd_png(icon_path, title):
+    st.markdown(
+        f"""
+        <style>
+            .page-header {{
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                margin-top: 10px;
+                margin-bottom: 6px;
+            }}
+            .page-header img {{
+                width: 40px;
+                height: 40px;
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
+            }}
+            .page-header h1 {{
+                font-size: 36px;
+                margin: 0;
+                padding: 0;
+                font-weight: 700;
+                font-family: 'PPSIGFlow', sans-serif;
+            }}
+        </style>
 
-/* Aplica fonte no app inteiro */
-html, body, [data-testid="stAppViewContainer"] {
-    font-family: 'PPSIGFlow', sans-serif !important;
-    background: #ffffff !important;
-    color: #222 !important;
-}
+        <div class="page-header">
+            <img src="{icon_path}">
+            <h1>{title}</h1>
+        </div>
+        <hr>
+        """,
+        unsafe_allow_html=True,
+    )
 
-/* Sidebar travada em 300px */
-[data-testid="stSidebar"] {
-    width: 300px !important;
-    min-width: 300px !important;
-    max-width: 300px !important;
-}
-[data-testid="stSidebar"] > div {
-    width: 300px !important;
-}
-
-/* Container central */
-.block-container {
-    max-width: 1600px !important;
-    padding-top: 1rem !important;
-    padding-left: 1.2rem !important;
-    padding-right: 1.2rem !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-}
-
-/* ---------- HEADER DA PÁGINA ---------- */
-.page-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 10px;
-}
-.page-header-icon {
-    width: 40px;
-    height: 40px;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-}
-.page-header-title {
-    font-size: 36px;
-    font-weight: 700;
-    margin: 0;
-}
-
-/* ---------- TÍTULO DA ÁREA DE FILTROS ---------- */
-.jp-section-title-main {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-top: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-
-/* ---------- GRID DOS CARDS ---------- */
-.jp-grid {
-    display: grid;
-    gap: 24px;
-    width: 100%;
-}
-
-/* Card principal */
-.jp-card {
-    background: #ffffff;
-    border: 1px solid #e6e6e6;
-    border-radius: 14px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-    display: flex;
-    flex-direction: column;
-    height: 650px;                /* Altura padrão A) */
-    overflow: hidden;             /* esconde scroll externo */
-    position: relative;
-}
-
-/* Header fixo dentro do card (title + meta) */
-.jp-card-header {
-    padding: 18px 22px 14px 22px;
-    border-bottom: 1px solid #f0f0f0;
-    background: #ffffff;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-.jp-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 4px;
-}
-.jp-gg {
-    color: #145efc;
-    font-weight: 700;
-    margin-bottom: 12px;
-}
-.jp-meta-block {
-    background: #f5f4f1;
-    border-radius: 10px;
-    padding: 8px 10px;
-    font-size: 0.9rem;
-}
-.jp-meta-row {
-    margin-bottom: 2px;
-}
-
-/* Corpo rolável do card (onde ficam as descrições) */
-.jp-body {
-    padding: 14px 22px 6px 22px;
-    overflow-y: auto;
-    height: calc(650px - 140px); /* altura do body = altura total - header */
-}
-
-/* Seções internas (Sub Job Family, Job Profile etc.) */
-.jp-section {
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
-    background: #fafafa;
-    border-left: 4px solid #145efc;
-}
-.jp-section.alt {
-    background: #f0f4ff;
-    border-left-color: #4f5d75;
-}
-.jp-section-title {
-    font-weight: 700;
-    font-size: 0.9rem;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.jp-section-title svg {
-    width: 20px;
-    height: 20px;
-}
-
-/* Texto da descrição */
-.jp-text {
-    font-size: 0.9rem;
-    line-height: 1.45;
-    white-space: pre-wrap;
-}
-
-/* Footer com ícone de PDF alinhado à direita */
-.jp-footer {
-    padding: 10px 18px 14px 18px;
-    text-align: right;
-}
-.jp-footer img {
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    opacity: 0.8;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    transition: 0.2s ease;
-}
-.jp-footer img:hover {
-    opacity: 1;
-    transform: scale(1.05);
-}
-
-/* Responsivo – 2 colunas e depois 1 */
-@media (max-width: 1200px) {
-    .jp-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
-}
-@media (max-width: 900px) {
-    .jp-grid {
-        grid-template-columns: 1fr !important;
-    }
-}
-</style>
-
-<script>
-/* Sincroniza o scroll entre todos os elementos .jp-body */
-window.addEventListener('load', function () {
-  const bodies = document.querySelectorAll('.jp-body');
-  bodies.forEach((body) => {
-    body.addEventListener('scroll', () => {
-      const pos = body.scrollTop;
-      bodies.forEach((b) => {
-        if (b !== body) {
-          b.scrollTop = pos;
-        }
-      });
-    });
-  });
-
-  /* Exportar cada card individual para impressão (simples) */
-  const pdfButtons = document.querySelectorAll('.jp-footer img[data-card-id]');
-  pdfButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const cardId = btn.getAttribute('data-card-id');
-      const card = document.getElementById(cardId);
-      if (!card) return;
-      const win = window.open('', '_blank');
-      win.document.write('<html><head><title>Job Profile</title>');
-      win.document.write('<style>body{font-family:Arial, sans-serif;padding:24px;}');
-      win.document.write('.card{max-width:900px;margin:0 auto;}');
-      win.document.write('</style></head><body>');
-      win.document.write('<div class="card">');
-      win.document.write(card.innerHTML);
-      win.document.write('</div></body></html>');
-      win.document.close();
-      win.focus();
-      win.print();
-    });
-  });
-});
-</script>
-"""
-st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
+header_hd_png("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
 # ==========================================================
-# HEADER DA PÁGINA (PNG nítido)
+# CSS GLOBAL
 # ==========================================================
 st.markdown(
     """
-    <div class="page-header">
-        <img src="assets/icons/business_review_clipboard.png"
-             class="page-header-icon">
-        <h1 class="page-header-title">Job Profile Description</h1>
-    </div>
-    <hr>
+    <style>
+
+    /* Fonte SIG */
+    @font-face {
+        font-family: 'PPSIGFlow';
+        src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
+        font-weight: 400;
+    }
+
+    html, body, [data-testid="stAppViewContainer"] {
+        font-family: 'PPSIGFlow', sans-serif !important;
+        background: #ffffff !important;
+        color: #222 !important;
+    }
+
+    /* Sidebar fixa */
+    [data-testid="stSidebar"] {
+        width: 300px !important;
+        min-width: 300px !important;
+        max-width: 300px !important;
+    }
+
+    .block-container {
+        max-width: 1600px;
+        padding-top: 0.8rem;
+    }
+
+    /* GRID DE CARDS */
+    .cards-grid {
+        display: grid;
+        gap: 24px;
+        margin-top: 22px;
+    }
+
+    /* CARD */
+    .jp-card {
+        border: 1px solid #e6e6e6;
+        border-radius: 14px;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .jp-card-header {
+        padding: 20px 24px 14px 24px;
+        border-bottom: 1px solid #f0f0f0;
+        background: #fff;
+    }
+
+    .jp-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .jp-gg {
+        color: #145efc;
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 14px;
+    }
+
+    .jp-meta-block {
+        background: #f5f4f1;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 0.92rem;
+        line-height: 1.35;
+    }
+
+    /* SEÇÕES */
+    .jp-section {
+        padding: 20px 24px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .jp-section-title {
+        font-weight: 700;
+        font-size: 0.98rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .jp-section-title svg {
+        width: 22px;
+        height: 22px;
+        opacity: 0.9;
+    }
+
+    .jp-text {
+        font-size: 0.93rem;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        margin-top: 2px;
+    }
+
+    </style>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
 )
 
 # ==========================================================
 # CARREGAR DADOS
 # ==========================================================
 @st.cache_data(ttl=600)
-def load_job_profile() -> pd.DataFrame:
-    path = Path("data") / "Job Profile.xlsx"
-    if not path.exists():
+def load_job_profile():
+    p = Path("data") / "Job Profile.xlsx"
+    if not p.exists():
         return pd.DataFrame()
-    df = pd.read_excel(path)
+    df = pd.read_excel(p)
     df.columns = df.columns.str.strip()
-
-    # Normaliza Global Grade (tira .0)
-    if "Global Grade" in df.columns:
-        df["Global Grade"] = (
-            df["Global Grade"]
-            .astype(str)
-            .str.strip()
-            .str.replace(r"\\.0$", "", regex=True)
-        )
     return df
-
 
 df = load_job_profile()
 if df.empty:
-    st.error("Arquivo 'Job Profile.xlsx' não encontrado ou vazio em data/Job Profile.xlsx.")
+    st.error("❌ Erro ao carregar o arquivo Job Profile.xlsx no diretório /data")
     st.stop()
 
-# Garante colunas que vamos usar
-expected_cols = [
-    "Job Family",
-    "Sub Job Family",
-    "Career Path",
-    "Job Profile",
-    "Global Grade",
-    "Full Job Code",
-    "Sub Job Family Description",
-    "Job Profile Description",
-    "Career Band Description",
-    "Role Description",
-    "Grade Differentiator",
-    "Qualifications",
-    "Specific parameters / KPIs",
-    "Competencies 1",
-    "Competencies 2",
-    "Competencies 3",
-]
-for col in expected_cols:
-    if col not in df.columns:
-        df[col] = ""
-
 # ==========================================================
-# CARREGAR SVGs SIG (inline)
+# FILTROS
 # ==========================================================
-def load_svg(name: str) -> str:
-    svg_path = Path("assets") / "icons" / "sig" / name
-    try:
-        return svg_path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return ""  # se faltar algum, não quebra
+st.markdown("### 🔍 Explorador de Perfis")
 
-
-SVG_ICONS = {
-    "Sub Job Family Description": load_svg("Hierarchy.svg"),
-    "Job Profile Description": load_svg("File_Clipboard_Text.svg"),
-    "Career Band Description": load_svg("Hierarchy.svg"),
-    "Role Description": load_svg("Shopping_Business_Target.svg"),
-    "Grade Differentiator": load_svg("Edit_Pencil.svg"),
-    "Qualifications": load_svg("Content_Book_Phone.svg"),
-    "Specific parameters / KPIs": load_svg("Graph_Bar.svg"),
-    "Competencies 1": load_svg("Setting_Cog.svg"),
-    "Competencies 2": load_svg("Setting_Cog.svg"),
-    "Competencies 3": load_svg("Setting_Cog.svg"),
-}
-
-SECTIONS_ORDER = list(SVG_ICONS.keys())
-
-# ==========================================================
-# FILTROS – Família / Subfamilia / Career Path
-# ==========================================================
-st.markdown(
-    '<div class="jp-section-title-main">🔍 Explorador de Perfis</div>',
-    unsafe_allow_html=True,
-)
-
-familias = sorted(
-    [f for f in df["Job Family"].dropna().unique() if str(f).strip() != ""]
-)
-
+familias = sorted(df["Job Family"].dropna().unique())
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    familia = st.selectbox("Job Family:", ["Selecione..."] + familias, index=0)
+    familia = st.selectbox("Job Family", ["Selecione..."] + familias)
 
 with col2:
-    if familia != "Selecione...":
-        subs = sorted(
-            [
-                s
-                for s in df[df["Job Family"] == familia]["Sub Job Family"]
-                .dropna()
-                .unique()
-                if str(s).strip() != ""
-            ]
-        )
-    else:
-        subs = []
-    sub = st.selectbox("Sub Job Family:", ["Selecione..."] + subs, index=0)
+    subs = sorted(df[df["Job Family"] == familia]["Sub Job Family"].dropna().unique()) if familia!="Selecione..." else []
+    sub = st.selectbox("Sub Job Family", ["Selecione..."] + subs)
 
 with col3:
-    if sub != "Selecione...":
-        paths = sorted(
-            [
-                p
-                for p in df[df["Sub Job Family"] == sub]["Career Path"]
-                .dropna()
-                .unique()
-                if str(p).strip() != ""
-            ]
-        )
-    else:
-        paths = []
-    trilha = st.selectbox("Career Path:", ["Selecione..."] + paths, index=0)
+    paths = sorted(df[df["Sub Job Family"] == sub]["Career Path"].dropna().unique()) if sub!="Selecione..." else []
+    trilha = st.selectbox("Career Path", ["Selecione..."] + paths)
 
 filtered = df.copy()
 if familia != "Selecione...":
@@ -393,128 +203,103 @@ if sub != "Selecione...":
 if trilha != "Selecione...":
     filtered = filtered[filtered["Career Path"] == trilha]
 
-if filtered.empty:
-    st.info("Ajuste os filtros para visualizar os perfis.")
-    st.stop()
-
-# ==========================================================
-# PICKLIST – até 3 perfis para comparar
-# ==========================================================
-filtered = filtered.copy()
-filtered["GG_clean"] = filtered["Global Grade"].astype(str).str.strip()
 filtered["label"] = filtered.apply(
-    lambda r: f'GG {r["GG_clean"] or "-"} • {r["Job Profile"]}', axis=1
+    lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
+    axis=1
 )
+
 label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
 
 selecionados_labels = st.multiselect(
-    "Selecione até 3 perfis para comparar:",
+    "Selecione até 3 perfis:",
     options=list(label_to_profile.keys()),
     max_selections=3,
 )
+
 if not selecionados_labels:
-    st.info("Selecione pelo menos 1 perfil para exibir os detalhes.")
     st.stop()
 
 selecionados = [label_to_profile[l] for l in selecionados_labels]
 
-# ==========================================================
-# PREPARAR DADOS DOS CARDS
-# ==========================================================
-cards_data = []
-for nome in selecionados:
-    row = filtered[filtered["Job Profile"] == nome]
-    if row.empty:
-        continue
-    cards_data.append(row.iloc[0].to_dict())
+rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selecionados]
 
-if not cards_data:
-    st.warning("Nenhum perfil encontrado após aplicar os filtros.")
-    st.stop()
-
-num_cards = len(cards_data)
-grid_template = f"grid-template-columns: repeat({num_cards}, minmax(0, 1fr));"
-
-st.markdown("---")
-st.markdown("### ✨ Comparativo de Perfis Selecionados", unsafe_allow_html=True)
 
 # ==========================================================
-# RENDER – GRID DE CARDS (HTML)
+# CARREGAR TODOS OS SVG INLINE
 # ==========================================================
-html_parts = [f'<div class="jp-grid" style="{grid_template}">']
+def svg(name):
+    path = Path(f"assets/icons/sig/{name}")
+    if not path.exists():
+        return ""
+    return path.read_text()
 
-for idx, card in enumerate(cards_data):
-    card_id = f"jp-card-{idx}"
+icons = {
+    "Sub Job Family Description": svg("Hierarchy.svg"),
+    "Job Profile Description": svg("Content_Book_Phone.svg"),
+    "Career Band Description": svg("File_Clipboard_Text.svg"),
+    "Role Description": svg("Shopping_Business_Target.svg"),
+    "Grade Differentiator": svg("User_Add.svg"),
+    "Qualifications": svg("Edit_Pencil.svg"),
+    "Specific parameters / KPIs": svg("Graph_Bar.svg"),
+    "Competencies 1": svg("Setting_Cog.svg"),
+    "Competencies 2": svg("Setting_Cog.svg"),
+    "Competencies 3": svg("Setting_Cog.svg"),
+}
 
-    job_profile = html.escape(str(card.get("Job Profile", "")))
-    gg = html.escape(str(card.get("Global Grade", "")))
-    job_family = html.escape(str(card.get("Job Family", "")))
-    sub_family = html.escape(str(card.get("Sub Job Family", "")))
-    career_path = html.escape(str(card.get("Career Path", "")))
-    full_code = html.escape(str(card.get("Full Job Code", "")))
+sections_order = list(icons.keys())
 
-    def esc(colname: str) -> str:
-        return html.escape(str(card.get(colname, "") or "")).strip()
 
-    card_html = []
-    card_html.append(f'<div class="jp-card" id="{card_id}">')
+# ==========================================================
+# RENDER DOS CARDS
+# ==========================================================
+st.markdown("### ✨ Comparativo de Perfis Selecionados")
 
-    # HEADER FIXO
-    card_html.append('<div class="jp-card-header">')
-    card_html.append(f'<div class="jp-title">{job_profile}</div>')
-    card_html.append(f'<div class="jp-gg">GG {gg}</div>')
-    card_html.append('<div class="jp-meta-block">')
-    card_html.append(
-        f'<div class="jp-meta-row"><b>Job Family:</b> {job_family}</div>'
-    )
-    card_html.append(
-        f'<div class="jp-meta-row"><b>Sub Job Family:</b> {sub_family}</div>'
-    )
-    card_html.append(
-        f'<div class="jp-meta-row"><b>Career Path:</b> {career_path}</div>'
-    )
-    card_html.append(
-        f'<div class="jp-meta-row"><b>Full Job Code:</b> {full_code}</div>'
-    )
-    card_html.append("</div>")  # fecha meta-block
-    card_html.append("</div>")  # fecha header
+# Grid automático com N colunas
+grid = f"grid-template-columns: repeat({len(rows)}, 1fr);"
+st.markdown(f'<div class="cards-grid" style="{grid}">', unsafe_allow_html=True)
 
-    # BODY ROLÁVEL
-    card_html.append('<div class="jp-body">')
+for card in rows:
 
-    for i, section_name in enumerate(SECTIONS_ORDER):
-        content = esc(section_name)
-        if not content or content.lower() == "nan":
+    job = html.escape(str(card.get("Job Profile","")))
+    gg = html.escape(str(card.get("Global Grade","")))
+    jf = html.escape(str(card.get("Job Family","")))
+    sf = html.escape(str(card.get("Sub Job Family","")))
+    cp = html.escape(str(card.get("Career Path","")))
+    fc = html.escape(str(card.get("Full Job Code","")))
+
+    html_card = []
+
+    html_card.append('<div class="jp-card">')
+
+    # HEADER
+    html_card.append('<div class="jp-card-header">')
+    html_card.append(f'<div class="jp-title">{job}</div>')
+    html_card.append(f'<div class="jp-gg">GG {gg}</div>')
+
+    html_card.append('<div class="jp-meta-block">')
+    html_card.append(f"<div><b>Job Family:</b> {jf}</div>")
+    html_card.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
+    html_card.append(f"<div><b>Career Path:</b> {cp}</div>")
+    html_card.append(f"<div><b>Full Job Code:</b> {fc}</div>")
+    html_card.append("</div>")  # meta block
+    html_card.append("</div>")  # header
+
+    # SEÇÕES
+    for sec in sections_order:
+        content = str(card.get(sec, "")).strip()
+        if not content or content.lower()=="nan":
             continue
+        icon_svg = icons[sec]
 
-        section_classes = "jp-section"
-        if i % 2 == 1:
-            section_classes += " alt"
+        html_card.append('<div class="jp-section">')
+        html_card.append(
+            f'<div class="jp-section-title">{icon_svg} {sec}</div>'
+        )
+        html_card.append(f'<div class="jp-text">{html.escape(content)}</div>')
+        html_card.append('</div>')
 
-        svg = SVG_ICONS.get(section_name, "")
+    html_card.append("</div>")  # card
 
-        card_html.append(f'<div class="{section_classes}">')
-        card_html.append('<div class="jp-section-title">')
-        if svg:
-            card_html.append(svg)
-        card_html.append(f"<span>{section_name}</span>")
-        card_html.append("</div>")  # título
-        card_html.append(f'<div class="jp-text">{content}</div>')
-        card_html.append("</div>")  # seção
+    st.markdown("".join(html_card), unsafe_allow_html=True)
 
-    card_html.append("</div>")  # fecha jp-body
-
-    # FOOTER COM ÍCONE PDF
-    card_html.append('<div class="jp-footer">')
-    card_html.append(
-        f'<img src="assets/icons/sig/pdf_c3_white.svg" '
-        f'title="Exportar PDF" data-card-id="{card_id}">'
-    )
-    card_html.append("</div>")  # footer
-
-    card_html.append("</div>")  # jp-card
-    html_parts.append("".join(card_html))
-
-html_parts.append("</div>")  # jp-grid
-
-st.markdown("".join(html_parts), unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
