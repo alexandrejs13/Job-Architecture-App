@@ -1,21 +1,20 @@
-# ============================================================
 # pages/3_Job_Profile_Description.py
-# VERSÃO FINAL — LAYOUT EXECUTIVO SIG + ÍCONES CORPORATIVOS
-# ============================================================
+# Job Profile Description – Comparação de até 3 perfis (SIG Design System)
 
 import streamlit as st
 import pandas as pd
 import html
 from pathlib import Path
+import base64
 
-# ------------------------------------------------------------
-# CONFIG
-# ------------------------------------------------------------
+# ==========================================================
+# CONFIG DA PÁGINA
+# ==========================================================
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
-# ------------------------------------------------------------
-# HEADER PADRÃO
-# ------------------------------------------------------------
+# ==========================================================
+# HEADER
+# ==========================================================
 def header(icon_path, title):
     col1, col2 = st.columns([0.08, 0.92])
     with col1:
@@ -33,303 +32,279 @@ def header(icon_path, title):
 
 header("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
-# ------------------------------------------------------------
-# CSS GLOBAL FINALIZADO
-# ------------------------------------------------------------
-css_path = Path("utils/global_css.py").resolve()
-from utils.global_css import load_global_css
-load_global_css()
-
-# ------------------------------------------------------------
-# CSS LOCAL DA PÁGINA (ÍCONES + SINCRONIZAÇÃO)
-# ------------------------------------------------------------
-st.markdown("""
+# ==========================================================
+# CSS GLOBAL (com fonte PP SIG Flow + layout executivo)
+# ==========================================================
+custom_css = """
 <style>
 
-.jp-card-wrapper {
+@font-face {
+    font-family: 'PPSIGFlow';
+    src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
+    font-weight: 400;
+}
+@font-face {
+    font-family: 'PPSIGFlow';
+    src: url('assets/css/fonts/PPSIGFlow-SemiBold.otf') format('opentype');
+    font-weight: 600;
+}
+@font-face {
+    font-family: 'PPSIGFlow';
+    src: url('assets/css/fonts/PPSIGFlow-Bold.otf') format('opentype');
+    font-weight: 700;
+}
+
+html, body, [data-testid="stAppViewContainer"] {
+    font-family: 'PPSIGFlow', sans-serif !important;
+    background: #ffffff !important;
+    color: #222 !important;
+}
+
+/* Sidebar fixa */
+[data-testid="stSidebar"] {
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+}
+
+/* Conteúdo central limitado */
+.block-container {
+    max-width: 1600px !important;
+    padding-top: 1rem !important;
+}
+
+/* GRID principal — 1,2,3 colunas */
+.jp-comparison-grid {
+    display: grid;
+    gap: 24px;
+}
+
+/* CARD */
+.jp-card {
+    background: #ffffff;
+    border: 1px solid #e6e6e6;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 0;
     display: flex;
     flex-direction: column;
     height: 650px;
-    background: #ffffff;
-    border-radius: 14px;
-    border: 1px solid #e6e6e6;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    padding: 0;
+    overflow-y: auto;
     position: relative;
-    overflow: hidden;
 }
 
+/* HEADER FIXO NO CARD */
 .jp-card-header {
-    padding: 18px 22px 14px 22px;
-    background: #ffffff;
-    border-bottom: 1px solid #eee;
     position: sticky;
     top: 0;
+    background: #ffffff;
+    padding: 18px 22px 14px 22px;
     z-index: 10;
+    border-bottom: 1px solid #eee;
 }
 
 .jp-title {
-    font-family: 'PPSIGFlow-SemiBold', sans-serif;
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     font-weight: 700;
-    color: #111;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
 }
-
 .jp-gg {
-    font-size: 1rem;
-    font-weight: 800;
     color: #145efc;
-    margin-bottom: 6px;
+    font-weight: 700;
+    margin-bottom: 12px;
 }
 
-.jp-meta {
-    font-size: 0.9rem;
+/* BLOCO META */
+.jp-meta-block {
     background: #f5f4f1;
     border-radius: 10px;
     padding: 10px 12px;
+    font-size: 0.9rem;
 }
 
-.jp-body {
-    padding: 18px 22px;
-    overflow-y: auto;
-}
-
-.jp-body::-webkit-scrollbar {
-    width: 8px;
-}
-.jp-body::-webkit-scrollbar-thumb {
-    background: #c8c8c8;
-    border-radius: 10px;
-}
-
+/* SEÇÕES DO CARD */
 .jp-section {
-    background: #fafafa;
-    padding: 14px 14px;
-    border-radius: 12px;
-    margin-bottom: 14px;
+    padding: 14px 22px;
+    border-bottom: 1px solid #f0f0f0;
 }
 .jp-section.alt {
-    background: #f0f4ff;
+    background: #fafafa;
 }
-
 .jp-section-title {
+    font-weight: 700;
+    font-size: 0.92rem;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    margin-bottom: 8px;
+    gap: 8px;
 }
-
 .jp-section-title img {
-    width: 22px;
+    width: 20px;
     opacity: 0.9;
 }
-
 .jp-text {
-    font-size: 0.9rem;
-    color: #333;
     line-height: 1.45;
+    font-size: 0.9rem;
     white-space: pre-wrap;
 }
 
+/* FOOTER DO CARD */
 .jp-footer {
-    padding: 20px;
+    padding: 15px;
     text-align: right;
 }
-
 .jp-footer img {
-    width: 28px;
-    cursor: pointer;
+    width: 26px;
     opacity: 0.8;
-    transition: 0.2s;
+    cursor: pointer;
 }
 .jp-footer img:hover {
     opacity: 1;
-    transform: scale(1.08);
-}
-
-/* GRID CONTROLADO */
-.jp-grid {
-    display: grid;
-    gap: 22px;
-    width: 100%;
 }
 
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(custom_css, unsafe_allow_html=True)
 
-# ------------------------------------------------------------
-# LOAD DATA
-# ------------------------------------------------------------
-@st.cache_data
+# ==========================================================
+# CARREGAR DADOS
+# ==========================================================
+@st.cache_data(ttl=600)
 def load_job_profile():
-    path = Path("data/Job Profile.xlsx")
+    path = Path("data") / "Job Profile.xlsx"
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_excel(path)
-    for c in df.columns:
-        df[c] = df[c].astype(str).str.strip()
-    df["Global Grade"] = (
-        df["Global Grade"]
-        .astype(str)
-        .str.replace(r"\.0$", "", regex=True)
-        .str.strip()
-    )
+    df.columns = df.columns.str.strip()
     return df
 
 df = load_job_profile()
 if df.empty:
-    st.error("❌ 'Job Profile.xlsx' não encontrado")
+    st.error("Erro ao carregar Job Profile.xlsx")
     st.stop()
 
-# Garantir colunas
-columns_needed = [
-    "Job Family", "Sub Job Family", "Career Path",
-    "Job Profile", "Global Grade", "Full Job Code",
-    "Sub Job Family Description", "Job Profile Description",
-    "Career Band Description", "Role Description",
-    "Grade Differentiator", "Qualifications",
-    "Specific parameters / KPIs", "Competencies 1",
-    "Competencies 2", "Competencies 3",
-]
-for c in columns_needed:
-    if c not in df.columns:
-        df[c] = ""
-
-# ------------------------------------------------------------
+# ==========================================================
 # FILTROS
-# ------------------------------------------------------------
-st.markdown("### 🔍 Explorador de Perfis")
+# ==========================================================
+st.subheader("🔍 Explorador de Perfis")
 
-familias = sorted(df["Job Family"].unique())
+familias = sorted(df["Job Family"].dropna().unique())
 
 col1, col2, col3 = st.columns(3)
+
 with col1:
-    fam = st.selectbox("Job Family:", ["Selecione..."] + familias)
+    familia = st.selectbox("Job Family", ["Selecione..."] + familias)
+
 with col2:
-    subs = sorted(df[df["Job Family"] == fam]["Sub Job Family"].unique()) if fam!="Selecione..." else []
-    sub = st.selectbox("Sub Job Family:", ["Selecione..."] + subs)
+    subs = sorted(df[df["Job Family"] == familia]["Sub Job Family"].dropna().unique()) if familia!="Selecione..." else []
+    sub = st.selectbox("Sub Job Family", ["Selecione..."] + subs)
+
 with col3:
-    paths = sorted(df[df["Sub Job Family"] == sub]["Career Path"].unique()) if sub!="Selecione..." else []
-    trilha = st.selectbox("Career Path:", ["Selecione..."] + paths)
+    paths = sorted(df[df["Sub Job Family"] == sub]["Career Path"].dropna().unique()) if sub!="Selecione..." else []
+    trilha = st.selectbox("Career Path", ["Selecione..."] + paths)
 
 filtered = df.copy()
-if fam!="Selecione...": filtered = filtered[filtered["Job Family"] == fam]
-if sub!="Selecione...": filtered = filtered[filtered["Sub Job Family"] == sub]
-if trilha!="Selecione...": filtered = filtered[filtered["Career Path"] == trilha]
+if familia != "Selecione...":
+    filtered = filtered[filtered["Job Family"] == familia]
+if sub != "Selecione...":
+    filtered = filtered[filtered["Sub Job Family"] == sub]
+if trilha != "Selecione...":
+    filtered = filtered[filtered["Career Path"] == trilha]
 
-if filtered.empty:
-    st.info("Selecione filtros válidos.")
-    st.stop()
-
-# ------------------------------------------------------------
+# ==========================================================
 # PICKLIST
-# ------------------------------------------------------------
+# ==========================================================
 filtered["label"] = filtered.apply(
-    lambda r: f'GG {r["Global Grade"]} • {r["Job Profile"]}', axis=1
+    lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
+    axis=1
 )
-map_label = dict(zip(filtered["label"], filtered["Job Profile"]))
 
-selecionados = st.multiselect(
+label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
+
+selecionados_labels = st.multiselect(
     "Selecione até 3 perfis para comparar:",
-    options=list(map_label.keys()),
+    options=list(label_to_profile.keys()),
     max_selections=3,
 )
-if not selecionados:
+
+if not selecionados_labels:
+    st.info("Selecione ao menos 1 perfil.")
     st.stop()
 
-lista = [map_label[l] for l in selecionados]
-cards = [filtered[filtered["Job Profile"] == x].iloc[0].to_dict() for x in lista]
+selecionados = [label_to_profile[l] for l in selecionados_labels]
 
-# ------------------------------------------------------------
-# ICONES CORPORATIVOS (22px)
-# ------------------------------------------------------------
-ICONES = {
-    "Sub Job Family Description": "assets/icons/sig/Hierarchy.svg",
-    "Job Profile Description": "assets/icons/sig/File_Clipboard_Text.svg",
-    "Career Band Description": "assets/icons/sig/Hierarchy.svg",
-    "Role Description": "assets/icons/sig/Shopping_Business_Target.svg",
-    "Grade Differentiator": "assets/icons/sig/Edit_Pencil.svg",
-    "Qualifications": "assets/icons/sig/Content_Book_Phone.svg",
-    "Specific parameters / KPIs": "assets/icons/sig/Graph_Bar.svg",
-    "Competencies 1": "assets/icons/sig/Setting_Cog.svg",
-    "Competencies 2": "assets/icons/sig/Setting_Cog.svg",
-    "Competencies 3": "assets/icons/sig/Setting_Cog.svg",
+rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selecionados]
+
+num = len(rows)
+grid_template = f"grid-template-columns: repeat({num}, 1fr);"
+st.markdown("---")
+st.markdown("### ✨ Comparativo de Perfis Selecionados")
+
+icons = {
+    "Sub Job Family Description": "Hierarchy.svg",
+    "Job Profile Description": "File_Clipboard_Text.svg",
+    "Career Band Description": "Hierarchy.svg",
+    "Role Description": "Shopping_Business_Suitcase.svg",
+    "Grade Differentiator": "Edit_Pencil.svg",
+    "Qualifications": "Content_Book_Phone.svg",
+    "Specific parameters / KPIs": "Graph_Bar.svg",
+    "Competencies 1": "Setting_Cog.svg",
+    "Competencies 2": "Setting_Cog.svg",
+    "Competencies 3": "Setting_Cog.svg",
 }
 
-sections = [
-    "Sub Job Family Description",
-    "Job Profile Description",
-    "Career Band Description",
-    "Role Description",
-    "Grade Differentiator",
-    "Qualifications",
-    "Specific parameters / KPIs",
-    "Competencies 1",
-    "Competencies 2",
-    "Competencies 3",
-]
+sections_order = list(icons.keys())
 
-# ------------------------------------------------------------
-# GRID
-# ------------------------------------------------------------
-cols = len(cards)
-grid = f"grid-template-columns: repeat({cols}, 1fr);"
-st.markdown("---")
-st.markdown(f'<div class="jp-grid" style="{grid}">', unsafe_allow_html=True)
+html_parts = [f'<div class="jp-comparison-grid" style="{grid_template}">']
 
-# ------------------------------------------------------------
-# RENDER CARDS
-# ------------------------------------------------------------
-for card in cards:
-    html_card = []
-    html_card.append('<div class="jp-card-wrapper">')
+for card in rows:
+    job = html.escape(str(card.get("Job Profile","")))
+    gg = html.escape(str(card.get("Global Grade","")))
+    jf = html.escape(str(card.get("Job Family","")))
+    sf = html.escape(str(card.get("Sub Job Family","")))
+    cp = html.escape(str(card.get("Career Path","")))
+    fc = html.escape(str(card.get("Full Job Code","")))
 
-    # HEADER
-    html_card.append('<div class="jp-card-header">')
-    html_card.append(f'<div class="jp-title">{html.escape(card["Job Profile"])}</div>')
-    html_card.append(f'<div class="jp-gg">GG {html.escape(card["Global Grade"])}</div>')
+    card_html = []
+    card_html.append('<div class="jp-card">')
 
-    html_card.append('<div class="jp-meta">')
-    html_card.append(f"<div><b>Job Family:</b> {html.escape(card['Job Family'])}</div>")
-    html_card.append(f"<div><b>Sub Job Family:</b> {html.escape(card['Sub Job Family'])}</div>")
-    html_card.append(f"<div><b>Career Path:</b> {html.escape(card['Career Path'])}</div>")
-    html_card.append(f"<div><b>Full Job Code:</b> {html.escape(card['Full Job Code'])}</div>")
-    html_card.append("</div></div>")
+    # HEADER FIXO
+    card_html.append('<div class="jp-card-header">')
+    card_html.append(f'<div class="jp-title">{job}</div>')
+    card_html.append(f'<div class="jp-gg">GG {gg}</div>')
 
-    # BODY
-    html_card.append('<div class="jp-body">')
+    # Meta-block
+    card_html.append('<div class="jp-meta-block">')
+    card_html.append(f"<div><b>Job Family:</b> {jf}</div>")
+    card_html.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
+    card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
+    card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
+    card_html.append("</div>")
+    card_html.append("</div>")  # fecha header
 
-    for i, section in enumerate(sections):
-        content = card.get(section, "").strip()
-        if not content: 
+    # SEÇÕES
+    for i, sec in enumerate(sections_order):
+        content = str(card.get(sec,"")).strip()
+        if not content or content.lower()=="nan":
             continue
+        icon = icons[sec]
+        alt = " alt" if i%2==1 else ""
+        card_html.append(f'<div class="jp-section{alt}">')
+        card_html.append(
+            f'<div class="jp-section-title">'
+            f'<img src="assets/icons/sig/{icon}"> {sec}'
+            f'</div>'
+        )
+        card_html.append(f'<div class="jp-text">{html.escape(content)}</div>')
+        card_html.append('</div>')
 
-        classe = "jp-section alt" if i % 2 else "jp-section"
-        icon = ICONES[section]
+    # FOOTER PDF
+    card_html.append('<div class="jp-footer">')
+    card_html.append('<img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">')
+    card_html.append('</div>')
 
-        html_card.append(f'''
-            <div class="{classe}">
-                <div class="jp-section-title">
-                    <img src="{icon}">
-                    {section}
-                </div>
-                <div class="jp-text">{html.escape(content)}</div>
-            </div>
-        ''')
+    card_html.append("</div>")  # card
+    html_parts.append("".join(card_html))
 
-    html_card.append("</div>")  # body
-
-    # FOOTER + PDF
-    html_card.append('''
-        <div class="jp-footer">
-            <img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">
-        </div>
-    ''')
-
-    html_card.append("</div>")  # wrapper
-    st.markdown("".join(html_card), unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
+html_parts.append("</div>")
+st.markdown("".join(html_parts), unsafe_allow_html=True)
