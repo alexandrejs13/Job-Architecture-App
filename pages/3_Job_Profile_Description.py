@@ -1,290 +1,311 @@
+# pages/4_Job_Maps.py
+# Modern UI • Clean Design • Fullscreen • Career Indicators • Apple-style Exit Button
+
 import streamlit as st
 import pandas as pd
-import html
-from pathlib import Path
+import streamlit.components.v1 as components
+from utils.data_loader import load_excel_data
 
-# --------------------------------------------
-# PAGE CONFIG
-# --------------------------------------------
-st.set_page_config(page_title="Job Profile Description", layout="wide")
+# ==========================================================
+# CONFIGURAÇÃO DE PÁGINA
+# ==========================================================
+st.set_page_config(page_title="Job Maps", layout="wide")
 
+# ==========================================================
+# HEADER NOVO (VISUAL CLEAN)
+# ==========================================================
+def header(icon_path: str, title: str):
+    col1, col2 = st.columns([0.08, 0.92])
+    with col1:
+        st.image(icon_path, width=48)
+    with col2:
+        st.markdown(
+            f"<h1 style='margin:0; padding:0; font-size:36px; font-weight:700;'>{title}</h1>",
+            unsafe_allow_html=True
+        )
+    st.markdown("<hr style='margin-top:5px;'>", unsafe_allow_html=True)
 
-# --------------------------------------------
-# HEADER
-# --------------------------------------------
-def header_png(icon_path, title_text):
-    st.markdown(
-        f"""
-        <style>
-            .page-title {{
-                display:flex;
-                align-items:center;
-                gap:16px;
-                margin-bottom:10px;
-            }}
-            .page-title img {{
-                width:42px;
-                height:42px;
-                image-rendering:crisp-edges;
-            }}
-            .page-title h1 {{
-                margin:0;
-                font-size:36px;
-                font-weight:800;
-            }}
-        </style>
+header("assets/icons/globe_trade.png", "Job Maps")
 
-        <div class="page-title">
-            <img src="{icon_path}">
-            <h1>{title_text}</h1>
-        </div>
-        <hr style="margin-top:12px;">
-        """,
-        unsafe_allow_html=True,
-    )
-
-header_png("assets/icons/business_review_clipboard.png", "Job Profile Description")
-
-
-# --------------------------------------------
-# CSS FIX EXTRA (GRID 3 COL + CARDS)
-# --------------------------------------------
-st.markdown(
-    """
+# ==========================================================
+# CSS CLEAN + MODERNIZAÇÃO DO MAPA
+# ==========================================================
+clean_css = """
 <style>
 
-.jp-grid {
-    display: grid;
-    gap: 24px;
-    width: 100%;
+:root {
+    --border: #d9d9d9;
+    --subtle-bg: #f7f7f7;
+    --header-bg: #eaeaea;
+    --gg-bg: #3c3c3c;
+    --text-gray: #444;
 }
 
-@media (min-width: 1200px) {
-    .jp-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (min-width: 800px) and (max-width:1199px) {
-    .jp-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 799px) {
-    .jp-grid { grid-template-columns: 1fr; }
-}
-
-.jp-card {
-    background: #faf9f7;
-    border: 1px solid #e6e2db;
-    border-radius: 14px;
-    padding: 0;
-    overflow: hidden;
-}
-
-.jp-header {
-    padding: 22px;
-    background: white;
-    border-bottom: 1px solid #e6dfd6;
-}
-
-.jp-title {
-    font-size: 1.35rem;
-    font-weight: 800;
-    margin: 0;
-}
-
-.jp-gg {
-    margin-top: 4px;
-    font-size: 1.05rem;
-    color: #145efc;
-    font-weight: 700;
-}
-
-.jp-meta {
-    background: #f2efeb;
-    padding: 18px;
-    margin: 0 22px 22px 22px;
-    border-radius: 12px;
-    border: 1px solid #e3ddd6;
-}
-
-.jp-section {
-    padding: 20px 22px;
-    border-left: 5px solid #145efc33;
-    margin: 14px 0;
-    background: white;
+/* GRID WRAPPER */
+.map-wrapper {
+    height: 75vh;
+    overflow: auto;
     border-radius: 10px;
+    border: 0.5px solid var(--border);
+    background: white;
 }
 
-.jp-section-title {
+/* GRID */
+.jobmap-grid {
+    display: grid;
+    width: max-content;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+/* HEADERS */
+.header-family {
+    background: var(--header-bg);
+    border-bottom: 0.5px solid var(--border);
+    border-right: 0.5px solid var(--border);
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+}
+
+.header-subfamily {
+    background: var(--subtle-bg);
+    border-bottom: 0.5px solid var(--border);
+    border-right: 0.5px solid var(--border);
+    font-weight: 600;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* GG LEFT COLUMN */
+.gg-header {
+    background: var(--gg-bg);
+    color: white;
     font-weight: 800;
-    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.jp-section-title svg {
-    width: 22px;
-    height: 22px;
+.gg-cell {
+    background: var(--gg-bg);
+    color: white;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.jp-text {
-    white-space: pre-wrap;
-    line-height: 1.42;
-    font-size: 0.92rem;
+/* CELLS */
+.cell {
+    border-bottom: 0.5px solid var(--border);
+    border-right: 0.5px solid var(--border);
+    padding: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* JOB CARD CLEAN */
+.job-card {
+    background: white;
+    border: 0.5px solid var(--border);
+    border-left-width: 4px !important;
+    border-radius: 6px;
+    padding: 6px 8px;
+    width: 135px;
+    height: 75px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    transition: 0.20s ease;
+}
+
+.job-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.job-card b {
+    font-size: 0.78rem;
+    margin-bottom: 3px;
+    color: #333;
+}
+
+.job-card span {
+    font-size: 0.7rem;
+    color: #666;
+}
+
+/* FULLSCREEN EXIT BUTTON - APPLE STYLE */
+#exit-fullscreen-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 999999 !important;
+    background: #111 !important;
+    color: white !important;
+    border-radius: 28px !important;
+    padding: 12px 28px !important;
+    border: none !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    box-shadow: 0px 4px 16px rgba(0,0,0,0.35) !important;
+    cursor: pointer;
+}
+#exit-fullscreen-btn:hover {
+    transform: scale(1.06);
 }
 
 </style>
-""",
-    unsafe_allow_html=True,
-)
+"""
+st.markdown(clean_css, unsafe_allow_html=True)
 
-
-# --------------------------------------------
-# LOAD EXCEL
-# --------------------------------------------
-@st.cache_data(ttl=600)
-def load_job_profile():
-    path = Path("data") / "Job Profile.xlsx"
-    if not path.exists():
-        return pd.DataFrame()
-    df = pd.read_excel(path)
-    df.columns = df.columns.str.strip()
-    return df
-
-df = load_job_profile()
+# ==========================================================
+# CARREGAMENTO DE DADOS
+# ==========================================================
+data = load_excel_data()
+df = data.get("job_profile", pd.DataFrame())
 
 if df.empty:
-    st.error("Não foi possível carregar Job Profile.xlsx")
+    st.error("Arquivo Job Profile não encontrado ou vazio.")
     st.stop()
 
+# Pré-processamento
+df = df.copy()
+df["Job Family"] = df["Job Family"].astype(str).str.strip()
+df["Sub Job Family"] = df["Sub Job Family"].astype(str).str.strip().replace(['nan', 'None', '<NA>'], '-')
+df["Career Path"] = df["Career Path"].astype(str).str.strip()
+df["Global Grade"] = df["Global Grade"].astype(str).str.replace(r"\.0$", "", regex=True)
 
-# --------------------------------------------
-# FILTERS
-# --------------------------------------------
-st.subheader("🔍 Explorador de Perfis")
+df = df[(df["Job Family"] != "") & (df["Job Profile"] != "") & (df["Global Grade"] != "")]
 
-familias = sorted(df["Job Family"].dropna().unique())
+# ==========================================================
+# CORES DISCRETAS POR CARREIRA (OPÇÃO 2)
+# ==========================================================
+def get_path_color(path_name):
+    p = str(path_name).lower()
+    if "manage" in p or "executive" in p: return "#4F5D75"      # Taupe / Steel Blue
+    if "professional" in p: return "#2F2F2F"                   # Graphite
+    if "tech" in p or "support" in p: return "#7C7C7C"         # Cool Gray
+    return "#5F6C7A"                                           # Blue-gray
 
-col1, col2, col3 = st.columns(3)
+# ==========================================================
+# FILTROS (minimalistas)
+# ==========================================================
+families = ["Todas"] + sorted(df["Job Family"].unique())
+paths = ["Todas"] + sorted(df["Career Path"].unique())
 
-with col1:
-    familia = st.selectbox("Job Family", ["Selecione..."] + familias)
+colA, colB = st.columns(2)
+fam_filter = colA.selectbox("Job Family", families)
+path_filter = colB.selectbox("Career Path", paths)
 
-with col2:
-    subs = sorted(df[df["Job Family"] == familia]["Sub Job Family"].dropna().unique()) if familia!="Selecione..." else []
-    sub = st.selectbox("Sub Job Family", ["Selecione..."] + subs)
+df_flt = df.copy()
+if fam_filter != "Todas":
+    df_flt = df_flt[df_flt["Job Family"] == fam_filter]
+if path_filter != "Todas":
+    df_flt = df_flt[df_flt["Career Path"] == path_filter]
 
-with col3:
-    paths = sorted(df[df["Sub Job Family"] == sub]["Career Path"].dropna().unique()) if sub!="Selecione..." else []
-    trilha = st.selectbox("Career Path", ["Selecione..."] + paths)
+# ==========================================================
+# GERAÇÃO DO MAPA HTML (estrutura original preservada)
+# ==========================================================
+@st.cache_data(ttl=600)
+def generate_map(df):
 
-filtered = df.copy()
-if familia != "Selecione...":
-    filtered = filtered[filtered["Job Family"] == familia]
-if sub != "Selecione...":
-    filtered = filtered[filtered["Sub Job Family"] == sub]
-if trilha != "Selecione...":
-    filtered = filtered[filtered["Career Path"] == trilha]
+    grades = sorted(df["Global Grade"].unique(), key=lambda x: int(x) if x.isdigit() else 999, reverse=True)
+    families_order = sorted(df["Job Family"].unique())
 
+    # subfamilias
+    submap = {}
+    col_index = 2
+    for fam in families_order:
+        subs = sorted(df[df["Job Family"] == fam]["Sub Job Family"].unique())
+        for s in subs:
+            submap[(fam, s)] = col_index
+            col_index += 1
 
-# --------------------------------------------
-# PICKLIST
-# --------------------------------------------
-filtered["label"] = filtered.apply(
-    lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
-    axis=1
-)
-label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
+    # cards agrupados
+    grouped = df.groupby(["Job Family", "Sub Job Family", "Global Grade"])
+    cards = {k: v.to_dict("records") for k, v in grouped}
 
-selecionados_labels = st.multiselect(
-    "Selecione até 3 perfis para comparar:",
-    options=list(label_to_profile.keys()),
-    max_selections=3,
-)
+    html = []
+    html.append("<div class='map-wrapper'><div class='jobmap-grid'>")
 
-if not selecionados_labels:
-    st.stop()
+    # GG header
+    html.append(f"<div class='gg-header' style='grid-column:1; grid-row:1 / span 2;'>GG</div>")
 
-selecionados = [label_to_profile[l] for l in selecionados_labels]
+    # famílias
+    col = 2
+    for fam in families_order:
+        subs = sorted(df[df["Job Family"] == fam]["Sub Job Family"].unique())
+        span = len(subs)
+        html.append(f"<div class='header-family' style='grid-row:1; grid-column:{col} / span {span};'>{fam}</div>")
+        col += span
 
-rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selecionados]
+    # subfamílias
+    for (fam, subfam), c in submap.items():
+        html.append(f"<div class='header-subfamily' style='grid-row:2; grid-column:{c};'>{subfam}</div>")
 
+    # cells
+    row_idx = 3
+    for g in grades:
+        html.append(f"<div class='gg-cell' style='grid-row:{row_idx}; grid-column:1;'>GG {g}</div>")
 
-# --------------------------------------------
-# LOAD SVG ICONS
-# --------------------------------------------
-def svg(name):
-    with open(f"assets/icons/sig/{name}", "r") as f:
-        return f.read()
+        for (fam, subfam), c_idx in submap.items():
+            records = cards.get((fam, subfam, g), [])
+            cell_html = ""
 
-icons = {
-    "Sub Job Family Description": svg("Hierarchy.svg"),
-    "Job Profile Description": svg("Content_Book_Phone.svg"),
-    "Career Band Description": svg("File_Clipboard_Text.svg"),
-    "Role Description": svg("Shopping_Business_Target.svg"),
-    "Grade Differentiator": svg("User_Add.svg"),
-    "Qualifications": svg("Edit_Pencil.svg"),
-    "Specific parameters / KPIs": svg("Graph_Bar.svg"),
-    "Competencies 1": svg("Setting_Cog.svg"),
-    "Competencies 2": svg("Setting_Cog.svg"),
-    "Competencies 3": svg("Setting_Cog.svg"),
-}
+            for rec in records:
+                color = get_path_color(rec["Career Path"])
+                cell_html += (
+                    f"<div class='job-card' style='border-left-color:{color};'>"
+                    f"<b>{rec['Job Profile']}</b>"
+                    f"<span>{rec['Career Path']}</span>"
+                    "</div>"
+                )
 
-sections = list(icons.keys())
+            html.append(f"<div class='cell' style='grid-row:{row_idx}; grid-column:{c_idx};'>{cell_html}</div>")
 
+        row_idx += 1
 
-# --------------------------------------------
-# RENDER
-# --------------------------------------------
-st.markdown("### ✨ Comparativo de Perfis Selecionados")
+    html.append("</div></div>")
+    return "".join(html)
 
-st.markdown('<div class="jp-grid">', unsafe_allow_html=True)
+# Renderização
+st.markdown(generate_map(df_flt), unsafe_allow_html=True)
 
-for card in rows:
+# ==========================================================
+# FULLSCREEN — BOTÃO PRETO FOSCO (APPLE STYLE)
+# ==========================================================
+if "fullscreen" not in st.session_state:
+    st.session_state.fullscreen = False
 
-    # header
-    job = html.escape(str(card.get("Job Profile", "")))
-    gg = html.escape(str(card.get("Global Grade", "")))
-    jf = html.escape(str(card.get("Job Family", "")))
-    sf = html.escape(str(card.get("Sub Job Family", "")))
-    cp = html.escape(str(card.get("Career Path", "")))
-    fc = html.escape(str(card.get("Full Job Code", "")))
+# ATIVA FULLSCREEN
+if st.button("⛶ Tela Cheia"):
+    st.session_state.fullscreen = True
+    st.rerun()
 
-    card_html = f"""
-    <div class="jp-card">
-        <div class="jp-header">
-            <div class="jp-title">{job}</div>
-            <div class="jp-gg">GG {gg}</div>
-        </div>
+# FULLSCREEN MODE
+if st.session_state.fullscreen:
 
-        <div class="jp-meta">
-            <div><b>Job Family:</b> {jf}</div>
-            <div><b>Sub Job Family:</b> {sf}</div>
-            <div><b>Career Path:</b> {cp}</div>
-            <div><b>Full Job Code:</b> {fc}</div>
-        </div>
-    """
+    # ESC PARA SAIR
+    components.html("""
+    <script>
+    document.addEventListener('keydown', (e)=>{
+        if(e.key === "Escape"){
+            window.parent.document.querySelector('#exit-fullscreen-btn').click();
+        }
+    });
+    </script>
+    """, height=0, width=0)
 
-    # sections
-    for sec in sections:
-        content = card.get(sec, "")
-        if content is None or str(content).lower() == "nan" or str(content).strip() == "":
-            content = "—"
-
-        svg_icon = icons[sec]
-
-        card_html += f"""
-        <div class="jp-section">
-            <div class="jp-section-title">
-                {svg_icon}
-                <span>{sec}</span>
-            </div>
-            <div class="jp-text">{html.escape(str(content))}</div>
-        </div>
-        """
-
-    card_html += "</div>"
-
-    st.markdown(card_html, unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
+    # BOTÃO SAIR (PRETO FOSCO)
+    st.markdown("""
+    <button id="exit-fullscreen-btn" onclick="window.parent.location.reload()">
+        ❌ Sair
+    </button>
+    """, unsafe_allow_html=True)
