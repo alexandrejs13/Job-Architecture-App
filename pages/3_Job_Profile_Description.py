@@ -1,5 +1,5 @@
 # pages/3_Job_Profile_Description.py
-# Job Profile Description – Compare up to 3 profiles (SIG Design System)
+# Job Profile Description – Comparison of up to 3 profiles (SIG Design System)
 
 import streamlit as st
 import pandas as pd
@@ -27,7 +27,7 @@ def header(icon_path, title):
             """,
             unsafe_allow_html=True,
         )
-    st.markdown("<hr style='margin-top:8px; margin-bottom:6px;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin-top:5px; margin-bottom:0;'>", unsafe_allow_html=True)
 
 header("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
@@ -68,10 +68,9 @@ html, body, [data-testid="stAppViewContainer"] {
 .jp-comparison-grid {
     display: grid;
     gap: 24px;
-    align-items: flex-start;
 }
 
-/* CARD */
+/* CARD WRAPPER */
 .jp-card {
     background: #ffffff;
     border: 1px solid #e6e6e6;
@@ -79,21 +78,21 @@ html, body, [data-testid="stAppViewContainer"] {
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     padding: 0;
     position: relative;
-    overflow: hidden;              /* 🔒 corta o texto que sobe para fora do card */
+    overflow: hidden;              /* 🔒 impede texto de “invadir” para fora do card */
 }
 
-/* 🔒 HEADER FIXO DENTRO DO CARD (NÃO INVADE O TOPO DA PÁGINA) */
+/* 🔒 HEADER FIXO DENTRO DO CARD */
 .jp-card-header {
     position: sticky;
-    top: 190px;                    /* distância do topo da janela -> abaixo do título + filtros */
+    top: 90px;                    /* distância do topo da página (aba Streamlit + h1) */
     background: #ffffff;
     padding: 18px 22px 14px 22px;
-    z-index: 10;
+    z-index: 5;
     border-bottom: 1px solid #eee;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
 }
 
-/* Titles */
+/* TITLES */
 .jp-title {
     font-size: 1.25rem;
     font-weight: 700;
@@ -146,7 +145,7 @@ html, body, [data-testid="stAppViewContainer"] {
 
 /* FOOTER PDF */
 .jp-footer {
-    padding: 15px;
+    padding: 12px 18px 16px 18px;
     text-align: right;
 }
 
@@ -195,7 +194,11 @@ with col1:
 
 with col2:
     subs = (
-        sorted(df[df["Job Family"] == family]["Sub Job Family"].dropna().unique())
+        sorted(
+            df[df["Job Family"] == family]["Sub Job Family"]
+            .dropna()
+            .unique()
+        )
         if family != "Select..."
         else []
     )
@@ -203,7 +206,11 @@ with col2:
 
 with col3:
     paths = (
-        sorted(df[df["Sub Job Family"] == sub_family]["Career Path"].dropna().unique())
+        sorted(
+            df[df["Sub Job Family"] == sub_family]["Career Path"]
+            .dropna()
+            .unique()
+        )
         if sub_family != "Select..."
         else []
     )
@@ -228,13 +235,13 @@ filtered["label"] = filtered.apply(
 label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
 
 selected_labels = st.multiselect(
-    "Select up to 3 job profiles to compare:",
+    "Select up to 3 profiles to compare:",
     options=list(label_to_profile.keys()),
     max_selections=3,
 )
 
 if not selected_labels:
-    st.info("Select at least 1 job profile to display.")
+    st.info("Please select at least one profile.")
     st.stop()
 
 selected_profiles = [label_to_profile[l] for l in selected_labels]
@@ -243,10 +250,10 @@ rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in select
 num_cards = len(rows)
 grid_template = f"grid-template-columns: repeat({num_cards}, minmax(0, 1fr));"
 
-st.markdown("<hr style='margin-top:10px; margin-bottom:4px;'>", unsafe_allow_html=True)
+st.markdown("---")
 
 # ==========================================================
-# ICONS & SECTIONS
+# ICONS + ORDER
 # ==========================================================
 icons = {
     "Sub Job Family Description": "Hierarchy.svg",
@@ -269,7 +276,6 @@ sections_order = list(icons.keys())
 html_parts = [f'<div class="jp-comparison-grid" style="{grid_template}">']
 
 for card in rows:
-
     job = html.escape(str(card.get("Job Profile", "")))
     gg = html.escape(str(card.get("Global Grade", "")))
     jf = html.escape(str(card.get("Job Family", "")))
@@ -280,7 +286,7 @@ for card in rows:
     card_html = []
     card_html.append('<div class="jp-card">')
 
-    # FIXED HEADER INSIDE CARD
+    # HEADER FIXED
     card_html.append('<div class="jp-card-header">')
     card_html.append(f'<div class="jp-title">{job}</div>')
     card_html.append(f'<div class="jp-gg">GG {gg}</div>')
@@ -289,10 +295,10 @@ for card in rows:
     card_html.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
     card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
     card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
-    card_html.append("</div>")
-    card_html.append("</div>")  # end header
+    card_html.append("</div>")  # meta-block
+    card_html.append("</div>")  # jp-card-header
 
-    # SECTIONS (scroll behind the header)
+    # BODY SECTIONS
     for i, sec in enumerate(sections_order):
         content = str(card.get(sec, "")).strip()
         if not content or content.lower() == "nan":
@@ -303,20 +309,22 @@ for card in rows:
 
         card_html.append(f'<div class="jp-section{alt_class}">')
         card_html.append(
-            f'<div class="jp-section-title"><img src="assets/icons/sig/{icon}"> {sec}</div>'
+            f'<div class="jp-section-title">'
+            f'<img src="assets/icons/sig/{icon}"> {sec}</div>'
         )
         card_html.append(f'<div class="jp-text">{html.escape(content)}</div>')
-        card_html.append("</div>")
+        card_html.append("</div>")  # jp-section
 
     # FOOTER
     card_html.append('<div class="jp-footer">')
-    card_html.append('<img src="assets/icons/sig/pdf_c3_white.svg" title="Export to PDF">')
-    card_html.append("</div>")
+    card_html.append(
+        '<img src="assets/icons/sig/pdf_c3_white.svg" title="Export to PDF">'
+    )
+    card_html.append("</div>")  # jp-footer
 
-    card_html.append("</div>")  # card wrapper
-
+    card_html.append("</div>")  # jp-card
     html_parts.append("".join(card_html))
 
-html_parts.append("</div>")  # grid
+html_parts.append("</div>")  # jp-comparison-grid
 
 st.markdown("".join(html_parts), unsafe_allow_html=True)
