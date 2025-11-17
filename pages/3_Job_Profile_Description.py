@@ -1,4 +1,6 @@
 # pages/3_Job_Profile_Description.py
+# Job Profile Description – comparação de até 3 perfis (sem scroll interno, seções alinhadas)
+
 import streamlit as st
 import pandas as pd
 import html
@@ -11,9 +13,9 @@ st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 
 # ---------------------------------------------------------
-# HEADER (PNG HD)
+# HEADER COM PNG (nítido) + TÍTULO
 # ---------------------------------------------------------
-def header_png(icon_path, title_text):
+def header_png(icon_path: str, title_text: str):
     st.markdown(
         f"""
         <style>
@@ -36,7 +38,6 @@ def header_png(icon_path, title_text):
                 font-weight: 700;
             }}
         </style>
-
         <div class="page-title">
             <img src="{icon_path}">
             <h1>{title_text}</h1>
@@ -46,52 +47,79 @@ def header_png(icon_path, title_text):
         unsafe_allow_html=True,
     )
 
+
 header_png("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
 
 # ---------------------------------------------------------
-# CSS – GRID POR SEÇÃO
+# CSS GLOBAL DA PÁGINA
 # ---------------------------------------------------------
 st.markdown(
     """
 <style>
-
 html, body, [data-testid="stAppViewContainer"] {
     font-family: 'PPSIGFlow', sans-serif;
-    background: white !important;
+    background: #ffffff !important;
+    color: #222 !important;
 }
 
+/* Sidebar fixa e não redimensionável */
+[data-testid="stSidebar"] {
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+}
+[data-testid="stSidebar"] > div {
+    width: 300px !important;
+}
+
+/* Conteúdo principal */
 .block-container {
     max-width: 1600px !important;
-    padding-top: 0.5rem;
+    padding-top: 1rem !important;
 }
 
-/* GRID Dinâmico — 1, 2 ou 3 colunas */
+/* GRID – 1, 2 ou 3 colunas */
 .jp-grid {
     display: grid;
     gap: 26px;
 }
-@media (min-width: 900px) and (max-width: 1299px) {
-    .jp-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (min-width: 1300px) {
-    .jp-grid { grid-template-columns: repeat(3, 1fr); }
+
+/* 1 coluna – mobile / telas pequenas */
+@media (max-width: 899px) {
+    .jp-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-/* Card Limpo */
+/* 2 colunas – médio */
+@media (min-width: 900px) and (max-width: 1299px) {
+    .jp-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 3 colunas – grande */
+@media (min-width: 1300px) {
+    .jp-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* CARD clean, sem borda colorida lateral */
 .jp-card {
     background: #ffffff;
-    border: 1px solid #ececec;
+    border: 1px solid #e8e8e8;
     border-radius: 14px;
     padding: 22px 26px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
 }
 
-/* Título */
+/* Título do card */
 .jp-title {
     font-weight: 700;
     font-size: 1.25rem;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 .jp-gg {
     color: #145efc;
@@ -99,48 +127,87 @@ html, body, [data-testid="stAppViewContainer"] {
     margin-bottom: 14px;
 }
 
-/* Bloco Meta */
+/* Bloco meta */
 .jp-meta {
     background: #f5f4f1;
     border-radius: 10px;
     padding: 12px 14px;
-    margin-bottom: 22px;
+    margin-bottom: 18px;
     font-size: 0.94rem;
 }
 
-/* Seção */
+/* Seções */
 .jp-section {
-    margin-bottom: 38px;
+    margin-bottom: 24px;
 }
-
 .jp-section-title {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 8px;
+    font-size: 0.98rem;
+    margin-bottom: 6px;
 }
-
-.jp-section svg {
+.jp-section-title svg {
     width: 22px;
     height: 22px;
 }
 
+/* Texto */
 .jp-text {
     white-space: pre-wrap;
     font-size: 0.94rem;
     line-height: 1.45;
 }
 
+/* ------------------------------------------------------
+   SINCRONIZAÇÃO DE ALTURA POR LINHA (por seção)
+   – usa data-sec-index em cada .jp-section
+   ------------------------------------------------------ */
 </style>
+
+<script>
+function syncSectionHeights() {{
+    const sections = document.querySelectorAll('.jp-section[data-sec-index]');
+    if (!sections.length) return;
+
+    // Reset minHeight antes de recalcular
+    sections.forEach(s => s.style.minHeight = '0px');
+
+    const maxByIndex = {{}};
+
+    sections.forEach(sec => {{
+        const idx = sec.getAttribute('data-sec-index');
+        if (!idx) return;
+        const h = sec.offsetHeight;
+        if (!maxByIndex[idx] || h > maxByIndex[idx]) {{
+            maxByIndex[idx] = h;
+        }}
+    }});
+
+    Object.keys(maxByIndex).forEach(idx => {{
+        const h = maxByIndex[idx];
+        document.querySelectorAll('.jp-section[data-sec-index="' + idx + '"]').forEach(sec => {{
+            sec.style.minHeight = h + 'px';
+        }});
+    }});
+}}
+
+window.addEventListener('load', function() {{
+    syncSectionHeights();
+    // Em caso de resize da janela
+    window.addEventListener('resize', function() {{
+        syncSectionHeights();
+    }});
+}});
+</script>
 """,
     unsafe_allow_html=True,
 )
 
 
 # ---------------------------------------------------------
-# LOAD EXCEL
+# CARREGAR Job Profile.xlsx
 # ---------------------------------------------------------
 @st.cache_data(ttl=600)
 def load_job_profile():
@@ -151,30 +218,42 @@ def load_job_profile():
     df.columns = df.columns.str.strip()
     return df
 
+
 df = load_job_profile()
+
 if df.empty:
-    st.error("Arquivo Job Profile.xlsx não encontrado.")
+    st.error("Não foi possível carregar data/Job Profile.xlsx")
     st.stop()
 
 
 # ---------------------------------------------------------
-# FILTERS
+# FILTROS
 # ---------------------------------------------------------
 st.subheader("🔍 Explorador de Perfis")
 
 familias = sorted(df["Job Family"].dropna().unique())
 
-c1, c2, c3 = st.columns(3)
+col1, col2, col3 = st.columns(3)
 
-with c1:
+with col1:
     familia = st.selectbox("Job Family", ["Selecione..."] + familias)
 
-with c2:
-    subs = sorted(df[df["Job Family"] == familia]["Sub Job Family"].dropna().unique()) if familia!="Selecione..." else []
+with col2:
+    if familia != "Selecione...":
+        subs = sorted(
+            df[df["Job Family"] == familia]["Sub Job Family"].dropna().unique()
+        )
+    else:
+        subs = []
     sub = st.selectbox("Sub Job Family", ["Selecione..."] + subs)
 
-with c3:
-    paths = sorted(df[df["Sub Job Family"] == sub]["Career Path"].dropna().unique()) if sub!="Selecione..." else []
+with col3:
+    if sub != "Selecione...":
+        paths = sorted(
+            df[df["Sub Job Family"] == sub]["Career Path"].dropna().unique()
+        )
+    else:
+        paths = []
     trilha = st.selectbox("Career Path", ["Selecione..."] + paths)
 
 filtered = df.copy()
@@ -185,13 +264,18 @@ if sub != "Selecione...":
 if trilha != "Selecione...":
     filtered = filtered[filtered["Career Path"] == trilha]
 
+if filtered.empty:
+    st.info("Ajuste os filtros para visualizar os perfis.")
+    st.stop()
+
 
 # ---------------------------------------------------------
-# PICKLIST
+# PICKLIST – até 3 perfis
 # ---------------------------------------------------------
+filtered = filtered.copy()
 filtered["label"] = filtered.apply(
     lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
-    axis=1
+    axis=1,
 )
 label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
 
@@ -205,41 +289,54 @@ if not selecionados_labels:
     st.stop()
 
 selecionados = [label_to_profile[l] for l in selecionados_labels]
-rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selecionados]
+
+rows = []
+for nome in selecionados:
+    subdf = filtered[filtered["Job Profile"] == nome]
+    if not subdf.empty:
+        rows.append(subdf.iloc[0].to_dict())
+
+if not rows:
+    st.warning("Nenhum perfil encontrado após aplicar os filtros.")
+    st.stop()
 
 
 # ---------------------------------------------------------
-# LOAD SVG INLINE
+# FUNÇÃO PARA LER SVG INLINE
 # ---------------------------------------------------------
-def svg(name):
-    with open(f"assets/icons/sig/{name}", "r") as f:
-        return f.read()
+def read_svg(name: str) -> str:
+    try:
+        svg_path = Path("assets") / "icons" / "sig" / name
+        with open(svg_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        # Fallback: ícone vazio
+        return "<svg width='22' height='22'></svg>"
 
-icons = {
-    "Sub Job Family Description": svg("Hierarchy.svg"),
-    "Job Profile Description": svg("Content_Book_Phone.svg"),
-    "Career Band Description": svg("File_Clipboard_Text.svg"),
-    "Role Description": svg("Shopping_Business_Target.svg"),
-    "Grade Differentiator": svg("User_Add.svg"),
-    "Qualifications": svg("Edit_Pencil.svg"),
-    "Specific parameters / KPIs": svg("Graph_Bar.svg"),
-    "Competencies 1": svg("Setting_Cog.svg"),
-    "Competencies 2": svg("Setting_Cog.svg"),
-    "Competencies 3": svg("Setting_Cog.svg"),
-}
 
-sections = list(icons.keys())
+# Mapa de seções + SVG correto (como você pediu)
+sections = [
+    ("Sub Job Family Description", read_svg("Hierarchy.svg")),
+    ("Job Profile Description", read_svg("Content_Book_Phone.svg")),
+    ("Career Band Description", read_svg("File_Clipboard_Text.svg")),
+    ("Role Description", read_svg("Shopping_Business_Target.svg")),
+    ("Grade Differentiator", read_svg("User_Add.svg")),
+    ("Qualifications", read_svg("Edit_Pencil.svg")),
+    ("Specific parameters / KPIs", read_svg("Graph_Bar.svg")),
+    ("Competencies 1", read_svg("Setting_Cog.svg")),
+    ("Competencies 2", read_svg("Setting_Cog.svg")),
+    ("Competencies 3", read_svg("Setting_Cog.svg")),
+]
 
 
 # ---------------------------------------------------------
-# RENDER FINAL – GRID POR SEÇÃO
+# RENDER – GRID DE CARDS (1/2/3 colunas)
 # ---------------------------------------------------------
-st.markdown("### ✨ Comparativo de Perfis Selecionados<br><br>", unsafe_allow_html=True)
+st.markdown("### ✨ Comparativo de Perfis Selecionados")
 
 st.markdown('<div class="jp-grid">', unsafe_allow_html=True)
 
 for card in rows:
-
     job = html.escape(str(card.get("Job Profile", "")))
     gg = html.escape(str(card.get("Global Grade", "")))
     jf = html.escape(str(card.get("Job Family", "")))
@@ -247,10 +344,8 @@ for card in rows:
     cp = html.escape(str(card.get("Career Path", "")))
     fc = html.escape(str(card.get("Full Job Code", "")))
 
-    # CARD HEADER
     card_html = f"""
     <div class="jp-card">
-
         <div class="jp-title">{job}</div>
         <div class="jp-gg">GG {gg}</div>
 
@@ -262,20 +357,26 @@ for card in rows:
         </div>
     """
 
-    # SECTIONS — synchronized, even if empty
-    for sec in sections:
-        content = str(card.get(sec, "")).strip()
-        if not content or content.lower() == "nan":
+    # seções em ordem fixa, sempre exibidas (mesmo que vazias -> "—")
+    for idx, (sec_name, svg_icon) in enumerate(sections):
+        raw_content = str(card.get(sec_name, "") or "").strip()
+        if not raw_content or raw_content.lower() == "nan":
             content = "—"
+        else:
+            content = html.escape(raw_content)
 
         card_html += f"""
-        <div class="jp-section">
-            <div class="jp-section-title">{icons[sec]} {sec}</div>
-            <div class="jp-text">{html.escape(content)}</div>
+        <div class="jp-section" data-sec-index="{idx}">
+            <div class="jp-section-title">
+                {svg_icon}
+                <span>{sec_name}</span>
+            </div>
+            <div class="jp-text">{content}</div>
         </div>
         """
 
-    card_html += "</div>"
+    card_html += "</div>"  # fecha jp-card
+
     st.markdown(card_html, unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
