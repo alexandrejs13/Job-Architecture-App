@@ -1,5 +1,5 @@
 # pages/3_Job_Profile_Description.py
-# Job Profile Description – Comparação de até 3 perfis (SIG Design System)
+# Job Profile Description – Comparison up to 3 profiles (SIG Design System)
 
 import streamlit as st
 import pandas as pd
@@ -7,50 +7,50 @@ import html
 from pathlib import Path
 
 # ==========================================================
-# CONFIG DA PÁGINA
+# PAGE CONFIG
 # ==========================================================
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ==========================================================
-# HEADER GLOBAL (voltando a aparecer corretamente)
+# PAGE HEADER (VISIBLE + FIXED)
 # ==========================================================
-def header(icon_path, title):
+def header():
     st.markdown("""
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;z-index:500;position:relative;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;position:relative;z-index:1000;">
             <img src='assets/icons/business_review_clipboard.png' width='48'>
-            <h1 style="margin:0;padding:0;font-size:36px;font-weight:700;">
+            <h1 style="margin:0;padding:0;font-size:36px;font-weight:700;color:#000;">
                 Job Profile Description
             </h1>
         </div>
-        <hr style="margin-top:4px;">
+        <hr style="margin-top:4px;margin-bottom:10px;">
     """, unsafe_allow_html=True)
 
-header("assets/icons/business_review_clipboard.png", "Job Profile Description")
+header()
 
 # ==========================================================
-# CSS GLOBAL — SOLUÇÃO FINAL
+# CSS — FINAL + PRO + CLEAN
 # ==========================================================
 custom_css = """
 <style>
 
 :root {
-    --top-cover-height: 90px;   /* altura da tampa branca */
+    --sticky-offset: 100px; /* distance from top, safe for Streamlit header */
 }
 
-/* FONTES */
+/* Fonts */
 @font-face {
     font-family: 'PPSIGFlow';
-    src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
+    src: url('assets/css/fonts/PPSIGFlow-Regular.otf');
     font-weight: 400;
 }
 @font-face {
     font-family: 'PPSIGFlow';
-    src: url('assets/css/fonts/PPSIGFlow-SemiBold.otf') format('opentype');
+    src: url('assets/css/fonts/PPSIGFlow-SemiBold.otf');
     font-weight: 600;
 }
 @font-face {
     font-family: 'PPSIGFlow';
-    src: url('assets/css/fonts/PPSIGFlow-Bold.otf') format('opentype');
+    src: url('assets/css/fonts/PPSIGFlow-Bold.otf');
     font-weight: 700;
 }
 
@@ -61,77 +61,72 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 
 .block-container {
-    max-width: 1600px !important;
-    padding-top: 1rem !important;
-}
-
-/* GRID */
-.jp-comparison-grid {
-    display: grid;
-    gap: 24px;
+    max-width: 1580px !important;
 }
 
 /* ==========================================================
-   CARD — TAMPA SUPERIOR + BORDA PRESERVADA
+   GRID — responsive: 1, 2 or 3 columns
+   ========================================================== */
+.jp-comparison-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+}
+
+/* ==========================================================
+   CARD — perfect borders, no overflow leaks
    ========================================================== */
 .jp-card {
     background: #ffffff;
     border: 1px solid #e6e6e6;
     border-radius: 14px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    overflow: hidden !important;
     position: relative;
-    overflow: hidden !important;   /* 🔥 impede texto de sair do card */
-    padding: 0;
 }
 
-/* TAMPA BRANCA — bloqueia texto acima do sticky */
-.jp-card::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--top-cover-height);
-    background: #ffffff;
-    z-index: 4;
+.jp-inner {
+    position: relative;
 }
 
 /* ==========================================================
-   STICKY HEADER FUNCIONANDO
+   FULL STICKY BLOCK — EXACTLY WHAT SHOULD STAY FIXED
    ========================================================== */
-.jp-card-header {
+.jp-sticky {
     position: sticky;
-    top: var(--top-cover-height);
+    top: var(--sticky-offset);
     background: #ffffff;
-    padding: 18px 22px 14px 22px;
+    padding: 22px 22px 18px 22px;
     z-index: 10;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 6px 10px rgba(0,0,0,0.05);
+    border-bottom: 1px solid #eee;
 }
 
-/* TITULOS */
+/* Titles */
 .jp-title {
     font-size: 1.25rem;
     font-weight: 700;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .jp-gg {
     color: #145efc;
     font-weight: 700;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
-/* META */
-.jp-meta-block {
+/* Meta info block */
+.jp-meta {
     background: #f5f4f1;
     border-radius: 10px;
     padding: 10px 12px;
     font-size: 0.9rem;
+    line-height: 1.35;
 }
 
-/* SEÇÕES */
+/* Sections */
 .jp-section {
-    padding: 14px 22px;
+    padding: 18px 22px;
     border-bottom: 1px solid #f0f0f0;
 }
 
@@ -142,15 +137,14 @@ html, body, [data-testid="stAppViewContainer"] {
 .jp-section-title {
     font-weight: 700;
     font-size: 0.92rem;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin-bottom: 10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
 }
 
 .jp-section-title img {
     width: 20px;
-    opacity: 0.9;
 }
 
 .jp-text {
@@ -159,7 +153,7 @@ html, body, [data-testid="stAppViewContainer"] {
     white-space: pre-wrap;
 }
 
-/* FOOTER */
+/* Footer */
 .jp-footer {
     padding: 15px;
     text-align: right;
@@ -167,20 +161,11 @@ html, body, [data-testid="stAppViewContainer"] {
 
 .jp-footer img {
     width: 26px;
-    opacity: 0.8;
     cursor: pointer;
+    opacity: 0.75;
 }
-
 .jp-footer img:hover {
     opacity: 1;
-}
-
-/* TÍTULO DA SEÇÃO */
-.comparison-title {
-    position: relative;
-    z-index: 50;
-    margin-top: 10px;
-    margin-bottom: 14px;
 }
 
 </style>
@@ -188,7 +173,7 @@ html, body, [data-testid="stAppViewContainer"] {
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================================
-# LOAD JOB PROFILE
+# LOAD JOB PROFILE DATA
 # ==========================================================
 @st.cache_data(ttl=600)
 def load_job_profile():
@@ -201,38 +186,42 @@ def load_job_profile():
 
 df = load_job_profile()
 if df.empty:
-    st.error("Erro ao carregar Job Profile.xlsx")
+    st.error("Error loading Job Profile.xlsx")
     st.stop()
 
 # ==========================================================
-# FILTROS
+# FILTERS — IN ENGLISH
 # ==========================================================
-st.subheader("🔍 Explorador de Perfis")
+st.subheader("🔍 Job Profile Description Explorer")
 
-familias = sorted(df["Job Family"].dropna().unique())
+families = sorted(df["Job Family"].dropna().unique())
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    familia = st.selectbox("Job Family", ["Selecione..."] + familias)
+    family = st.selectbox("Job Family", ["Select..."] + families)
 
 with col2:
-    subs = sorted(df[df["Job Family"] == familia]["Sub Job Family"].dropna().unique()) if familia != "Selecione..." else []
-    sub = st.selectbox("Sub Job Family", ["Selecione..."] + subs)
+    subs = sorted(df[df["Job Family"] == family]["Sub Job Family"].dropna().unique()
+                  ) if family != "Select..." else []
+    sub = st.selectbox("Sub Job Family", ["Select..."] + subs)
 
 with col3:
-    paths = sorted(df[df["Sub Job Family"] == sub]["Career Path"].dropna().unique()) if sub != "Selecione..." else []
-    trilha = st.selectbox("Career Path", ["Selecione..."] + paths)
+    paths = sorted(df[df["Sub Job Family"] == sub]["Career Path"].dropna().unique()
+                   ) if sub != "Select..." else []
+    path = st.selectbox("Career Path", ["Select..."] + paths)
 
 filtered = df.copy()
-if familia != "Selecione...":
-    filtered = filtered[filtered["Job Family"] == familia]
-if sub != "Selecione...":
+if family != "Select...":
+    filtered = filtered[filtered["Job Family"] == family]
+if sub != "Select...":
     filtered = filtered[filtered["Sub Job Family"] == sub]
-if trilha != "Selecione...":
-    filtered = filtered[filtered["Career Path"] == trilha]
+if path != "Select...":
+    filtered = filtered[filtered["Career Path"] == path]
 
-# PICKLIST
+# ==========================================================
+# PICKLIST — ENGLISH
+# ==========================================================
 filtered["label"] = filtered.apply(
     lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
     axis=1
@@ -240,26 +229,27 @@ filtered["label"] = filtered.apply(
 
 label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
 
-selecionados_labels = st.multiselect(
-    "Selecione até 3 perfis para comparar:",
+selected_labels = st.multiselect(
+    "Select up to 3 profiles to compare:",
     options=list(label_to_profile.keys()),
     max_selections=3,
 )
 
-if not selecionados_labels:
-    st.info("Selecione ao menos 1 perfil.")
+if not selected_labels:
+    st.info("Select at least one profile.")
     st.stop()
 
-selecionados = [label_to_profile[l] for l in selecionados_labels]
-rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selecionados]
+selected_profiles = [label_to_profile[l] for l in selected_labels]
+rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict()
+        for p in selected_profiles]
 
-num = len(rows)
-grid_template = f"grid-template-columns: repeat({num}, 1fr);"
-
+# ==========================================================
+# BUILD CARDS GRID
+# ==========================================================
 st.markdown("---")
-st.markdown('<h3 class="comparison-title">✨ Comparativo de Perfis Selecionados</h3>', unsafe_allow_html=True)
 
-# ÍCONES
+html_parts = ['<div class="jp-comparison-grid">']
+
 icons = {
     "Sub Job Family Description": "Hierarchy.svg",
     "Job Profile Description": "File_Clipboard_Text.svg",
@@ -275,11 +265,6 @@ icons = {
 
 sections_order = list(icons.keys())
 
-html_parts = [f'<div class="jp-comparison-grid" style="{grid_template}">']
-
-# ==========================================================
-# CARDS
-# ==========================================================
 for card in rows:
 
     job = html.escape(str(card.get("Job Profile", "")))
@@ -291,31 +276,27 @@ for card in rows:
 
     card_html = []
     card_html.append('<div class="jp-card">')
+    card_html.append('<div class="jp-inner">')
 
-    # HEADER FIXO (com tampa funcionando)
-    card_html.append('<div class="jp-card-header">')
+    # STICKY BLOCK (FULL HEADER)
+    card_html.append('<div class="jp-sticky">')
     card_html.append(f'<div class="jp-title">{job}</div>')
     card_html.append(f'<div class="jp-gg">GG {gg}</div>')
-    card_html.append('<div class="jp-meta-block">')
+    card_html.append('<div class="jp-meta">')
     card_html.append(f"<div><b>Job Family:</b> {jf}</div>")
     card_html.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
     card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
     card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
-    card_html.append("</div>")
-    card_html.append("</div>")
+    card_html.append("</div></div>")  # close sticky
 
-    # SEÇÕES
+    # SECTIONS
     for i, sec in enumerate(sections_order):
-        content = (
-            str(card.get(sec, "")).strip()
-            if str(card.get(sec, "")).strip().lower() != "nan"
-            else ""
-        )
-        if not content:
+        content = str(card.get(sec, "")).strip()
+        if not content or content.lower() == "nan":
             continue
 
         icon = icons[sec]
-        alt = " alt" if i % 2 == 1 else ""
+        alt = " alt" if i % 2 else ""
 
         card_html.append(f'<div class="jp-section{alt}">')
         card_html.append(
@@ -331,9 +312,11 @@ for card in rows:
     )
     card_html.append("</div>")
 
-    card_html.append("</div>")  # card wrapper
+    card_html.append("</div>")  # jp-inner
+    card_html.append("</div>")  # jp-card
 
     html_parts.append("".join(card_html))
 
 html_parts.append("</div>")
+
 st.markdown("".join(html_parts), unsafe_allow_html=True)
