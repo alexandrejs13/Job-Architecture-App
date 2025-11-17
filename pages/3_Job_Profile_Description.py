@@ -3,65 +3,35 @@ import pandas as pd
 import html
 from pathlib import Path
 
-# ---------------------------------------------------------
-# CONFIG
-# ---------------------------------------------------------
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
-# ---------------------------------------------------------
-# HEADER PNG HD
-# ---------------------------------------------------------
+# HEADER -----------------------------------------------------
+
 def header_png(icon_path, title_text):
     st.markdown(
         f"""
-        <style>
-            .page-title {{
-                display: flex;
-                align-items: center;
-                gap: 14px;
-                margin-bottom: 8px;
-            }}
-            .page-title img {{
-                width: 40px;
-                height: 40px;
-                image-rendering: -webkit-optimize-contrast;
-                image-rendering: crisp-edges;
-            }}
-            .page-title h1 {{
-                margin: 0;
-                padding: 0;
-                font-size: 36px;
-                font-weight: 800;
-            }}
-        </style>
-
-        <div class="page-title">
-            <img src="{icon_path}">
-            <h1>{title_text}</h1>
+        <div class="page-title" style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
+            <img src="{icon_path}" style="width:40px; height:40px; image-rendering:crisp-edges;">
+            <h1 style="margin:0; font-size:34px; font-weight:800;">{title_text}</h1>
         </div>
-        <hr style="margin-top:6px;">
+        <hr>
         """,
         unsafe_allow_html=True,
     )
 
-
 header_png("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
+# CSS GRID CORRETO ---------------------------------------------
 
-# ---------------------------------------------------------
-# CSS – GRID + SEÇÕES SINCRONIZADAS
-# ---------------------------------------------------------
-st.markdown(
-    """
+st.markdown("""
 <style>
 
 .jp-grid {
     display: grid;
-    width: 100%;
     gap: 26px;
+    width: 100%;
 }
 
-/* 1, 2 ou 3 colunas automaticamente */
 @media (max-width: 899px) {
     .jp-grid { grid-template-columns: 1fr; }
 }
@@ -72,7 +42,6 @@ st.markdown(
     .jp-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* CARD */
 .jp-card {
     background: #faf9f7;
     border-radius: 14px;
@@ -80,38 +49,36 @@ st.markdown(
     padding: 26px;
 }
 
-/* Título do cargo */
 .jp-title {
-    font-size: 1.3rem;
+    font-size: 1.35rem;
     font-weight: 800;
-    margin: 0 0 4px 0;
+    margin-bottom: 4px;
 }
 
 .jp-gg {
-    font-weight: 800;
     color: #145efc;
+    font-weight: 800;
     margin-bottom: 14px;
 }
 
-/* Meta */
 .jp-meta {
-    background: white;
-    padding: 16px;
-    border-radius: 12px;
+    padding: 14px;
+    background: #fff;
     border: 1px solid #e6e2db;
-    font-size: 0.95rem;
+    border-radius: 12px;
     margin-bottom: 22px;
+    font-size: 0.95rem;
 }
 
 .jp-section {
-    margin-top: 28px;
+    margin-bottom: 26px;
 }
 
 .jp-section-title {
-    font-weight: 800;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    font-weight: 800;
     font-size: 1rem;
     margin-bottom: 6px;
 }
@@ -122,34 +89,17 @@ st.markdown(
 }
 
 .jp-text {
-    white-space: pre-wrap;
     font-size: 0.92rem;
-    line-height: 1.45;
-}
-
-/* alinhamento por linha */
-.sec-row {
-    display: flex;
-    gap: 26px;
-    width: 100%;
-}
-.sec-cell {
-    flex: 1;
-    background: #fff;
-    border: 1px solid #ece7e0;
-    padding: 20px 18px;
-    border-radius: 12px;
+    line-height: 1.42;
+    white-space: pre-wrap;
 }
 
 </style>
-""",
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
 
-# ---------------------------------------------------------
-# LOAD EXCEL
-# ---------------------------------------------------------
+# DATA ---------------------------------------------------------
+
 @st.cache_data(ttl=600)
 def load_job_profile():
     path = Path("data") / "Job Profile.xlsx"
@@ -160,18 +110,15 @@ def load_job_profile():
     return df
 
 df = load_job_profile()
-
 if df.empty:
-    st.error("Erro ao carregar Job Profile.xlsx")
+    st.error("Job Profile.xlsx não encontrado.")
     st.stop()
 
-# ---------------------------------------------------------
-# FILTROS
-# ---------------------------------------------------------
+# FILTROS ------------------------------------------------------
+
 st.subheader("🔍 Explorador de Perfis")
 
 familias = sorted(df["Job Family"].dropna().unique())
-
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -186,41 +133,37 @@ with col3:
     trilha = st.selectbox("Career Path", ["Selecione..."] + paths)
 
 filtered = df.copy()
-if familia != "Selecione...":
+if familia!="Selecione...":
     filtered = filtered[filtered["Job Family"] == familia]
-if sub != "Selecione...":
+if sub!="Selecione...":
     filtered = filtered[filtered["Sub Job Family"] == sub]
-if trilha != "Selecione...":
+if trilha!="Selecione...":
     filtered = filtered[filtered["Career Path"] == trilha]
 
-# ---------------------------------------------------------
-# PICKLIST
-# ---------------------------------------------------------
+# PICKLIST -----------------------------------------------------
+
 filtered["label"] = filtered.apply(
     lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
     axis=1
 )
-label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
+label_map = dict(zip(filtered["label"], filtered["Job Profile"]))
 
 selecionados_labels = st.multiselect(
-    "Selecione até 3 perfis para comparar:",
-    options=list(label_to_profile.keys()),
+    "Selecione até 3 perfis:",
+    list(label_map.keys()),
     max_selections=3,
 )
 
 if not selecionados_labels:
     st.stop()
 
-selecionados = [label_to_profile[l] for l in selecionados_labels]
+perfils = [label_map[l] for l in selecionados_labels]
+cards = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in perfils]
 
-rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selecionados]
+# ÍCONES SVG ---------------------------------------------------
 
-# ---------------------------------------------------------
-# SVG INLINE
-# ---------------------------------------------------------
 def svg(name):
-    with open(f"assets/icons/sig/{name}", "r") as f:
-        return f.read()
+    return Path(f"assets/icons/sig/{name}").read_text()
 
 icons = {
     "Sub Job Family Description": svg("Hierarchy.svg"),
@@ -237,64 +180,45 @@ icons = {
 
 sections = list(icons.keys())
 
-
-# ---------------------------------------------------------
-# RENDER – ALTURAS SINCRONIZADAS POR LINHA
-# ---------------------------------------------------------
-st.markdown("### ✨ Comparativo de Perfis Selecionados")
+# RENDER 3 CARDS ------------------------------------------------
 
 st.markdown('<div class="jp-grid">', unsafe_allow_html=True)
 
-# Para cada card → renderiza header fixo
-for card in rows:
+for card in cards:
 
-    job = html.escape(str(card.get("Job Profile", "")))
+    job = html.escape(card.get("Job Profile", ""))
     gg = html.escape(str(card.get("Global Grade", "")))
-    jf = html.escape(str(card.get("Job Family", "")))
-    sf = html.escape(str(card.get("Sub Job Family", "")))
-    cp = html.escape(str(card.get("Career Path", "")))
-    fc = html.escape(str(card.get("Full Job Code", "")))
+    jf = html.escape(card.get("Job Family", ""))
+    sf = html.escape(card.get("Sub Job Family", ""))
+    cp = html.escape(card.get("Career Path", ""))
+    fc = html.escape(card.get("Full Job Code", ""))
 
-    st.markdown(
-        f"""
-        <div class="jp-card">
+    st.markdown("<div class='jp-card'>", unsafe_allow_html=True)
 
-            <div class="jp-title">{job}</div>
-            <div class="jp-gg">GG {gg}</div>
+    st.markdown(f"""
+        <div class="jp-title">{job}</div>
+        <div class="jp-gg">GG {gg}</div>
 
-            <div class="jp-meta">
-                <div><b>Job Family:</b> {jf}</div>
-                <div><b>Sub Job Family:</b> {sf}</div>
-                <div><b>Career Path:</b> {cp}</div>
-                <div><b>Full Job Code:</b> {fc}</div>
-            </div>
-        """,
-        unsafe_allow_html=True
-    )
+        <div class="jp-meta">
+            <div><b>Job Family:</b> {jf}</div>
+            <div><b>Sub Job Family:</b> {sf}</div>
+            <div><b>Career Path:</b> {cp}</div>
+            <div><b>Full Job Code:</b> {fc}</div>
+        </div>
+    """, unsafe_allow_html=True)
 
-    # =============================================================
-    # Seções sincronizadas — linha a linha
-    # =============================================================
+    # Uma seção por linha (sincronizada)
     for sec in sections:
+        content = card.get(sec, "").strip()
+        if not content:
+            content = "—"
 
-        st.markdown('<div class="sec-row">', unsafe_allow_html=True)
-
-        # uma célula por card selecionado
-        for card2 in rows:
-            content = str(card2.get(sec, "")).strip()
-            content = html.escape(content) if content else "—"
-
-            st.markdown(
-                f"""
-                <div class="sec-cell">
-                    <div class="jp-section-title">{icons[sec]} <span>{sec}</span></div>
-                    <div class="jp-text">{content}</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+            <div class="jp-section">
+                <div class="jp-section-title">{icons[sec]} {sec}</div>
+                <div class="jp-text">{html.escape(content)}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
