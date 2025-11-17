@@ -12,31 +12,32 @@ from pathlib import Path
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ==========================================================
-# HEADER
+# HEADER GLOBAL (voltando a aparecer corretamente)
 # ==========================================================
 def header(icon_path, title):
-    col1, col2 = st.columns([0.08, 0.92])
-    with col1:
-        st.image(icon_path, width=48)
-    with col2:
-        st.markdown(
-            f"""
-            <h1 style="margin:0; padding:0; font-size:36px; font-weight:700;">
-                {title}
+    st.markdown("""
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;z-index:500;position:relative;">
+            <img src='assets/icons/business_review_clipboard.png' width='48'>
+            <h1 style="margin:0;padding:0;font-size:36px;font-weight:700;">
+                Job Profile Description
             </h1>
-            """,
-            unsafe_allow_html=True,
-        )
-    st.markdown("<hr style='margin-top:5px;'>", unsafe_allow_html=True)
+        </div>
+        <hr style="margin-top:4px;">
+    """, unsafe_allow_html=True)
 
 header("assets/icons/business_review_clipboard.png", "Job Profile Description")
 
 # ==========================================================
-# CSS GLOBAL — VERSÃO FINAL
+# CSS GLOBAL — SOLUÇÃO FINAL
 # ==========================================================
 custom_css = """
 <style>
 
+:root {
+    --top-cover-height: 90px;   /* altura da tampa branca */
+}
+
+/* FONTES */
 @font-face {
     font-family: 'PPSIGFlow';
     src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
@@ -59,10 +60,6 @@ html, body, [data-testid="stAppViewContainer"] {
     color: #222 !important;
 }
 
-:root {
-    --sticky-top-offset: 82px; /* autoajustável e seguro */
-}
-
 .block-container {
     max-width: 1600px !important;
     padding-top: 1rem !important;
@@ -74,28 +71,41 @@ html, body, [data-testid="stAppViewContainer"] {
     gap: 24px;
 }
 
-/* CARD - bordas SEMPRE preservadas */
+/* ==========================================================
+   CARD — TAMPA SUPERIOR + BORDA PRESERVADA
+   ========================================================== */
 .jp-card {
     background: #ffffff;
     border: 1px solid #e6e6e6;
     border-radius: 14px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-    padding: 0;
     position: relative;
-    overflow: visible !important;
-    z-index: 1;
+    overflow: hidden !important;   /* 🔥 impede texto de sair do card */
+    padding: 0;
 }
 
-/* STICKY HEADER SUPER ESTÁVEL */
+/* TAMPA BRANCA — bloqueia texto acima do sticky */
+.jp-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--top-cover-height);
+    background: #ffffff;
+    z-index: 4;
+}
+
+/* ==========================================================
+   STICKY HEADER FUNCIONANDO
+   ========================================================== */
 .jp-card-header {
     position: sticky;
-    top: var(--sticky-top-offset);
+    top: var(--top-cover-height);
     background: #ffffff;
     padding: 18px 22px 14px 22px;
-    z-index: 20;
-
-    /* sombra suave apenas na parte inferior */
-    box-shadow: 0 6px 10px rgba(0,0,0,0.05);
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 /* TITULOS */
@@ -149,7 +159,7 @@ html, body, [data-testid="stAppViewContainer"] {
     white-space: pre-wrap;
 }
 
-/* FOOTER PDF */
+/* FOOTER */
 .jp-footer {
     padding: 15px;
     text-align: right;
@@ -165,18 +175,16 @@ html, body, [data-testid="stAppViewContainer"] {
     opacity: 1;
 }
 
-/* TÍTULO ACIMA DOS CARDS */
+/* TÍTULO DA SEÇÃO */
 .comparison-title {
     position: relative;
-    z-index: 200;
-    background: #ffffff;
+    z-index: 50;
+    margin-top: 10px;
     margin-bottom: 14px;
-    padding-top: 4px;
 }
 
 </style>
 """
-
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================================
@@ -224,9 +232,7 @@ if sub != "Selecione...":
 if trilha != "Selecione...":
     filtered = filtered[filtered["Career Path"] == trilha]
 
-# ==========================================================
 # PICKLIST
-# ==========================================================
 filtered["label"] = filtered.apply(
     lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
     axis=1
@@ -251,13 +257,9 @@ num = len(rows)
 grid_template = f"grid-template-columns: repeat({num}, 1fr);"
 
 st.markdown("---")
+st.markdown('<h3 class="comparison-title">✨ Comparativo de Perfis Selecionados</h3>', unsafe_allow_html=True)
 
-st.markdown(
-    '<h3 class="comparison-title">✨ Comparativo de Perfis Selecionados</h3>',
-    unsafe_allow_html=True
-)
-
-# Ícones
+# ÍCONES
 icons = {
     "Sub Job Family Description": "Hierarchy.svg",
     "Job Profile Description": "File_Clipboard_Text.svg",
@@ -290,7 +292,7 @@ for card in rows:
     card_html = []
     card_html.append('<div class="jp-card">')
 
-    # HEADER FIXO CORRIGIDO
+    # HEADER FIXO (com tampa funcionando)
     card_html.append('<div class="jp-card-header">')
     card_html.append(f'<div class="jp-title">{job}</div>')
     card_html.append(f'<div class="jp-gg">GG {gg}</div>')
@@ -299,13 +301,17 @@ for card in rows:
     card_html.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
     card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
     card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
-    card_html.append("</div>")   # meta block
-    card_html.append("</div>")   # header
+    card_html.append("</div>")
+    card_html.append("</div>")
 
     # SEÇÕES
     for i, sec in enumerate(sections_order):
-        content = str(card.get(sec, "")).strip()
-        if not content or content.lower() == "nan":
+        content = (
+            str(card.get(sec, "")).strip()
+            if str(card.get(sec, "")).strip().lower() != "nan"
+            else ""
+        )
+        if not content:
             continue
 
         icon = icons[sec]
@@ -320,12 +326,14 @@ for card in rows:
 
     # FOOTER
     card_html.append('<div class="jp-footer">')
-    card_html.append('<img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">')
+    card_html.append(
+        '<img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">'
+    )
     card_html.append("</div>")
+
     card_html.append("</div>")  # card wrapper
 
     html_parts.append("".join(card_html))
 
-html_parts.append("</div>")  # grid container
-
+html_parts.append("</div>")
 st.markdown("".join(html_parts), unsafe_allow_html=True)
