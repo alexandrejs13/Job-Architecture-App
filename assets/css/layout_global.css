@@ -1,5 +1,5 @@
 /* ============================================================
-   FONTS PPSIGFlow
+   FONTS PPSIGFlow — Regular, SemiBold, Bold
    ============================================================ */
 @font-face {
     font-family: "PPSIGFlow";
@@ -17,182 +17,17 @@
     font-weight: 700;
 }
 
-/* Aplica PPSIGFlow global */
-html, body, [data-testid="stAppViewContainer"], 
-[data-testid="stAppViewContainer"] * {
+/* ============================================================
+   GLOBAL — aplica fonte SIG em tudo
+   ============================================================ */
+html, body, [data-testid="stAppViewContainer"], * {
     font-family: "PPSIGFlow", sans-serif !important;
     color: #000 !important;
     background: white !important;
 }
 
 /* ============================================================
-   SIDEBAR SIG — Sand 1
+   SIDEBAR — Sand 1 oficial SIG
    ============================================================ */
 [data-testid="stSidebar"] {
-    background: #f2efeb !important;
-    width: 300px !important;
-    min-width: 300px !important;
-    max-width: 300px !important;
-    border-right: 1px solid #dedad6 !important;
-}
-
-/* fonte do menu */
-[data-testid="stSidebar"] * {
-    font-family: "PPSIGFlow", sans-serif !important;
-    font-size: 20px !important;
-    color: #000 !important;
-}
-
-/* item selecionado */
-[data-testid="stSidebar"] .highlighted {
-    font-weight: 700 !important;
-}
-
-/* hover */
-[data-testid="stSidebar"] a:hover {
-    opacity: 0.75 !important;
-}
-
-/* ============================================================
-   HEADER FIX — remove texto “keyt” SEM quebrar a seta
-   ============================================================ */
-
-/* esconde qualquer texto residual */
-header [data-testid="stToolbar"] div {
-    font-size: 0 !important;
-    color: transparent !important;
-    overflow: hidden !important;
-}
-
-/* mantém somente o ícone visível e clicável */
-header [data-testid="stToolbar"] svg {
-    width: 22px !important;
-    height: 22px !important;
-    display: inline-flex !important;
-    color: #000 !important;
-}
-
-/* garante clique da seta */
-header [data-testid="stToolbar"] {
-    pointer-events: auto !important;
-}
-
-/* ============================================================
-   CONTEÚDO
-   ============================================================ */
-.block-container {
-    max-width: 1500px !important;
-    padding-top: 1rem !important;
-}
-
-/* ============================================================
-   BOTÕES SIG
-   ============================================================ */
-.stButton > button {
-    background: #145efc !important;
-    color: white !important;
-    border-radius: 28px !important;
-    font-weight: 700 !important;
-    padding: 10px 22px !important;
-}
-button:focus, button:active, *:focus {
-    outline: none !important;
-    box-shadow: none !important;
-}
-
-/* ============================================================
-   GRIDS E CARDS (mantidos)
-   ============================================================ */
-
-.jp-grid {
-    display: grid;
-    gap: 22px;
-    width: 100%;
-}
-@media (max-width: 899px) {
-    .jp-grid { grid-template-columns: 1fr; }
-}
-@media (min-width: 900px) and (max-width: 1299px) {
-    .jp-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (min-width: 1300px) {
-    .jp-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-.jp-card {
-    background: #faf9f7;
-    border-radius: 14px;
-    border: 1px solid #e6e2db;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    height: 650px;
-    overflow: hidden;
-    position: relative;
-}
-.jp-header {
-    padding: 22px;
-    border-bottom: 1px solid #dfdad3;
-    background: #fff;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-.jp-scroll {
-    padding: 20px 24px;
-    overflow-y: auto;
-}
-.jp-title {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: #222;
-}
-.jp-gg {
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: #145efc;
-}
-.jp-meta-block {
-    margin-top: 15px;
-    padding: 16px;
-    background: white;
-    border-radius: 10px;
-    border: 1px solid #ece7e0;
-}
-.jp-meta-row {
-    margin-bottom: 6px;
-    font-size: 0.92rem;
-}
-.jp-section {
-    margin-top: 24px;
-    padding: 16px;
-    border-radius: 10px;
-    border-left: 6px solid #145efc22;
-}
-.jp-section:nth-child(even) { background: #fdfbf8; }
-.jp-section:nth-child(odd) { background: #ffffff; }
-.jp-section-title {
-    font-weight: 800;
-    margin-bottom: 10px;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.jp-text {
-    white-space: pre-wrap;
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-
-/* remove botão PDF */
-.jp-pdf-btn { display: none !important; }
-
-/* FIX de markdown */
-[data-testid="stMarkdown"] pre,
-[data-testid="stMarkdown"] code,
-code, pre {
-    all: unset !important;
-    white-space: normal !important;
-    font-family: "PPSIGFlow" !important;
-}
+    ba
