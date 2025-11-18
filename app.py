@@ -1,6 +1,7 @@
 import streamlit as st
 import base64
 import os
+import textwrap
 
 # ==========================================================
 # CONFIG
@@ -23,9 +24,9 @@ icon_path = "assets/icons/governance.png"
 icon_b64 = load_icon_png(icon_path)
 
 # ==========================================================
-# HOME SCREEN — ÍCONE GIGANTE + SIG FLOW + SUBTÍTULO
+# HOME SCREEN
 # ==========================================================
-st.markdown(f"""
+html = textwrap.dedent(f"""
 <style>
 @font-face {{
     font-family: 'SIGFlowBold';
@@ -61,7 +62,6 @@ p.sig-subtitle {{
     align-items: center;
     text-align: center;
 ">
-    
     <img src="data:image/png;base64,{icon_b64}"
          style="width: 400px; height: 400px; margin-bottom: 32px;">
     
@@ -70,6 +70,7 @@ p.sig-subtitle {{
     <p class="sig-subtitle">
         Integrated global job framework enabling standardized governance and consistent role alignment
     </p>
-
 </div>
-""", unsafe_allow_html=True)
+""")
+
+st.markdown(html, unsafe_allow_html=True)
