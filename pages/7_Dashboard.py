@@ -1,5 +1,5 @@
 # ==========================================================
-# DASHBOARD — VERSÃO FINAL (Página 7)
+# DASHBOARD — VERSÃO FINAL SEM CAREER BAND (Página 7)
 # ==========================================================
 
 import streamlit as st
@@ -41,7 +41,6 @@ st.markdown(f"""
 st.markdown("<br>", unsafe_allow_html=True)
 
 
-
 # ==========================================================
 # CORES SIG
 # ==========================================================
@@ -52,8 +51,6 @@ SIG_COLORS = [
     "#167865",  # Forest 2
     "#f5f073",  # Moss 1
 ]
-
-
 
 # ==========================================================
 # IMPORTAÇÃO DO ARQUIVO
@@ -68,9 +65,7 @@ COL_FAMILY = "job_family"
 COL_SUBFAMILY = "sub_job_family"
 COL_PROFILE = "job_profile"
 COL_GRADE = "global_grade"
-COL_BAND = "career_band"
 COL_CAREER_PATH = "career_path"
-
 
 
 # ==========================================================
@@ -130,12 +125,10 @@ def sig_legend(df, category, value):
         )
 
 
-
 # ==========================================================
 # ABAS — Overview / Family Micro-Analysis
 # ==========================================================
 tab1, tab2 = st.tabs(["Overview", "Family Micro-Analysis"])
-
 
 
 # ==========================================================
@@ -151,7 +144,6 @@ with tab1:
         "Subfamilies": df[COL_SUBFAMILY].nunique(),
         "Job Profiles": df[COL_PROFILE].nunique(),
         "Career Paths": df[COL_CAREER_PATH].nunique(),
-        "Career Bands": df[COL_BAND].nunique(),
         "Global Grades": df[COL_GRADE].nunique(),
         "Avg Profiles / Family": round(df[COL_PROFILE].nunique() / df[COL_FAMILY].nunique(), 1),
         "Avg Profiles / Subfamily": round(df[COL_PROFILE].nunique() / df[COL_SUBFAMILY].nunique(), 1),
@@ -233,14 +225,12 @@ with tab2:
 
     df_sel = df[df[COL_FAMILY] == selected]
 
-    # ---------- Cards ----------
     kpis_family = {
         "Subfamilies": df_sel[COL_SUBFAMILY].nunique(),
         "Job Profiles": df_sel[COL_PROFILE].nunique(),
         "Career Paths": df_sel[COL_CAREER_PATH].nunique(),
-        "Career Bands": df_sel[COL_BAND].nunique(),
         "Global Grades": df_sel[COL_GRADE].nunique(),
-        "Career Levels": df_sel[COL_GRADE].nunique(),
+        "Career Levels": df_sel[COL_GRADE].nunique(),  # ajuste
     }
 
     st.markdown("<div class='sig-card-grid'>", unsafe_allow_html=True)
