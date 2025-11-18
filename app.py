@@ -24,7 +24,7 @@ def load_image_b64(path):
 
 
 # ==========================================================
-# CSS GLOBAL SIG  (mesmo das outras páginas)
+# CSS GLOBAL SIG  (o mesmo das outras páginas)
 # ==========================================================
 css_path = "assets/css/sig_style.css"
 if os.path.exists(css_path):
@@ -33,7 +33,7 @@ if os.path.exists(css_path):
 
 
 # ==========================================================
-# FONTES PP SIG FLOW — já usadas nas outras páginas
+# FONTES PP SIG FLOW — carregadas igual nas outras páginas
 # ==========================================================
 try:
     from utils.fonts import load_pp_fonts
@@ -68,7 +68,7 @@ st.markdown(
 
 
 # ==========================================================
-# TÍTULO + TEXTO DESCRITIVO — usando fontes SIG
+# BLOCO DO TÍTULO + TEXTO (EXATAMENTE COMO VOCÊ ENVIOU)
 # ==========================================================
 st.markdown(
     """
