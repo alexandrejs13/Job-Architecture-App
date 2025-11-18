@@ -1,145 +1,201 @@
-html_final = f"""
-<html>
-<head>
-<style>
+import streamlit as st
+import pandas as pd
+import html
 
-html, body, #wrap {{
-    margin: 0;
-    padding: 0;
-    height: auto !important;
-    overflow: visible !important;
-}}
+st.set_page_config(
+    page_title="Job Profile Description Explorer",
+    layout="wide"
+)
 
-.grid {{
-    display: grid;
-    gap: 24px;
-    grid-template-columns: repeat({len(profiles)}, 1fr);
-}}
+st.markdown(
+    """
+    <style>
+        /* remove padding padrão do Streamlit */
+        .block-container {
+            padding-top: 1rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
 
-.card {{
-    background: #fff;
-    border-radius: 16px;
-    border: 1px solid #ddd;
-    box-shadow: 0px 4px 14px rgba(0,0,0,0.08);
-    overflow: visible !important;
-    display: flex;
-    flex-direction: column;
-}}
+        /* GRID principal */
+        .jp-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            width: 100%;
+        }
 
-.header {{
-    position: sticky;
-    top: 0;
-    background: #fff;
-    padding: 24px;
-    border-bottom: 1px solid #eee;
-    z-index: 50;
-}}
+        /* Card do topo (sticky) */
+        .jp-card-top {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
 
-.title {{
-    font-size: 23px;
-    font-weight: 700;
-    margin-bottom: 6px;
-}}
+        /* Card das descrições (scroll conjunto) */
+        .jp-card-desc {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            margin-top: 24px;
+            height: auto;
+        }
 
-.gg {{
-    font-size: 17px;
-    font-weight: 700;
-    color: #145efc;
-    margin-bottom: 16px;
-}}
+        /* Área única de rolagem */
+        .scroll-area {
+            height: 800px;      /* AJUSTE COMO QUISER */
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 12px;
+            margin-top: 12px;
+        }
 
-.meta {{
-    background: #f7f5ef;
-    padding: 14px;
-    border-radius: 10px;
-}}
+        .section-title {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
 
-.body {{
-    padding: 22px;
-    overflow: visible !important;
-}}
+        .jp-labelbox {
+            background: #f6f5f2;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            margin-top: 12px;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-.section {{
-    margin-bottom: 22px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #f1f1f1;
-}}
+# ---------------------------------------------------------------------------------------
+# LOAD DATA (ajuste o caminho conforme seu projeto)
+# ---------------------------------------------------------------------------------------
+@st.cache_data
+def load_profiles():
+    df = pd.read_excel("data/Job_Profile.xlsx")
+    return df
 
-.section-title {{
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-}}
+df = load_profiles()
 
-.section-title img {{
-    width: 20px;
-}}
+# ---------------------------------------------------------------------------------------
+# FILTROS
+# ---------------------------------------------------------------------------------------
+st.markdown("## 🔍 Job Profile Description Explorer")
 
-.text {{
-    margin-top: 8px;
-    white-space: pre-wrap;
-    line-height: 1.45;
-}}
+col1, col2, col3 = st.columns(3)
 
-</style>
-</head>
+with col1:
+    job_family = st.selectbox(
+        "Job Family",
+        ["All"] + sorted(df["Job Family"].dropna().unique().tolist())
+    )
 
-<body>
-<div id="wrap">
-<div class="grid">
-"""
+with col2:
+    sub_family = st.selectbox(
+        "Sub Job Family",
+        ["All"] + sorted(df["Sub Job Family"].dropna().unique().tolist())
+    )
+
+with col3:
+    career_path = st.selectbox(
+        "Career Path",
+        ["All"] + sorted(df["Career Path"].dropna().unique().tolist())
+    )
+
+flt = df.copy()
+
+if job_family != "All":
+    flt = flt[flt["Job Family"] == job_family]
+
+if sub_family != "All":
+    flt = flt[flt["Sub Job Family"] == sub_family]
+
+if career_path != "All":
+    flt = flt[flt["Career Path"] == career_path]
+
+flt["label"] = flt["GG"].astype(str) + " • " + flt["Job Profile"]
+
+selected = st.multiselect(
+    "Select up to 3 profiles to compare:",
+    options=flt["label"].tolist(),
+    max_selections=3
+)
+
+if not selected:
+    st.info("Select profiles to display.")
+    st.stop()
+
+profiles = [
+    flt[flt["label"] == s].iloc[0].to_dict()
+    for s in selected
+]
+
+# ---------------------------------------------------------------------------------------
+# HTML FINAL
+# ---------------------------------------------------------------------------------------
+
+html_blocks_top = ""
+html_blocks_desc = ""
 
 for p in profiles:
+    # ESCAPA HTML
+    title = html.escape(p["Job Profile"])
+    gg = html.escape(str(p["GG"]))
+    jf = html.escape(str(p["Job Family"]))
+    sjf = html.escape(str(p["Sub Job Family"]))
+    cp = html.escape(str(p["Career Path"]))
+    fjc = html.escape(str(p["Full Job Code"]))
 
-    job = html.escape(p["Job Profile"])
-    gg  = str(p["Global Grade"]).replace(".0","")
-    jf  = html.escape(p["Job Family"])
-    sf  = html.escape(p["Sub Job Family"])
-    cp  = html.escape(p["Career Path"])
-    fc  = html.escape(p["Full Job Code"])
+    sjf_desc = html.escape(str(p.get("Sub Job Family Description", "")))
+    jpd = html.escape(str(p.get("Job Profile Description", "")))
+    cbd = html.escape(str(p.get("Career Band Description", "")))
 
+    # CARD TOP STICKY
+    html_blocks_top += f"""
+    <div class="jp-card-top">
+        <div class="section-title">{title}</div>
+        <div style="color:#145efc; font-weight:700; font-size:20px;">GG {gg}</div>
 
-    html_final += f"""
-    <div class="card">
-
-        <div class="header">
-            <div class="title">{job}</div>
-            <div class="gg">GG {gg}</div>
-            <div class="meta">
-                <b>Job Family:</b> {jf}<br>
-                <b>Sub Job Family:</b> {sf}<br>
-                <b>Career Path:</b> {cp}<br>
-                <b>Full Job Code:</b> {fc}
-            </div>
+        <div class="jp-labelbox">
+            <b>Job Family:</b> {jf}<br>
+            <b>Sub Job Family:</b> {sjf}<br>
+            <b>Career Path:</b> {cp}<br>
+            <b>Full Job Code:</b> {fjc}
         </div>
-
-        <div class="body">
+    </div>
     """
 
-    for sec in sections:
-        val = p.get(sec, "")
-        if not val or str(val).strip() == "":
-            continue
+    # CARD DE DESCRIÇÃO
+    html_blocks_desc += f"""
+    <div class="jp-card-desc">
+        <div class="section-title">Sub Job Family Description</div>
+        <p>{sjf_desc}</p>
 
-        icon = icons[sec]
+        <div class="section-title">Job Profile Description</div>
+        <p>{jpd}</p>
 
-        html_final += f"""
-        <div class="section">
-            <div class="section-title">
-                <img src="assets/icons/sig/{icon}">
-                {html.escape(sec)}
-            </div>
-            <div class="text">{html.escape(str(val))}</div>
-        </div>
-        """
+        <div class="section-title">Career Band Description</div>
+        <p>{cbd}</p>
+    </div>
+    """
 
-    html_final += "</div></div>"
+# GRID (3 colunas)
+html_final = f"""
+<div class="scroll-area">
+    <div class="jp-grid">
+        {html_blocks_top}
+    </div>
 
-html_final += """
-</div></div>
-</body>
-</html>
+    <div class="jp-grid" style="margin-top:32px;">
+        {html_blocks_desc}
+    </div>
+</div>
 """
 
-components.html(html_final, height=2000, scrolling=True)
+st.components.v1.html(html_final, height=900, scrolling=False)
