@@ -39,7 +39,7 @@ def load_svg(svg_name):
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
-# Mapeamento DEFINITIVO
+# ÍCONES INLINE
 icons_svg = {
     "Sub Job Family Description": load_svg("Hierarchy.svg"),
     "Job Profile Description": load_svg("Content_Book_Phone.svg"),
@@ -118,7 +118,7 @@ sections = [
 ]
 
 # ---------------------------------------------------------
-# BUILD HTML FINAL
+# BUILD HTML FINAL (com cores invertidas)
 # ---------------------------------------------------------
 def build_html(profiles):
 
@@ -162,11 +162,12 @@ html, body {{
     gap: 28px;
 }}
 
+/* 🔥 CARD GRANDE (AGORA SAND1) */
 .card-top {{
-    background: white;
+    background: #f5f3ee;    /* SAND1 */
     border-radius: 16px;
-    padding: 18px 22px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.10);
+    padding: 22px;
+    box-shadow: none !important;   /* sem sombra */
 }}
 
 .title {{
@@ -182,16 +183,18 @@ html, body {{
     margin-top: 6px;
 }}
 
+/* 🔥 INFO BOX COM SOMBRA LEVE AGORA */
 .meta {{
-    background: #f5f3ee;
+    background: white;
     padding: 14px;
     border-radius: 12px;
-    margin-top: 12px;
+    margin-top: 14px;
     border: 1px solid #e3e1dd;
     font-size: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
 }}
 
-/* 🔥 ÁREA DE ROLAGEM ÚNICA */
+/* 🔥 ÁREA SCROLL */
 #scroll-area {{
     flex: 1;
     overflow-y: auto;
@@ -204,7 +207,7 @@ html, body {{
     gap: 28px;
 }}
 
-/* 🔥 CADA SEÇÃO É UMA LINHA — ALINHAMENTO PERFEITO */
+/* LINHAS ALINHADAS */
 .row {{
     display: contents;
 }}
@@ -239,6 +242,7 @@ html, body {{
     width: 20px;
     height: 20px;
 }}
+
 </style>
 
 </head>
@@ -247,7 +251,7 @@ html, body {{
 
 <div id="viewport">
 
-    <!-- 🔥 TOPO -->
+    <!-- 🔥 CARD SUPERIOR -->
     <div id="top-area">
         <div class="grid-top">
     """
@@ -265,6 +269,7 @@ html, body {{
         <div class="card-top">
             <div class="title">{job}</div>
             <div class="gg">GG {gg}</div>
+
             <div class="meta">
                 <b>Job Family:</b> {jf}<br>
                 <b>Sub Job Family:</b> {sf}<br>
@@ -283,20 +288,20 @@ html, body {{
         <div class="grid-desc">
     """
 
-    # ---------- CONTEÚDO ALINHADO POR LINHAS ----------
+    # ---------- CONTEÚDO ----------
     for sec in sections:
-
         html_code += "<div class='row'>"
 
         for p in profiles:
             val = p.get(sec, "")
-
             icon = icons_svg.get(sec, "")
-            icon_block = f"<span class='icon-inline'>{icon}</span>"
 
             html_code += f"""
             <div class="section-box">
-                <div class="section-title">{icon_block} {html.escape(sec)}</div>
+                <div class="section-title">
+                    <span class="icon-inline">{icon}</span>
+                    {html.escape(sec)}
+                </div>
                 <div class="section-line"></div>
                 <div class="section-text">{html.escape(str(val))}</div>
             </div>
