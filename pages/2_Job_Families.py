@@ -40,23 +40,20 @@ st.markdown(f"""
 st.markdown("""
 <style>
 
-    /* Container principal do Streamlit */
     .main > div {
-        max-width: 1400px;    /* limite máximo elegante */
+        max-width: 1400px;
         margin-left: auto;
         margin-right: auto;
         padding-left: 20px;
         padding-right: 20px;
     }
 
-    /* Estilo para dataframes */
     .stDataFrame {
         max-width: 1400px;
         margin-left: auto;
         margin-right: auto;
     }
 
-    /* Estilo para cards / container padrão */
     .block-container, .stColumn {
         max-width: 1400px !important;
         margin-left: auto !important;
@@ -68,55 +65,7 @@ st.markdown("""
 
 
 # ==========================================================
-# CONTAINER CENTRAL PARA EVITAR PÁGINA INFINITA
-# ==========================================================
-container_style = """
-<style>
-.sig-container {
-    max-width: 1100px;
-    margin-left: auto;
-    margin-right: auto;
-}
-</style>
-"""
-st.markdown(container_style, unsafe_allow_html=True)
-
-
-# ==========================================================
-# ABRE CONTAINER
-# ==========================================================
-st.markdown('<div class="sig-container">', unsafe_allow_html=True)
-
-
-# ==========================================================
-# TEXTO PRINCIPAL
-# ==========================================================
-st.markdown("""
-### What Job Families Represent in a Job Architecture
-
-**Job Families** group roles based on similar nature of work, core capabilities, and functional purpose.  
-They establish structure, clarity, and transparency inside the organization.
-
-A robust Job Family framework:
-
-- organizes work into meaningful capability clusters  
-- supports fair and consistent leveling decisions  
-- clarifies career path options  
-- ensures functional comparability across teams and regions  
-- strengthens compensation alignment  
-
----
-
-### Families, Subfamilies, Profiles and Description
-
-- **Job Family** → broad discipline  
-- **Sub Job Family** → specialization within the discipline  
-- **Profile** → defined role inside a subfamily  
-- **Description** → purpose, scope, influence, and functional expectations  
-""")
-
-# ==========================================================
-# LOAD ARQUIVO
+# CARREGAR ARQUIVO
 # ==========================================================
 file_path = "data/Job Family.xlsx"
 
@@ -127,13 +76,43 @@ if not os.path.exists(file_path):
 df = pd.read_excel(file_path)
 df.columns = [str(c).strip() for c in df.columns]
 
-required_cols = {"Job Family", "Sub Job Family"}
+# remove a primeira coluna (sequencial)
+df = df.iloc[:, 1:]
 
+required_cols = {"Job Family", "Sub Job Family"}
 if not required_cols.issubset(df.columns):
-    st.error(
-        "O arquivo deve conter as colunas exatas: Job Family e Sub Job Family."
-    )
+    st.error("Arquivo precisa conter colunas: Job Family e Sub Job Family.")
     st.stop()
+
+
+# ==========================================================
+# CONTEÚDO
+# ==========================================================
+st.markdown("""
+### What Job Families Represent in a Job Architecture
+
+**Job Families** group roles based on similar nature of work, capabilities, and functional purpose.  
+They establish structure, clarity, and transparency inside the organization.
+
+A robust Job Family framework:
+
+- organizes work into meaningful capability clusters  
+- supports fair and consistent leveling decisions  
+- clarifies career path options  
+- ensures functional comparability across the business  
+- strengthens compensation alignment  
+
+---
+
+### Families, Subfamilies, Profiles and Description
+
+- **Job Family** → broad discipline  
+- **Sub Job Family** → specialization within the discipline  
+- **Profile** → defined role inside a subfamily  
+- **Description** → purpose, scope, influence, and functional expectations  
+
+---
+""")
 
 # ==========================================================
 # PICKLIST
@@ -159,16 +138,76 @@ df_filtered = df[
 st.markdown("---")
 
 # ==========================================================
-# TABELA
+# TABELA PREMIUM SIG
 # ==========================================================
 st.markdown("### Job Family & Subfamily Detail")
 
-st.dataframe(df_filtered, use_container_width=True)
+table_html = df_filtered.to_html(
+    index=False,
+    classes="sig-premium-table",
+    escape=False
+)
 
-# ==========================================================
-# FECHA CONTAINER
-# ==========================================================
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("""
+<style>
+
+.sig-premium-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 15px;
+    line-height: 1.45;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+
+.sig-premium-table th {
+    background: #f2f4f7;
+    font-weight: 700;
+    padding: 14px 16px;
+    text-align: left;
+    color: #333;
+    white-space: normal;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.sig-premium-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+    white-space: normal;
+    max-width: 420px;
+    word-wrap: break-word;
+}
+
+.sig-premium-table tr:nth-child(even) td {
+    background: #fafafa;
+}
+
+.sig-premium-table tr:hover td {
+    background: #eef3ff;
+    transition: background 0.25s ease;
+}
+
+.sig-premium-table thead tr:first-child th:first-child {
+    border-top-left-radius: 12px;
+}
+.sig-premium-table thead tr:first-child th:last-child {
+    border-top-right-radius: 12px;
+}
+.sig-premium-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+}
+.sig-premium-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown(table_html, unsafe_allow_html=True)
 
 # ==========================================================
 # RODAPÉ
