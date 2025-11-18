@@ -105,7 +105,7 @@ icons = {
 }
 
 # ---------------------------------------------------------
-# HTML FINAL — versão com colunas alinhadas por linha
+# HTML — versão topo minimalista
 # ---------------------------------------------------------
 def build_html(profiles):
 
@@ -133,14 +133,14 @@ html, body {{
     overflow: hidden;
 }}
 
-/* HEADER SUPERIOR */
+/* TOP FIXO — sem sombra */
 #top-area {{
     background: white;
     padding: 12px 18px;
     position: sticky;
     top: 0;
     z-index: 20;
-    box-shadow: none !important;
+    box-shadow: none;
 }}
 
 .grid-top {{
@@ -150,52 +150,38 @@ html, body {{
 }}
 
 .card-top {{
-    background: white;
-    padding: 22px;
+    padding: 12px;
     border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    display: flex;
-    flex-direction: column;
-}}
-
-.header-block {{
-    min-height: 90px;
 }}
 
 .title {{
     font-size: 21px;
     font-weight: 700;
+    line-height: 1.15;
 }}
 
 .gg {{
     color: #145efc;
     font-size: 18px;
     font-weight: 700;
-    margin-top: 6px;
+    margin-top: 4px;
 }}
 
-.meta {{
-    background: #f5f3ee;
-    padding: 14px;
-    border-radius: 12px;
-    margin-top: 10px;
-    border: 1px solid #e3e1dd;
+.meta-line {{
+    font-size: 15px;
+    margin-top: 2px;
 }}
 
-/* SCROLL */
 #scroll-area {{
     flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
     padding: 20px;
 }}
 
-/* 🔥 GRID DE LINHAS — cada linha terá N colunas iguais */
 .grid-row {{
     display: grid;
     grid-template-columns: repeat({n}, 1fr);
     gap: 24px;
-    align-items: stretch;    /* 🔥 força mesmas alturas */
 }}
 
 .cell {{
@@ -234,7 +220,7 @@ html, body {{
         <div class="grid-top">
     """
 
-    # ----------------- CARDS SUPERIORES -----------------
+    # ------------------ TOP CARDS CLEAN ------------------
     for p in profiles:
         job = html.escape(p["Job Profile"])
         gg = html.escape(str(p["Global Grade"]))
@@ -245,16 +231,13 @@ html, body {{
 
         html_code += f"""
         <div class="card-top">
-            <div class="header-block">
-                <div class="title">{job}</div>
-                <div class="gg">GG {gg}</div>
-            </div>
-            <div class="meta">
-                <b>Job Family:</b> {jf}<br>
-                <b>Sub Job Family:</b> {sf}<br>
-                <b>Career Path:</b> {cp}<br>
-                <b>Full Job Code:</b> {fc}
-            </div>
+            <div class="title">{job}</div>
+            <div class="gg">GG {gg}</div>
+
+            <div class="meta-line"><b>Job Family:</b> {jf}</div>
+            <div class="meta-line"><b>Sub Job Family:</b> {sf}</div>
+            <div class="meta-line"><b>Career Path:</b> {cp}</div>
+            <div class="meta-line"><b>Full Job Code:</b> {fc}</div>
         </div>
         """
 
@@ -262,28 +245,26 @@ html, body {{
         </div>
     </div>
 
-    <!-- SCROLL -->
     <div id="scroll-area">
     """
 
-    # ----------------- LINHAS ALINHADAS -----------------
+    # ------------------ SEÇÕES ALINHADAS ------------------
     for sec in sections:
-
         html_code += f"""<div class="grid-row">"""
 
         for p in profiles:
             val = p.get(sec, "")
+            icon = icons[sec]
 
             html_code += f"""
             <div class="cell">
                 <div class="section-title">
-                    <img src="assets/icons/sig/{icons[sec]}">
+                    <img src="assets/icons/sig/{icon}">
                     {html.escape(sec)}
                 </div>
                 <div class="text">{html.escape(str(val))}</div>
             </div>
             """
-
         html_code += "</div>"
 
     html_code += """
@@ -296,7 +277,5 @@ html, body {{
 
     return html_code
 
-# ---------------------------------------------------------
-# RENDER HTML
-# ---------------------------------------------------------
+
 components.html(build_html(profiles), height=900, scrolling=False)
