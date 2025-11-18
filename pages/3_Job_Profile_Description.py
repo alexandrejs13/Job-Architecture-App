@@ -1,22 +1,20 @@
 # pages/3_Job_Profile_Description.py
 # Job Profile Description – comparison of up to 3 profiles
 
+import streamlit as st
+import pandas as pd
 import html
 from pathlib import Path
-
-import pandas as pd
-import streamlit as st
 
 # ==========================================================
 # PAGE CONFIG
 # ==========================================================
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
-
 # ==========================================================
 # HEADER
 # ==========================================================
-def header(icon_path: str, title: str) -> None:
+def header(icon_path: str, title: str):
     col1, col2 = st.columns([0.08, 0.92])
     with col1:
         st.image(icon_path, width=48)
@@ -24,23 +22,23 @@ def header(icon_path: str, title: str) -> None:
         st.markdown(
             f"""
             <h1 style="margin:0; padding:0; font-size:36px; font-weight:700;">
-                {title}
+                {html.escape(title)}
             </h1>
             """,
             unsafe_allow_html=True,
         )
-    st.markdown("<hr style='margin-top:8px; margin-bottom:4px;'>", unsafe_allow_html=True)
-
+    st.markdown("<hr style='margin-top:5px; margin-bottom: 1.25rem;'>", unsafe_allow_html=True)
 
 header("assets/icons/business_review_clipboard.png", "Job Profile Description")
-
 
 # ==========================================================
 # GLOBAL CSS
 # ==========================================================
 custom_css = """
 <style>
-/* ------------- Fonts ------------- */
+/* --------------------------------------------------------
+   FONTES
+---------------------------------------------------------*/
 @font-face {
     font-family: 'PPSIGFlow';
     src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
@@ -57,11 +55,10 @@ custom_css = """
     font-weight: 700;
 }
 
-/* base app */
 html, body, [data-testid="stAppViewContainer"] {
-    font-family: 'PPSIGFlow', sans-serif !important;
+    font-family: 'PPSIGFlow', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
     background: #ffffff !important;
-    color: #222222 !important;
+    color: #222 !important;
 }
 
 .block-container {
@@ -69,64 +66,53 @@ html, body, [data-testid="stAppViewContainer"] {
     padding-top: 0.5rem !important;
 }
 
-/* ------------- Comparison layout ------------- */
-
-.jp-page {
-    width: 100%;
+/* --------------------------------------------------------
+   FORM CONTROLS
+---------------------------------------------------------*/
+.jp-filters-subtitle {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
 }
 
-/* sticky row with header cards */
-.jp-header-row {
-    position: sticky;
-    top: 78px;
-    z-index: 50;
-
-    padding-top: 18px;
-    padding-bottom: 22px;
-
-    background: linear-gradient(
-        to bottom,
-        #ffffff 0%,
-        #ffffff 60%,
-        rgba(255,255,255,0.95) 80%,
-        rgba(255,255,255,0.85) 92%,
-        rgba(255,255,255,0.0) 100%
-    );
-
-    backdrop-filter: blur(2px);
-}
-
-/* grid for header row and body row */
-.jp-header-row,
-.jp-body-row {
+/* --------------------------------------------------------
+   GRID GERAL
+---------------------------------------------------------*/
+.jp-fixed-header-row,
+.jp-descriptions-grid {
     display: grid;
     gap: 24px;
 }
 
-/* HEADER CARD – fixed section */
+/* número de colunas controlado por CSS variable */
+.jp-fixed-header-row {
+    grid-template-columns: repeat(var(--jp-cols, 1), minmax(0, 1fr));
+    position: sticky;
+    top: 112px;  /* abaixo do header + filtros */
+    z-index: 20;
+    padding: 12px 0 6px 0;
+    background: linear-gradient(#ffffff 85%, rgba(255,255,255,0.0));
+}
+
+/* grid de descrições (não é sticky) */
+.jp-descriptions-grid {
+    grid-template-columns: repeat(var(--jp-cols, 1), minmax(0, 1fr));
+    margin-top: 18px;
+}
+
+/* --------------------------------------------------------
+   CARDS – CABEÇALHO (FIXO)
+---------------------------------------------------------*/
 .jp-header-card {
     background: #ffffff;
     border-radius: 18px;
     border: 1px solid #e6e6e6;
-    box-shadow: 0 6px 14px rgba(15, 18, 35, 0.10);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     padding: 20px 22px 18px 22px;
 }
 
-/* BODY CARD – content with overflow hidden patch */
-.jp-body-card {
-    background: #ffffff;
-    border-radius: 18px;
-    border: 1px solid #e6e6e6;
-    box-shadow: 0 4px 10px rgba(15, 18, 35, 0.08);
-    padding: 16px 22px 8px 22px;
-
-    /* 🔥 prevents text from leaking above the card */
-    overflow: hidden;
-}
-
-/* title & GG inside header card */
 .jp-title {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 700;
     margin-bottom: 4px;
 }
@@ -134,39 +120,40 @@ html, body, [data-testid="stAppViewContainer"] {
 .jp-gg {
     color: #145efc;
     font-weight: 700;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
-/* meta block under the GG */
 .jp-meta-block {
     background: #f5f4f1;
     border-radius: 12px;
-    padding: 10px 13px;
+    padding: 12px 14px;
     font-size: 0.92rem;
 }
 
-/* Section blocks inside body card */
+/* --------------------------------------------------------
+   CARDS – DESCRIÇÕES
+---------------------------------------------------------*/
+.jp-desc-card {
+    background: #ffffff;
+    border-radius: 18px;
+    border: 1px solid #e6e6e6;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    padding: 16px 18px 18px 18px;
+}
+
 .jp-section {
-    padding: 14px 0 14px 0;
+    padding: 10px 2px 12px 2px;
     border-bottom: 1px solid #f0f0f0;
 }
 
 .jp-section:last-child {
     border-bottom: none;
-    padding-bottom: 6px;
-}
-
-.jp-section.alt {
-    background: #fafafa;
-    margin: 0 -22px;
-    padding-left: 22px;
-    padding-right: 22px;
 }
 
 .jp-section-title {
     font-weight: 700;
     font-size: 0.95rem;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -178,49 +165,45 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 
 .jp-text {
-    line-height: 1.45;
+    line-height: 1.42;
     font-size: 0.9rem;
     white-space: pre-wrap;
 }
 
-/* PDF icon */
-.jp-footer {
-    padding-top: 12px;
-    text-align: right;
+/* --------------------------------------------------------
+   PEQUENOS AJUSTES
+---------------------------------------------------------*/
+.jp-desc-wrapper {
+    margin-top: 10px;
+    margin-bottom: 24px;
 }
 
-.jp-footer img {
-    width: 26px;
-    opacity: 0.8;
-    cursor: pointer;
-}
-
-.jp-footer img:hover {
-    opacity: 1;
+/* diminuir um pouco o espaço acima da comparação */
+.jp-compare-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0.8rem 0 0.4rem 0;
 }
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-
 # ==========================================================
-# LOAD JOB PROFILE TABLE
+# LOAD DATA
 # ==========================================================
 @st.cache_data(ttl=600)
 def load_job_profile():
     path = Path("data") / "Job Profile.xlsx"
     if not path.exists():
         return pd.DataFrame()
-    df = pd.read_excel(path)
-    df.columns = df.columns.str.strip()
-    return df
-
+    df_ = pd.read_excel(path)
+    df_.columns = df_.columns.str.strip()
+    return df_
 
 df = load_job_profile()
 if df.empty:
-    st.error("Error loading Job Profile.xlsx. Please check the file.")
+    st.error("Error loading Job Profile.xlsx")
     st.stop()
-
 
 # ==========================================================
 # FILTERS
@@ -232,29 +215,39 @@ families = sorted(df["Job Family"].dropna().unique())
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    family = st.selectbox("Job Family", ["Select..."] + families)
+    st.markdown('<div class="jp-filters-subtitle">Job Family</div>', unsafe_allow_html=True)
+    family = st.selectbox(
+        label="Job Family",
+        options=["Select..."] + families,
+        label_visibility="collapsed",
+    )
 
 with col2:
-    if family != "Select...":
-        subs = sorted(
-            df[df["Job Family"] == family]["Sub Job Family"].dropna().unique()
-        )
-    else:
-        subs = []
-    sub_family = st.selectbox("Sub Job Family", ["Select..."] + subs)
+    st.markdown('<div class="jp-filters-subtitle">Sub Job Family</div>', unsafe_allow_html=True)
+    subs = (
+        sorted(df[df["Job Family"] == family]["Sub Job Family"].dropna().unique())
+        if family != "Select..."
+        else []
+    )
+    sub_family = st.selectbox(
+        label="Sub Job Family",
+        options=["Select..."] + subs,
+        label_visibility="collapsed",
+    )
 
 with col3:
-    if sub_family != "Select...":
-        paths = sorted(
-            df[df["Sub Job Family"] == sub_family]["Career Path"]
-            .dropna()
-            .unique()
-        )
-    else:
-        paths = []
-    career_path = st.selectbox("Career Path", ["Select..."] + paths)
+    st.markdown('<div class="jp-filters-subtitle">Career Path</div>', unsafe_allow_html=True)
+    paths = (
+        sorted(df[df["Sub Job Family"] == sub_family]["Career Path"].dropna().unique())
+        if sub_family != "Select..."
+        else []
+    )
+    career_path = st.selectbox(
+        label="Career Path",
+        options=["Select..."] + paths,
+        label_visibility="collapsed",
+    )
 
-# apply filters
 filtered = df.copy()
 if family != "Select...":
     filtered = filtered[filtered["Job Family"] == family]
@@ -264,14 +257,17 @@ if career_path != "Select...":
     filtered = filtered[filtered["Career Path"] == career_path]
 
 if filtered.empty:
-    st.info("No profiles match your filters.")
+    st.info("No profiles found for the selected criteria.")
     st.stop()
 
-# multiselect labels
+# ==========================================================
+# PICKLIST
+# ==========================================================
 filtered["label"] = filtered.apply(
-    lambda r: f"GG {str(r.get('Global Grade', '')).replace('.0','')} • {r.get('Job Profile', '')}",
+    lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
     axis=1,
 )
+
 label_to_profile = dict(zip(filtered["label"], filtered["Job Profile"]))
 
 selected_labels = st.multiselect(
@@ -281,20 +277,18 @@ selected_labels = st.multiselect(
 )
 
 if not selected_labels:
+    st.info("Please select at least one profile to display.")
     st.stop()
 
 selected_profiles = [label_to_profile[l] for l in selected_labels]
-rows = [
-    filtered[filtered["Job Profile"] == p].iloc[0].to_dict()
-    for p in selected_profiles
-]
+rows = [filtered[filtered["Job Profile"] == p].iloc[0].to_dict() for p in selected_profiles]
 
 num_cols = len(rows)
-grid_style = f"grid-template-columns: repeat({num_cols}, minmax(320px, 1fr));"
 
+st.markdown('<p class="jp-compare-title">Selected profiles</p>', unsafe_allow_html=True)
 
 # ==========================================================
-# ICONS & SECTIONS
+# ICONS / SECTIONS
 # ==========================================================
 icons = {
     "Sub Job Family Description": "Hierarchy.svg",
@@ -308,19 +302,12 @@ icons = {
     "Competencies 2": "Setting_Cog.svg",
     "Competencies 3": "Setting_Cog.svg",
 }
-
 sections_order = list(icons.keys())
 
-
 # ==========================================================
-# BUILD HTML
+# BUILD HTML – FIXED HEADER CARDS
 # ==========================================================
-page_html_parts = [f'<div class="jp-page">']
-
-# ----- sticky header row -----
-page_html_parts.append(
-    f'<div class="jp-header-row" style="{grid_style}">'
-)
+header_parts = [f'<div class="jp-fixed-header-row" style="--jp-cols:{num_cols};">']
 
 for card in rows:
     job = html.escape(str(card.get("Job Profile", "")))
@@ -330,66 +317,54 @@ for card in rows:
     cp = html.escape(str(card.get("Career Path", "")))
     fc = html.escape(str(card.get("Full Job Code", "")))
 
-    header_card_html = []
-    header_card_html.append('<div class="jp-header-card">')
-    header_card_html.append(f'<div class="jp-title">{job}</div>')
-    header_card_html.append(f'<div class="jp-gg">GG {gg}</div>')
-    header_card_html.append('<div class="jp-meta-block">')
-    header_card_html.append(f"<div><b>Job Family:</b> {jf}</div>")
-    header_card_html.append(f"<div><b>Sub Job Family:</b> {sf}</div>")
-    header_card_html.append(f"<div><b>Career Path:</b> {cp}</div>")
-    header_card_html.append(f"<div><b>Full Job Code:</b> {fc}</div>")
-    header_card_html.append("</div>")
-    header_card_html.append("</div>")
+    header_parts.append(
+        f"""
+        <div class="jp-header-card">
+            <div class="jp-title">{job}</div>
+            <div class="jp-gg">GG {gg}</div>
+            <div class="jp-meta-block">
+                <div><b>Job Family:</b> {jf}</div>
+                <div><b>Sub Job Family:</b> {sf}</div>
+                <div><b>Career Path:</b> {cp}</div>
+                <div><b>Full Job Code:</b> {fc}</div>
+            </div>
+        </div>
+        """
+    )
 
-    page_html_parts.append("".join(header_card_html))
+header_parts.append("</div>")  # close jp-fixed-header-row
+st.markdown("".join(header_parts), unsafe_allow_html=True)
 
-page_html_parts.append("</div>")  # end header row
-
-
-# ----- OPTIONAL invisible buffer -----
-page_html_parts.append('<div style="height:24px;"></div>')
-
-
-# ----- body row with all descriptions -----
-page_html_parts.append(
-    f'<div class="jp-body-row" style="{grid_style}">'
-)
+# ==========================================================
+# BUILD HTML – DESCRIPTION CARDS
+# ==========================================================
+desc_parts = [f'<div class="jp-descriptions-grid" style="--jp-cols:{num_cols};">']
 
 for card in rows:
-    body_html = []
-    body_html.append('<div class="jp-body-card">')
+    desc_parts.append('<div class="jp-desc-card">')
 
-    for idx, sec in enumerate(sections_order):
-        content = str(card.get(sec, "") or "").strip()
-        if not content or content.lower() == "nan":
+    for sec in sections_order:
+        content_raw = str(card.get(sec, "")).strip()
+        if not content_raw or content_raw.lower() == "nan":
             continue
-
-        icon_file = icons.get(sec, "")
-        alt = " alt" if idx % 2 == 1 else ""
-
-        body_html.append(f'<div class="jp-section{alt}">')
-        body_html.append(
-            f'<div class="jp-section-title">'
-            f'<img src="assets/icons/sig/{icon_file}"> {sec}'
-            f'</div>'
+        content = html.escape(content_raw)
+        icon_file = icons[sec]
+        desc_parts.append(
+            f"""
+            <div class="jp-section">
+                <div class="jp-section-title">
+                    <img src="assets/icons/sig/{icon_file}">
+                    {html.escape(sec)}
+                </div>
+                <div class="jp-text">{content}</div>
+            </div>
+            """
         )
-        body_html.append(
-            f'<div class="jp-text">{html.escape(content)}</div>'
-        )
-        body_html.append("</div>")
 
-    body_html.append('<div class="jp-footer">')
-    body_html.append(
-        '<img src="assets/icons/sig/pdf_c3_white.svg" title="Export PDF">'
-    )
-    body_html.append("</div>")
+    desc_parts.append("</div>")  # close jp-desc-card
 
-    body_html.append("</div>")
-    page_html_parts.append("".join(body_html))
+desc_parts.append("</div>")  # close jp-descriptions-grid
 
-
-page_html_parts.append("</div>")  # body row
-page_html_parts.append("</div>")  # jp-page wrapper
-
-st.markdown("".join(page_html_parts), unsafe_allow_html=True)
+st.markdown('<div class="jp-desc-wrapper">', unsafe_allow_html=True)
+st.markdown("".join(desc_parts), unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
