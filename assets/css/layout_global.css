@@ -214,3 +214,52 @@ code, pre {
     font-family: "PPSIGFlow" !important;
     display: inline !important;
 }
+/* ============================================================
+   CORREÇÃO 1 — Força PPSIGFlow no CORPO da página
+   ============================================================ */
+[data-testid="stAppViewContainer"] * {
+    font-family: "PPSIGFlow", sans-serif !important;
+    color: #000 !important;
+}
+
+/* ============================================================
+   CORREÇÃO 2 — Força tamanho da fonte igual no item “app”
+   ============================================================ */
+[data-testid="stSidebar"] div[role="list"] a,
+[data-testid="stSidebar"] div[role="list"] > div {
+    font-size: 20px !important;
+    font-weight: 500 !important;
+}
+
+/* item selecionado (app.py ou qualquer outro) */
+[data-testid="stSidebar"] [data-testid="stSidebarNav"] .highlighted {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+}
+
+/* ============================================================
+   CORREÇÃO 3 — restaurar seta de recolher na página app.py
+   ============================================================ */
+header [data-testid="stToolbar"] > div:nth-child(1) {
+    font-size: 0 !important; /* esconde “keyt” sem esconder ícone */
+}
+
+header [data-testid="stToolbar"] svg {
+    width: 22px !important;
+    height: 22px !important;
+    display: inline-flex !important;
+}
+
+/* ============================================================
+   CORREÇÃO 4 — remove bloco que quebra o header no app.py
+   ============================================================ */
+header [data-testid="stHeader"] {
+    height: 3rem !important;
+    padding: 0 1rem !important;
+}
+
+/* Garantir que o header não empurre a sidebar */
+header {
+    background: white !important;
+    align-items: center !important;
+}
