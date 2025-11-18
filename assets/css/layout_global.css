@@ -83,8 +83,17 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 
 /* ============================================================
+   FIX FINAL: Ocultar o item "app" do menu lateral (página inicial /)
+   (Adicionado para resolver o conflito com o botão de recolher)
+   ============================================================ */
+
+/* Oculta o link de navegação que aponta para a página inicial ("/"). */
+[data-testid="stSidebarNav"] a[href="/"] {
+    display: none !important;
+}
+
+/* ============================================================
     HEADER / TOOLBAR — LIMPEZA E AJUSTE DO BOTÃO DE RECOLHER
-    (FIX COMPLETO PARA O ERRO "key...")
     ============================================================ */
 
 /* 1. Limpa qualquer texto residual no cabeçalho (toolbar), mantendo o botão de expansão intacto. */
