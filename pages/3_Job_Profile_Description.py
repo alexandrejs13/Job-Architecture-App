@@ -1,121 +1,3 @@
-import streamlit as st
-import pandas as pd
-import html
-import streamlit.components.v1 as components
-
-# -------------------------------------------------------------------
-# PAGE CONFIG
-# -------------------------------------------------------------------
-st.set_page_config(page_title="Job Profile Description", layout="wide")
-
-# -------------------------------------------------------------------
-# HEADER
-# -------------------------------------------------------------------
-st.markdown("""
-<h1 style="font-size:36px; font-weight:700; margin-bottom:4px;">
-    Job Profile Description
-</h1>
-<hr style="margin-top:0;">
-""", unsafe_allow_html=True)
-
-# -------------------------------------------------------------------
-# LOAD DATA
-# -------------------------------------------------------------------
-@st.cache_data
-def load_profiles():
-    return pd.read_excel("data/Job Profile.xlsx")
-
-df = load_profiles()
-
-# -------------------------------------------------------------------
-# FILTERS
-# -------------------------------------------------------------------
-st.subheader("🔍 Job Profile Description Explorer")
-
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    job_family = st.selectbox(
-        "Job Family", 
-        ["All"] + sorted(df["Job Family"].dropna().unique())
-    )
-
-with c2:
-    subfam_list = df[df["Job Family"] == job_family]["Sub Job Family"].dropna().unique() \
-                   if job_family != "All" else df["Sub Job Family"].dropna().unique()
-
-    sub_family = st.selectbox(
-        "Sub Job Family",
-        ["All"] + sorted(subfam_list)
-    )
-
-with c3:
-    path_list = df[df["Sub Job Family"] == sub_family]["Career Path"].dropna().unique() \
-                if sub_family != "All" else df["Career Path"].dropna().unique()
-
-    career_path = st.selectbox(
-        "Career Path",
-        ["All"] + sorted(path_list)
-    )
-
-flt = df.copy()
-
-if job_family != "All":
-    flt = flt[flt["Job Family"] == job_family]
-if sub_family != "All":
-    flt = flt[flt["Sub Job Family"] == sub_family]
-if career_path != "All":
-    flt = flt[flt["Career Path"] == career_path]
-
-# LABEL = A) Global Grade + Job Profile
-flt["label"] = flt["Global Grade"].astype(str) + " • " + flt["Job Profile"]
-
-selected = st.multiselect(
-    "Select up to 3 profiles:",
-    flt["label"].tolist(),
-    max_selections=3
-)
-
-if not selected:
-    st.stop()
-
-profiles = [
-    flt[flt["label"] == s].iloc[0].to_dict()
-    for s in selected
-]
-
-# -------------------------------------------------------------------
-# SECTIONS
-# -------------------------------------------------------------------
-sections = [
-    "Sub Job Family Description",
-    "Job Profile Description",
-    "Career Band Description",
-    "Role Description",
-    "Grade Differentiator",
-    "Qualifications",
-    "Specific parameters / KPIs",
-    "Competencies 1",
-    "Competencies 2",
-    "Competencies 3",
-]
-
-icons = {
-    "Sub Job Family Description": "Hierarchy.svg",
-    "Job Profile Description": "File_Clipboard_Text.svg",
-    "Career Band Description": "Hierarchy.svg",
-    "Role Description": "Shopping_Business_Suitcase.svg",
-    "Grade Differentiator": "Edit_Pencil.svg",
-    "Qualifications": "Content_Book_Phone.svg",
-    "Specific parameters / KPIs": "Graph_Bar.svg",
-    "Competencies 1": "Setting_Cog.svg",
-    "Competencies 2": "Setting_Cog.svg",
-    "Competencies 3": "Setting_Cog.svg",
-}
-
-# -------------------------------------------------------------------
-# BUILD HTML FINAL
-# -------------------------------------------------------------------
 def build_html(profiles):
 
     n = len(profiles)
@@ -125,30 +7,43 @@ def build_html(profiles):
     <head>
     <style>
 
-    html, body, #wrap {{
+    html, body {{
         margin: 0;
         padding: 0;
-        overflow: visible !important;
+        overflow: hidden;
         font-family: 'Segoe UI', sans-serif;
     }}
 
-    /* GRID */
-    .grid {{
-        display: grid;
-        grid-template-columns: repeat({n}, 1fr);
-        gap: 32px;
-        width: 100%;
+    /* WRAPPER GERAL – DUAS ÁREAS: TOP (sticky) + SCROLL AREA */
+    #layout {{
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
     }}
 
-    /* TOP CARDS (sticky) */
+    /* BARRA SUPERIOR CONGELADA */
+    #top-block {{
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+        padding-bottom: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    }}
+
+    /* GRID DO TOPO */
+    .grid-top {{
+        display: grid;
+        grid-template-columns: repeat({n}, 1fr);
+        gap: 28px;
+        padding: 16px;
+    }}
+
     .card-top {{
         background: white;
         padding: 22px;
         border-radius: 16px;
         box-shadow: 0 4px 18px rgba(0,0,0,0.12);
-        position: sticky;
-        top: 0;
-        z-index: 50;
     }}
 
     .title {{
@@ -173,16 +68,19 @@ def build_html(profiles):
         line-height: 1.45;
     }}
 
-    /* SCROLL AREA (UNIFIED SCROLL) */
-    .scroll-area {{
-        height: 1500px;
+    /* ÁREA INFERIOR ROLÁVEL UNIFICADA */
+    #scroll-block {{
+        flex: 1;
         overflow-y: auto;
-        overflow-x: hidden;
-        padding-right: 12px;
-        margin-top: 26px;
+        padding: 24px;
     }}
 
-    /* DESCRIPTION CARDS */
+    .grid-desc {{
+        display: grid;
+        grid-template-columns: repeat({n}, 1fr);
+        gap: 28px;
+    }}
+
     .card-desc {{
         background: white;
         padding: 22px;
@@ -206,18 +104,20 @@ def build_html(profiles):
     .text {{
         font-size: 15px;
         line-height: 1.45;
-        white-space: pre-wrap;
         margin-bottom: 18px;
+        white-space: pre-wrap;
     }}
 
     </style>
     </head>
 
     <body>
-    <div id="wrap">
 
-        <!-- TOP CARDS -->
-        <div class="grid">
+    <div id="layout">
+
+        <!-- ÁREA DE CIMA CONGELADA -->
+        <div id="top-block">
+            <div class="grid-top">
     """
 
     # ---------- TOP CARDS ----------
@@ -243,14 +143,16 @@ def build_html(profiles):
         </div>
         """
 
-    # ---------- DESCRIPTION SECTION (scroll único) ----------
     html_code += """
+            </div>
         </div>
 
-        <div class="scroll-area">
-            <div class="grid">
+        <!-- ÁREA ROLÁVEL UNIFICADA -->
+        <div id="scroll-block">
+            <div class="grid-desc">
     """
 
+    # ---------- DESCRIPTIONS ----------
     for p in profiles:
         html_code += "<div class='card-desc'>"
 
@@ -276,13 +178,9 @@ def build_html(profiles):
         </div>
 
     </div>
+
     </body>
     </html>
     """
 
     return html_code
-
-# -------------------------------------------------------------------
-# RENDER HTML
-# -------------------------------------------------------------------
-components.html(build_html(profiles), height=1800, scrolling=False)
