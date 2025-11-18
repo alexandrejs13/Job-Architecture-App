@@ -3,14 +3,14 @@ import pandas as pd
 import html
 import streamlit.components.v1 as components
 
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
 # PAGE CONFIG
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
-# -------------------------------------------------------------------
-# HEADER
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
+# HEADER (fora do HTML principal)
+# ---------------------------------------------------------
 st.markdown("""
 <h1 style="font-size:36px; font-weight:700; margin-bottom:4px;">
     Job Profile Description
@@ -18,45 +18,43 @@ st.markdown("""
 <hr style="margin-top:0;">
 """, unsafe_allow_html=True)
 
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
 # LOAD DATA
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
 @st.cache_data
 def load_profiles():
     return pd.read_excel("data/Job Profile.xlsx")
 
 df = load_profiles()
 
-# -------------------------------------------------------------------
-# FILTERS
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
+# TOP FILTERS
+# ---------------------------------------------------------
 st.subheader("🔍 Job Profile Description Explorer")
 
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    job_family = st.selectbox(
-        "Job Family", 
-        ["All"] + sorted(df["Job Family"].dropna().unique())
-    )
+    job_family = st.selectbox("Job Family",
+        ["All"] + sorted(df["Job Family"].dropna().unique()))
 
 with c2:
-    subfam_list = df[df["Job Family"] == job_family]["Sub Job Family"].dropna().unique() \
-                   if job_family != "All" else df["Sub Job Family"].dropna().unique()
-
-    sub_family = st.selectbox(
-        "Sub Job Family",
-        ["All"] + sorted(subfam_list)
+    subfam_list = (
+        df[df["Job Family"] == job_family]["Sub Job Family"].dropna().unique()
+        if job_family != "All"
+        else df["Sub Job Family"].dropna().unique()
     )
+    sub_family = st.selectbox("Sub Job Family",
+        ["All"] + sorted(subfam_list))
 
 with c3:
-    path_list = df[df["Sub Job Family"] == sub_family]["Career Path"].dropna().unique() \
-                if sub_family != "All" else df["Career Path"].dropna().unique()
-
-    career_path = st.selectbox(
-        "Career Path",
-        ["All"] + sorted(path_list)
+    path_list = (
+        df[df["Sub Job Family"] == sub_family]["Career Path"].dropna().unique()
+        if sub_family != "All"
+        else df["Career Path"].dropna().unique()
     )
+    career_path = st.selectbox("Career Path",
+        ["All"] + sorted(path_list))
 
 flt = df.copy()
 
@@ -67,26 +65,19 @@ if sub_family != "All":
 if career_path != "All":
     flt = flt[flt["Career Path"] == career_path]
 
-# LABEL = A) Global Grade + Job Profile
 flt["label"] = flt["Global Grade"].astype(str) + " • " + flt["Job Profile"]
 
-selected = st.multiselect(
-    "Select up to 3 profiles:",
-    flt["label"].tolist(),
-    max_selections=3
-)
+selected = st.multiselect("Select up to 3 profiles:",
+    flt["label"].tolist(), max_selections=3)
 
 if not selected:
     st.stop()
 
-profiles = [
-    flt[flt["label"] == s].iloc[0].to_dict()
-    for s in selected
-]
+profiles = [flt[flt["label"] == s].iloc[0].to_dict() for s in selected]
 
-# -------------------------------------------------------------------
-# SECTIONS
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
+# SECTIONS CONFIG
+# ---------------------------------------------------------
 sections = [
     "Sub Job Family Description",
     "Job Profile Description",
@@ -113,114 +104,132 @@ icons = {
     "Competencies 3": "Setting_Cog.svg",
 }
 
-# -------------------------------------------------------------------
-# BUILD HTML FINAL
-# -------------------------------------------------------------------
+# ---------------------------------------------------------
+# BUILD HTML (VERSÃO DEFINITIVA)
+# ---------------------------------------------------------
 def build_html(profiles):
 
     n = len(profiles)
 
     html_code = f"""
-    <html>
-    <head>
-    <style>
+<html>
+<head>
+<meta charset="UTF-8">
 
-    html, body, #wrap {{
-        margin: 0;
-        padding: 0;
-        overflow: visible !important;
-        font-family: 'Segoe UI', sans-serif;
-    }}
+<style>
 
-    /* GRID */
-    .grid {{
-        display: grid;
-        grid-template-columns: repeat({n}, 1fr);
-        gap: 32px;
-        width: 100%;
-    }}
+html, body {{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden; /* 🔥 streamlit NÃO controla mais scroll */
+    font-family: 'Segoe UI', sans-serif;
+}}
 
-    /* TOP CARDS (sticky) */
-    .card-top {{
-        background: white;
-        padding: 22px;
-        border-radius: 16px;
-        box-shadow: 0 4px 18px rgba(0,0,0,0.12);
-        position: sticky;
-        top: 0;
-        z-index: 50;
-    }}
+#viewport {{
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 🔥 garante que só scroll-area role */
+}}
 
-    .title {{
-        font-size: 22px;
-        font-weight: 700;
-    }}
+/* BLOCO SUPERIOR FIXO */
+#top-area {{
+    background: white;
+    padding: 12px 18px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+}}
 
-    .gg {{
-        color: #145efc;
-        font-size: 18px;
-        font-weight: 700;
-        margin-top: 8px;
-    }}
+.grid-top {{
+    display: grid;
+    grid-template-columns: repeat({n}, 1fr);
+    gap: 24px;
+}}
 
-    .meta {{
-        background: #f5f3ee;
-        border: 1px solid #e3e1dd;
-        border-radius: 12px;
-        padding: 14px;
-        margin-top: 14px;
-        font-size: 15px;
-        line-height: 1.45;
-    }}
+.card-top {{
+    background: white;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}}
 
-    /* SCROLL AREA (UNIFIED SCROLL dynamic height) */
-    .scroll-area {{
-        height: calc(100vh - 330px);   /* 🔥🔥 PATCH APLICADO AQUI */
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding-right: 12px;
-        margin-top: 26px;
-    }}
+.title {{
+    font-size: 21px;
+    font-weight: 700;
+}}
 
-    /* DESCRIPTION CARDS */
-    .card-desc {{
-        background: white;
-        padding: 22px;
-        border-radius: 16px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }}
+.gg {{
+    color: #145efc;
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 6px;
+}}
 
-    .section-title {{
-        font-size: 17px;
-        font-weight: 700;
-        margin-bottom: 6px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }}
+.meta {{
+    background: #f5f3ee;
+    padding: 14px;
+    border-radius: 12px;
+    margin-top: 10px;
+    border: 1px solid #e3e1dd;
+}}
 
-    .section-title img {{
-        width: 20px;
-    }}
+/* ÁREA DE ROLAGEM ÚNICA */
+#scroll-area {{
+    flex: 1;
+    overflow-y: auto;    /* 🔥 rolagem REAL está aqui */
+    overflow-x: hidden;
+    padding: 20px;
+}}
 
-    .text {{
-        font-size: 15px;
-        line-height: 1.45;
-        white-space: pre-wrap;
-        margin-bottom: 18px;
-    }}
+.grid-desc {{
+    display: grid;
+    grid-template-columns: repeat({n}, 1fr);
+    gap: 24px;
+}}
 
-    </style>
-    </head>
+.card-desc {{
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}}
 
-    <body>
-    <div id="wrap">
+.section-title {{
+    font-size: 17px;
+    font-weight: 700;
+    margin: 10px 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}}
 
-        <!-- TOP CARDS -->
-        <div class="grid">
+.section-title img {{
+    width: 20px;
+}}
+
+.text {{
+    font-size: 15px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}}
+
+</style>
+</head>
+
+<body>
+
+<div id="viewport">
+
+    <!-- 🔥 CABEÇALHO FIXO -->
+    <div id="top-area">
+        <div class="grid-top">
     """
 
-    # ---------- TOP CARDS ----------
+    # CARDS SUPERIORES
     for p in profiles:
         job = html.escape(p["Job Profile"])
         gg = html.escape(str(p["Global Grade"]))
@@ -233,7 +242,6 @@ def build_html(profiles):
         <div class="card-top">
             <div class="title">{job}</div>
             <div class="gg">GG {gg}</div>
-
             <div class="meta">
                 <b>Job Family:</b> {jf}<br>
                 <b>Sub Job Family:</b> {sf}<br>
@@ -243,14 +251,16 @@ def build_html(profiles):
         </div>
         """
 
-    # ---------- DESCRIPTION SECTION (scroll único) ----------
     html_code += """
         </div>
+    </div>
 
-        <div class="scroll-area">
-            <div class="grid">
+    <!-- 🔥 ÁREA ROLÁVEL ÚNICA -->
+    <div id="scroll-area">
+        <div class="grid-desc">
     """
 
+    # CARDS DE DESCRIÇÃO
     for p in profiles:
         html_code += "<div class='card-desc'>"
 
@@ -259,11 +269,11 @@ def build_html(profiles):
             if not val or str(val).strip() == "":
                 continue
 
-            icon = icons[sec]
+            ic = icons[sec]
 
             html_code += f"""
                 <div class="section-title">
-                    <img src="assets/icons/sig/{icon}">
+                    <img src="assets/icons/sig/{ic}">
                     {html.escape(sec)}
                 </div>
                 <div class="text">{html.escape(str(val))}</div>
@@ -272,17 +282,18 @@ def build_html(profiles):
         html_code += "</div>"
 
     html_code += """
-            </div>
         </div>
-
     </div>
-    </body>
-    </html>
-    """
+
+</div>
+
+</body>
+</html>
+"""
 
     return html_code
 
-# -------------------------------------------------------------------
-# RENDER HTML
-# -------------------------------------------------------------------
-components.html(build_html(profiles), height=1800, scrolling=False)
+# ---------------------------------------------------------
+# RENDER HTML — COMPONENTE AGORA NÃO ROLA MAIS
+# ---------------------------------------------------------
+components.html(build_html(profiles), height=900, scrolling=False)
