@@ -1,10 +1,11 @@
 # pages/3_Job_Profile_Description.py
-# FINAL VERSION – FULL HTML LAYOUT WITH ST.HTML (OPTION A)
+# FINAL VERSION – FULL HTML LAYOUT WITH ST.COMPONENTS (OPTION A)
 
 import streamlit as st
 import pandas as pd
 import html
 from pathlib import Path
+import streamlit.components.v1 as components
 
 # -----------------------------------------------------------------------------
 # PAGE CONFIG
@@ -125,7 +126,6 @@ body, html, [data-testid="stAppViewContainer"] {
 
 </style>
 """
-
 st.markdown(CSS, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
@@ -202,9 +202,8 @@ icons = {
 sections = list(icons.keys())
 
 # -----------------------------------------------------------------------------
-# RENDER HTML
+# RENDER HTML CARDS
 # -----------------------------------------------------------------------------
-
 def render_cards(profiles):
     n = len(profiles)
     cls = f"cols-{n}"
@@ -219,7 +218,7 @@ def render_cards(profiles):
         cp = html.escape(p.get("Career Path", ""))
         fc = html.escape(p.get("Full Job Code", ""))
 
-        html_out += """
+        html_out += f"""
         <div class="jp-card">
             <div class="jp-card-header">
                 <div class="jp-title">{job}</div>
@@ -234,7 +233,7 @@ def render_cards(profiles):
             </div>
 
             <div class="jp-body">
-        """.format(job=job, gg=gg, jf=jf, sf=sf, cp=cp, fc=fc)
+        """
 
         for sec in sections:
             val = p.get(sec, "")
@@ -244,7 +243,7 @@ def render_cards(profiles):
             if not val:
                 continue
 
-            sec_html = html.escape(sec)
+            sec_title = html.escape(sec)
             val_html = html.escape(val)
             icon = icons[sec]
 
@@ -252,13 +251,13 @@ def render_cards(profiles):
             <div class="jp-section">
                 <div class="jp-section-title">
                     <img src="assets/icons/sig/{icon}">
-                    {sec_html}
+                    {sec_title}
                 </div>
                 <div class="jp-text">{val_html}</div>
             </div>
             """
 
-        html_out += "</div></div>"  # close jp-body and jp-card
+        html_out += "</div></div>"  # close body + card
 
     html_out += "</div>"  # close grid
     return html_out
@@ -267,7 +266,6 @@ def render_cards(profiles):
 html_final = render_cards(profiles)
 
 # -----------------------------------------------------------------------------
-# RENDER
+# RENDER USING ST.COMPONENTS (STABLE)
 # -----------------------------------------------------------------------------
-st.html(html_final, height=900)
-
+components.html(html_final, height=900, scrolling=True)
