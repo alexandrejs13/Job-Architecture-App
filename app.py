@@ -19,12 +19,18 @@ BASE_DIR = Path(__file__).parent
 # e garantir que não haja conflito com o botão de recolher.
 st.markdown("""
 <style>
-/* 1. Oculta o link de navegação da página inicial (item "app"). Este seletor é o mais comum para o item. */
-[data-testid="stSidebarNav"] a[href="/"] {
+/* 1. FIX MAIS AGRESSIVO: Tenta ocultar o primeiro item da lista de navegação (que é o 'app') */
+[data-testid="stSidebarNav"] > ul > div:nth-child(1) {
     display: none !important;
 }
+
 /* 2. Oculta o rótulo da aplicação ("streamlitApp" ou texto fantasma) que aparece na barra lateral/cabeçalho. */
 [data-testid="stSidebarContent"] > div:first-child > div:first-child > div:nth-child(2) {
+    display: none !important;
+}
+
+/* 3. Garante que o item de navegação original com href="/" (se ainda estiver lá) seja ocultado */
+[data-testid="stSidebarNav"] a[href="/"] {
     display: none !important;
 }
 </style>
