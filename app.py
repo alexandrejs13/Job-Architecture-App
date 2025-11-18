@@ -21,73 +21,58 @@ else:
     st.warning("CSS global não encontrado: assets/css/layout_global.css")
 
 # ------------------------------------------------------------
-# HOME — CARTÃO CENTRALIZADO
+# HOME CLEAN — SEM CARD BEGE
 # ------------------------------------------------------------
-st.markdown(
-    """
-    <div style="
-        display:flex;
-        justify-content:center;
-        width:100%;
-        margin-top:40px;
-    ">
-    """,
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    """
-    <div style="
-        max-width:900px;
-        width:100%;
-        background-color:#f2efeb;
-        padding:30px;
-        border-radius:20px;
-        box-shadow:0 4px 12px rgba(0,0,0,0.08);
-    ">
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div style="
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    width:100%;
+    margin-top:40px;
+">
+""", unsafe_allow_html=True)
 
 # ------------------------------------------------------------
-# IMAGEM DO CARD
+# IMAGEM — ARREDONDADA E LARGURA MÁXIMA
 # ------------------------------------------------------------
-st.image("assets/home/home_card.jpg", use_column_width=True)
+st.markdown("""
+<img src="assets/home/home_card.jpg" 
+     style="width:100%; max-width:900px; border-radius:22px; box-shadow:0 6px 14px rgba(0,0,0,0.08);" />
+""", unsafe_allow_html=True)
 
 # ------------------------------------------------------------
-# TÍTULO
+# TÍTULO COM ESTILO SIG
 # ------------------------------------------------------------
-st.markdown(
-    """
-    <h1 style="
-        font-size:42px;
-        margin-top:25px;
-        font-weight:800;
-        color:#222;
-    ">
-        Job Architecture
-    </h1>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<h1 style="
+    font-size:42px;
+    margin-top:32px;
+    font-weight:800;
+    color:#222;
+">
+    Job Architecture
+</h1>
+""", unsafe_allow_html=True)
 
 # ------------------------------------------------------------
-# DESCRIÇÃO
+# DESCRIÇÃO PREMIUM
 # ------------------------------------------------------------
-st.markdown(
-    """
-    <p style="
-        font-size:20px;
-        line-height:1.55;
-        margin-top:10px;
-        color:#333;
-    ">
-    A unified database of generic job descriptions that serves as a global reference 
-    for classifying, harmonizing, and standardizing all roles across the company.  
-    Here you will find consistent titles, clear levels, and internationally aligned profiles.  
-    Managers simply select the correct local job, while the system handles the rest—ensuring 
-    simplicity, reducing uncertainty, and promoting a fully integrated organizational structure.
-    </p>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<p style="
+    font-size:20px;
+    line-height:1.55;
+    margin-top:12px;
+    max-width:900px;
+    color:#333;
+">
+A unified database of generic job descriptions that serves as a global reference 
+for classifying, harmonizing, and standardizing all roles across the company.  
+Here you will find consistent titles, clear levels, and internationally aligned profiles.  
+Managers simply select the correct local job, while the system handles the rest—ensuring 
+simplicity, reducing uncertainty, and promoting a fully integrated organizational structure.
+</p>
+""", unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
