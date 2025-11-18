@@ -1,201 +1,280 @@
 import streamlit as st
 import pandas as pd
 import html
+import streamlit.components.v1 as components
 
-st.set_page_config(
-    page_title="Job Profile Description Explorer",
-    layout="wide"
-)
+# -------------------------------------------------------------------
+# PAGE CONFIG
+# -------------------------------------------------------------------
+st.set_page_config(page_title="Job Profile Description", layout="wide")
 
-st.markdown(
-    """
-    <style>
-        /* remove padding padrão do Streamlit */
-        .block-container {
-            padding-top: 1rem !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-        }
+# -------------------------------------------------------------------
+# HEADER
+# -------------------------------------------------------------------
+st.markdown("""
+<h1 style="font-size:36px; font-weight:700; margin-bottom:5px;">
+    Job Profile Description
+</h1>
+<hr style="margin-top:0;">
+""", unsafe_allow_html=True)
 
-        /* GRID principal */
-        .jp-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 32px;
-            width: 100%;
-        }
-
-        /* Card do topo (sticky) */
-        .jp-card-top {
-            background: white;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            position: sticky;
-            top: 0;
-            z-index: 20;
-        }
-
-        /* Card das descrições (scroll conjunto) */
-        .jp-card-desc {
-            background: white;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-            margin-top: 24px;
-            height: auto;
-        }
-
-        /* Área única de rolagem */
-        .scroll-area {
-            height: 800px;      /* AJUSTE COMO QUISER */
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding-right: 12px;
-            margin-top: 12px;
-        }
-
-        .section-title {
-            font-weight: 700;
-            font-size: 18px;
-            margin-bottom: 8px;
-        }
-
-        .jp-labelbox {
-            background: #f6f5f2;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 16px;
-            margin-top: 12px;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# ---------------------------------------------------------------------------------------
-# LOAD DATA (ajuste o caminho conforme seu projeto)
-# ---------------------------------------------------------------------------------------
+# -------------------------------------------------------------------
+# LOAD DATA
+# -------------------------------------------------------------------
 @st.cache_data
 def load_profiles():
-    df = pd.read_excel("data/Job_Profile.xlsx")
-    return df
+    return pd.read_excel("data/Job Profile.xlsx")
 
 df = load_profiles()
 
-# ---------------------------------------------------------------------------------------
-# FILTROS
-# ---------------------------------------------------------------------------------------
-st.markdown("## 🔍 Job Profile Description Explorer")
+# -------------------------------------------------------------------
+# FILTERS
+# -------------------------------------------------------------------
+st.subheader("🔍 Job Profile Description Explorer")
 
-col1, col2, col3 = st.columns(3)
+f1, f2, f3 = st.columns(3)
 
-with col1:
-    job_family = st.selectbox(
-        "Job Family",
-        ["All"] + sorted(df["Job Family"].dropna().unique().tolist())
-    )
+with f1:
+    jf = st.selectbox("Job Family",
+                      ["All"] + sorted(df["Job Family"].dropna().unique()))
 
-with col2:
-    sub_family = st.selectbox(
-        "Sub Job Family",
-        ["All"] + sorted(df["Sub Job Family"].dropna().unique().tolist())
-    )
+with f2:
+    sf_list = df[df["Job Family"] == jf]["Sub Job Family"].dropna().unique() if jf != "All" else df["Sub Job Family"].dropna().unique()
+    sf = st.selectbox("Sub Job Family",
+                      ["All"] + sorted(sf_list))
 
-with col3:
-    career_path = st.selectbox(
-        "Career Path",
-        ["All"] + sorted(df["Career Path"].dropna().unique().tolist())
-    )
+with f3:
+    cp_list = df[df["Sub Job Family"] == sf]["Career Path"].dropna().unique() if sf != "All" else df["Career Path"].dropna().unique()
+    cp = st.selectbox("Career Path",
+                      ["All"] + sorted(cp_list))
 
 flt = df.copy()
 
-if job_family != "All":
-    flt = flt[flt["Job Family"] == job_family]
-
-if sub_family != "All":
-    flt = flt[flt["Sub Job Family"] == sub_family]
-
-if career_path != "All":
-    flt = flt[flt["Career Path"] == career_path]
+if jf != "All":
+    flt = flt[flt["Job Family"] == jf]
+if sf != "All":
+    flt = flt[flt["Sub Job Family"] == sf]
+if cp != "All":
+    flt = flt[flt["Career Path"] == cp]
 
 flt["label"] = flt["GG"].astype(str) + " • " + flt["Job Profile"]
 
-selected = st.multiselect(
-    "Select up to 3 profiles to compare:",
-    options=flt["label"].tolist(),
-    max_selections=3
-)
+selected = st.multiselect("Select up to 3 profiles:", flt["label"].tolist(), max_selections=3)
 
 if not selected:
-    st.info("Select profiles to display.")
     st.stop()
 
-profiles = [
-    flt[flt["label"] == s].iloc[0].to_dict()
-    for s in selected
+profiles = [flt[flt["label"] == s].iloc[0].to_dict() for s in selected]
+
+# -------------------------------------------------------------------
+# SECTIONS (STATIC ORDER)
+# -------------------------------------------------------------------
+sections = [
+    "Sub Job Family Description",
+    "Job Profile Description",
+    "Career Band Description",
+    "Role Description",
+    "Grade Differentiator",
+    "Qualifications",
+    "Specific parameters / KPIs",
+    "Competencies 1",
+    "Competencies 2",
+    "Competencies 3"
 ]
 
-# ---------------------------------------------------------------------------------------
-# HTML FINAL
-# ---------------------------------------------------------------------------------------
+icons = {
+    "Sub Job Family Description": "Hierarchy.svg",
+    "Job Profile Description": "File_Clipboard_Text.svg",
+    "Career Band Description": "Hierarchy.svg",
+    "Role Description": "Shopping_Business_Suitcase.svg",
+    "Grade Differentiator": "Edit_Pencil.svg",
+    "Qualifications": "Content_Book_Phone.svg",
+    "Specific parameters / KPIs": "Graph_Bar.svg",
+    "Competencies 1": "Setting_Cog.svg",
+    "Competencies 2": "Setting_Cog.svg",
+    "Competencies 3": "Setting_Cog.svg",
+}
 
-html_blocks_top = ""
-html_blocks_desc = ""
+# -------------------------------------------------------------------
+# BUILD HTML
+# -------------------------------------------------------------------
+def build_html(profiles):
 
-for p in profiles:
-    # ESCAPA HTML
-    title = html.escape(p["Job Profile"])
-    gg = html.escape(str(p["GG"]))
-    jf = html.escape(str(p["Job Family"]))
-    sjf = html.escape(str(p["Sub Job Family"]))
-    cp = html.escape(str(p["Career Path"]))
-    fjc = html.escape(str(p["Full Job Code"]))
+    n = len(profiles)
 
-    sjf_desc = html.escape(str(p.get("Sub Job Family Description", "")))
-    jpd = html.escape(str(p.get("Job Profile Description", "")))
-    cbd = html.escape(str(p.get("Career Band Description", "")))
+    html_code = f"""
+    <html>
+    <head>
+    <style>
 
-    # CARD TOP STICKY
-    html_blocks_top += f"""
-    <div class="jp-card-top">
-        <div class="section-title">{title}</div>
-        <div style="color:#145efc; font-weight:700; font-size:20px;">GG {gg}</div>
+    body {{
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background: white;
+    }}
 
-        <div class="jp-labelbox">
-            <b>Job Family:</b> {jf}<br>
-            <b>Sub Job Family:</b> {sjf}<br>
-            <b>Career Path:</b> {cp}<br>
-            <b>Full Job Code:</b> {fjc}
+    /* WRAPPER FORÇANDO O STICKY FUNCIONAR */
+    #wrap {{
+        height: auto !important;
+        overflow: visible !important;
+    }}
+
+    /* GRID */
+    .grid {{
+        display: grid;
+        grid-template-columns: repeat({n}, 1fr);
+        gap: 32px;
+        width: 100%;
+    }}
+
+    /* CARD SUPERIOR (STICKY) */
+    .card-top {{
+        background: white;
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }}
+
+    .title {{
+        font-size: 22px;
+        font-weight: 700;
+    }}
+
+    .gg {{
+        color: #145efc;
+        font-weight: 700;
+        font-size: 18px;
+        margin-top: 8px;
+    }}
+
+    .meta {{
+        background: #f5f3ef;
+        padding: 14px;
+        border-radius: 12px;
+        font-size: 15px;
+        margin-top: 14px;
+        line-height: 1.45;
+        border: 1px solid #e8e6e2;
+    }}
+
+    /* CARD INFERIOR */
+    .card-desc {{
+        background: white;
+        padding: 22px;
+        border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        margin-bottom: 42px;
+    }}
+
+    .section-title {{
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }}
+
+    .section-title img {{
+        width: 20px;
+    }}
+
+    .text {{
+        white-space: pre-wrap;
+        line-height: 1.45;
+        margin-bottom: 18px;
+    }}
+
+    .scroll-page {{
+        height: 1500px;  /* TELA LONGA */
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 15px;
+        margin-top: 20px;
+    }}
+
+    </style>
+    </head>
+
+    <body>
+    <div id="wrap">
+
+        <!-- GRID DOS TOP CARDS (STICKY) -->
+        <div class="grid">
+    """
+
+    # ---------- TOP CARDS ----------
+    for p in profiles:
+        job = html.escape(str(p["Job Profile"]))
+        gg = html.escape(str(p["GG"]))
+        jf = html.escape(str(p["Job Family"]))
+        sf = html.escape(str(p["Sub Job Family"]))
+        cp = html.escape(str(p["Career Path"]))
+        fc = html.escape(str(p["Full Job Code"]))
+
+        html_code += f"""
+        <div class="card-top">
+            <div class="title">{job}</div>
+            <div class="gg">GG {gg}</div>
+
+            <div class="meta">
+                <b>Job Family:</b> {jf}<br>
+                <b>Sub Job Family:</b> {sf}<br>
+                <b>Career Path:</b> {cp}<br>
+                <b>Full Job Code:</b> {fc}
+            </div>
         </div>
-    </div>
+        """
+
+    html_code += """
+        </div>  <!-- end grid -->
     """
 
-    # CARD DE DESCRIÇÃO
-    html_blocks_desc += f"""
-    <div class="jp-card-desc">
-        <div class="section-title">Sub Job Family Description</div>
-        <p>{sjf_desc}</p>
-
-        <div class="section-title">Job Profile Description</div>
-        <p>{jpd}</p>
-
-        <div class="section-title">Career Band Description</div>
-        <p>{cbd}</p>
-    </div>
+    # ---------- MAIN SCROLL AREA ----------
+    html_code += """
+        <div class="scroll-page">
+            <div class="grid">
     """
 
-# GRID (3 colunas)
-html_final = f"""
-<div class="scroll-area">
-    <div class="jp-grid">
-        {html_blocks_top}
-    </div>
+    # ---------- DESCRIPTION CARDS ----------
+    for p in profiles:
+        html_code += "<div class='card-desc'>"
 
-    <div class="jp-grid" style="margin-top:32px;">
-        {html_blocks_desc}
-    </div>
-</div>
-"""
+        for sec in sections:
+            val = p.get(sec, "")
+            if not val or str(val).strip() == "":
+                continue
 
-st.components.v1.html(html_final, height=900, scrolling=False)
+            icon = icons[sec]
+
+            html_code += f"""
+                <div class="section-title">
+                    <img src="assets/icons/sig/{icon}">
+                    {html.escape(sec)}
+                </div>
+                <div class="text">
+                    {html.escape(str(val))}
+                </div>
+            """
+
+        html_code += "</div>"
+
+    html_code += """
+            </div>
+        </div> <!-- end scroll-page -->
+
+    </div>
+    </body>
+    </html>
+    """
+
+    return html_code
+
+# -------------------------------------------------------------------
+# RENDER HTML FINAL
+# -------------------------------------------------------------------
+components.html(build_html(profiles), height=1800, scrolling=False)
