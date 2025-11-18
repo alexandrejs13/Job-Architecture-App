@@ -17,7 +17,7 @@
     font-weight: 700;
 }
 
-/* aplica a fonte */
+/* aplica a fonte e fundo */
 html, body, [data-testid="stAppViewContainer"] {
     font-family: "PPSIGFlow", sans-serif !important;
     background: white !important;
@@ -27,15 +27,20 @@ html, body, [data-testid="stAppViewContainer"] {
    GLOBAL LAYOUT SIG
    ============================================================ */
 
-/* sidebar fixa, proibido redimensionar */
+/* sidebar fixa, padrão SIG */
 [data-testid="stSidebar"] {
-    background: white !important;
+    background: #f5efe6 !important;   /* sand1 */
     width: 300px !important;
     min-width: 300px !important;
     max-width: 300px !important;
     resize: none !important;
     overflow-y: auto !important;
     border-right: 1px solid #eee;
+}
+
+/* texto da sidebar */
+[data-testid="stSidebar"] * {
+    font-family: "PPSIGFlow" !important;
 }
 
 /* área principal centralizada */
@@ -61,7 +66,7 @@ button:focus, button:active, *:focus {
 }
 
 /* ============================================================
-   GRID RESPONSIVO — 1, 2 OU 3 COLUNAS
+   GRID RESPONSIVO
    ============================================================ */
 .jp-grid {
     display: grid;
@@ -157,7 +162,6 @@ button:focus, button:active, *:focus {
     border-left: 6px solid #145efc22;
 }
 
-/* cores alternadas */
 .jp-section:nth-child(even) {
     background: #fdfbf8;
 }
@@ -189,4 +193,17 @@ button:focus, button:active, *:focus {
 /* botão PDF removido */
 .jp-pdf-btn {
     display: none !important;
+}
+
+/* ============================================================
+   FIX DEFINITIVO — HTML NÃO ESCAPA NO MARKDOWN
+   ============================================================ */
+
+[data-testid="stMarkdown"] pre,
+[data-testid="stMarkdown"] code,
+code, pre {
+    all: unset !important;
+    display: inline !important;
+    white-space: normal !important;
+    font-family: "PPSIGFlow" !important;
 }
