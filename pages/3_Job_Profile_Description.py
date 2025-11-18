@@ -1,5 +1,41 @@
-def build_html(profiles):
+import streamlit as st
+import pandas as pd
+import html
+from streamlit.components.v1 import html as components_html
 
+
+# ---------------------------------------------------
+# LOAD DATA SAFELY
+# ---------------------------------------------------
+@st.cache_data
+def load_profiles():
+    df = pd.read_excel("data/Job Profile.xlsx")   # nome do arquivo CONFIRMADO
+    return df
+
+df = load_profiles()
+
+# ---------------------------------------------------
+# PAGE TITLE
+# ---------------------------------------------------
+st.title("Job Profile Description Explorer")
+
+# ---------------------------------------------------
+# SIMPLE SELECTOR
+# ---------------------------------------------------
+options = df["Job Profile"].unique().tolist()
+selected = st.multiselect("Select profiles to compare", options, max_selections=3)
+
+if len(selected) == 0:
+    st.info("Selecione até 3 perfis acima.")
+    st.stop()
+
+profiles = df[df["Job Profile"].isin(selected)].to_dict(orient="records")
+
+
+# ---------------------------------------------------
+# BUILD HTML
+# ---------------------------------------------------
+def build_html(profiles):
     n = len(profiles)
 
     html_code = f"""
@@ -10,65 +46,53 @@ def build_html(profiles):
     html, body {{
         margin: 0;
         padding: 0;
-        overflow: hidden;
         font-family: 'Segoe UI', sans-serif;
+        overflow: hidden;
     }}
 
-    /* WRAPPER GERAL – DUAS ÁREAS: TOP (sticky) + SCROLL AREA */
     #layout {{
         display: flex;
         flex-direction: column;
         height: 100vh;
     }}
 
-    /* BARRA SUPERIOR CONGELADA */
+    /* TOP STICKY BLOCK */
     #top-block {{
         position: sticky;
         top: 0;
-        z-index: 100;
+        z-index: 1000;
         background: white;
-        padding-bottom: 12px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+        padding: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.15);
     }}
 
-    /* GRID DO TOPO */
     .grid-top {{
         display: grid;
         grid-template-columns: repeat({n}, 1fr);
-        gap: 28px;
-        padding: 16px;
+        gap: 20px;
     }}
 
     .card-top {{
         background: white;
-        padding: 22px;
-        border-radius: 16px;
+        padding: 18px;
+        border-radius: 14px;
         box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+        font-size: 16px;
     }}
 
-    .title {{
+    .job {{
         font-size: 22px;
         font-weight: 700;
+        margin-bottom: 6px;
     }}
 
     .gg {{
         color: #145efc;
-        font-size: 18px;
         font-weight: 700;
-        margin-top: 8px;
+        margin-bottom: 12px;
     }}
 
-    .meta {{
-        background: #f5f3ee;
-        border: 1px solid #e3e1dd;
-        border-radius: 12px;
-        padding: 14px;
-        margin-top: 14px;
-        font-size: 15px;
-        line-height: 1.45;
-    }}
-
-    /* ÁREA INFERIOR ROLÁVEL UNIFICADA */
+    /* SCROLL AREA */
     #scroll-block {{
         flex: 1;
         overflow-y: auto;
@@ -78,34 +102,14 @@ def build_html(profiles):
     .grid-desc {{
         display: grid;
         grid-template-columns: repeat({n}, 1fr);
-        gap: 28px;
+        gap: 20px;
     }}
 
     .card-desc {{
         background: white;
-        padding: 22px;
-        border-radius: 16px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }}
-
-    .section-title {{
-        font-size: 17px;
-        font-weight: 700;
-        margin-bottom: 6px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }}
-
-    .section-title img {{
-        width: 20px;
-    }}
-
-    .text {{
-        font-size: 15px;
-        line-height: 1.45;
-        margin-bottom: 18px;
-        white-space: pre-wrap;
+        padding: 18px;
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.10);
     }}
 
     </style>
@@ -115,63 +119,49 @@ def build_html(profiles):
 
     <div id="layout">
 
-        <!-- ÁREA DE CIMA CONGELADA -->
+        <!-- STICKY BLOCK -->
         <div id="top-block">
             <div class="grid-top">
     """
 
-    # ---------- TOP CARDS ----------
+    # TOP CARDS
     for p in profiles:
-        job = html.escape(p["Job Profile"])
-        gg = html.escape(str(p["Global Grade"]))
-        jf = html.escape(p["Job Family"])
-        sf = html.escape(p["Sub Job Family"])
-        cp = html.escape(p["Career Path"])
-        fc = html.escape(p["Full Job Code"])
+        job = html.escape(str(p.get("Job Profile", "")))
+        gg = html.escape(str(p.get("Global Grade", "")))
+        jf = html.escape(str(p.get("Job Family", "")))
+        sf = html.escape(str(p.get("Sub Job Family", "")))
+        cp = html.escape(str(p.get("Career Path", "")))
+        fc = html.escape(str(p.get("Full Job Code", "")))
 
         html_code += f"""
-        <div class="card-top">
-            <div class="title">{job}</div>
-            <div class="gg">GG {gg}</div>
-
-            <div class="meta">
+            <div class="card-top">
+                <div class="job">{job}</div>
+                <div class="gg">GG {gg}</div>
                 <b>Job Family:</b> {jf}<br>
                 <b>Sub Job Family:</b> {sf}<br>
                 <b>Career Path:</b> {cp}<br>
                 <b>Full Job Code:</b> {fc}
             </div>
-        </div>
         """
 
     html_code += """
             </div>
         </div>
 
-        <!-- ÁREA ROLÁVEL UNIFICADA -->
+        <!-- SCROLL AREA -->
         <div id="scroll-block">
             <div class="grid-desc">
     """
 
-    # ---------- DESCRIPTIONS ----------
+    # DESCRIPTION CARDS
     for p in profiles:
-        html_code += "<div class='card-desc'>"
-
-        for sec in sections:
-            val = p.get(sec, "")
-            if not val or str(val).strip() == "":
-                continue
-
-            icon = icons[sec]
-
-            html_code += f"""
-                <div class="section-title">
-                    <img src="assets/icons/sig/{icon}">
-                    {html.escape(sec)}
-                </div>
-                <div class="text">{html.escape(str(val))}</div>
-            """
-
-        html_code += "</div>"
+        html_code += f"""
+        <div class="card-desc">
+            <b>Description test block for:</b><br>
+            {html.escape(p.get('Job Profile', ''))}<br><br>
+            Aqui entra o conteúdo completo depois.
+        </div>
+        """
 
     html_code += """
             </div>
@@ -184,3 +174,10 @@ def build_html(profiles):
     """
 
     return html_code
+
+
+# ---------------------------------------------------
+# RENDER HTML
+# ---------------------------------------------------
+final_html = build_html(profiles)
+components_html(final_html, height=900)
