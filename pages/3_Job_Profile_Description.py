@@ -11,14 +11,29 @@ import os
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ---------------------------------------------------------
+# LOAD INLINE IMAGE (PAGE ICON)
+# ---------------------------------------------------------
+def load_png_base64(path):
+    if not os.path.exists(path):
+        return ""
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+page_icon_b64 = load_png_base64("assets/icons/business_review_clipboard.png")
+
+# ---------------------------------------------------------
 # HEADER
 # ---------------------------------------------------------
-st.markdown("""
-<h1 style="font-size:36px; font-weight:700; margin-bottom:4px;">
-    Job Profile Description
-</h1>
-<hr style="margin-top:0;">
+st.markdown(f"""
+<div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
+    <img src="data:image/png;base64,{page_icon_b64}" style="width:34px; height:34px;">
+    <h1 style="font-size:36px; font-weight:700; margin:0;">
+        Job Profile Description
+    </h1>
+</div>
+<hr style="margin-top:4px;">
 """, unsafe_allow_html=True)
+
 
 # ---------------------------------------------------------
 # LOAD DATA
@@ -28,6 +43,7 @@ def load_profiles():
     return pd.read_excel("data/Job Profile.xlsx")
 
 df = load_profiles()
+
 
 # ---------------------------------------------------------
 # INLINE SVG LOADER
@@ -39,7 +55,7 @@ def load_svg(svg_name):
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
-# ÍCONES INLINE
+
 icons_svg = {
     "Sub Job Family Description": load_svg("Hierarchy.svg"),
     "Job Profile Description": load_svg("Content_Book_Phone.svg"),
@@ -101,6 +117,7 @@ if not selected:
 
 profiles = [flt[flt["label"] == s].iloc[0].to_dict() for s in selected]
 
+
 # ---------------------------------------------------------
 # SECTION ORDER
 # ---------------------------------------------------------
@@ -117,8 +134,9 @@ sections = [
     "Competencies 3",
 ]
 
+
 # ---------------------------------------------------------
-# BUILD HTML FINAL (com cores invertidas)
+# BUILD HTML FINAL (ÉPICO)
 # ---------------------------------------------------------
 def build_html(profiles):
 
@@ -146,10 +164,10 @@ html, body {{
     overflow: hidden;
 }}
 
-/* 🔥 TOPO FIXO */
+/* 🔥 TOPO SEM PADDING LATERAL */
 #top-area {{
     background: white;
-    padding: 16px 24px;
+    padding: 16px 0;
     flex-shrink: 0;
     position: sticky;
     top: 0;
@@ -162,12 +180,13 @@ html, body {{
     gap: 28px;
 }}
 
-/* 🔥 CARD GRANDE (AGORA SAND1) */
+/* 🔄 CARD GRANDE → FUNDO SAND1, SEM SOMBRA */
 .card-top {{
-    background: #f5f3ee;    /* SAND1 */
+    background: #f5f3ee;
     border-radius: 16px;
-    padding: 22px;
-    box-shadow: none !important;   /* sem sombra */
+    padding: 22px 26px;
+    box-shadow: none;
+    border: 1px solid #e3e1dd;
 }}
 
 .title {{
@@ -183,22 +202,22 @@ html, body {{
     margin-top: 6px;
 }}
 
-/* 🔥 INFO BOX COM SOMBRA LEVE AGORA */
+/* 🔄 BLOCO DE META → FUNDO BRANCO + SOMBRA */
 .meta {{
     background: white;
     padding: 14px;
     border-radius: 12px;
     margin-top: 14px;
-    border: 1px solid #e3e1dd;
+    border: 1px solid #e5e2dc;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     font-size: 14px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
 }}
 
-/* 🔥 ÁREA SCROLL */
+/* 🔥 ÁREA ROLÁVEL OCUPANDO TODA A LARGURA */
 #scroll-area {{
     flex: 1;
     overflow-y: auto;
-    padding: 28px;
+    padding: 28px 0;
 }}
 
 .grid-desc {{
@@ -207,7 +226,7 @@ html, body {{
     gap: 28px;
 }}
 
-/* LINHAS ALINHADAS */
+/* 🔥 SEÇÕES ALINHADAS */
 .row {{
     display: contents;
 }}
@@ -219,7 +238,6 @@ html, body {{
 .section-title {{
     font-size: 16px;
     font-weight: 700;
-    margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -242,7 +260,6 @@ html, body {{
     width: 20px;
     height: 20px;
 }}
-
 </style>
 
 </head>
@@ -251,12 +268,11 @@ html, body {{
 
 <div id="viewport">
 
-    <!-- 🔥 CARD SUPERIOR -->
     <div id="top-area">
         <div class="grid-top">
     """
 
-    # ---------- TOP CARDS ----------
+    # TOP CARDS
     for p in profiles:
         job = html.escape(p["Job Profile"])
         gg = html.escape(str(p["Global Grade"]))
@@ -269,7 +285,6 @@ html, body {{
         <div class="card-top">
             <div class="title">{job}</div>
             <div class="gg">GG {gg}</div>
-
             <div class="meta">
                 <b>Job Family:</b> {jf}<br>
                 <b>Sub Job Family:</b> {sf}<br>
@@ -283,25 +298,23 @@ html, body {{
         </div>
     </div>
 
-    <!-- 🔥 CONTEÚDO ROLÁVEL -->
     <div id="scroll-area">
         <div class="grid-desc">
     """
 
-    # ---------- CONTEÚDO ----------
+    # SEÇÕES ALINHADAS
     for sec in sections:
+
         html_code += "<div class='row'>"
 
         for p in profiles:
             val = p.get(sec, "")
             icon = icons_svg.get(sec, "")
+            icon_block = f"<span class='icon-inline'>{icon}</span>"
 
             html_code += f"""
             <div class="section-box">
-                <div class="section-title">
-                    <span class="icon-inline">{icon}</span>
-                    {html.escape(sec)}
-                </div>
+                <div class="section-title">{icon_block} {html.escape(sec)}</div>
                 <div class="section-line"></div>
                 <div class="section-text">{html.escape(str(val))}</div>
             </div>
@@ -320,6 +333,7 @@ html, body {{
 """
 
     return html_code
+
 
 # ---------------------------------------------------------
 # RENDER HTML
