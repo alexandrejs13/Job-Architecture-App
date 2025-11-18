@@ -1,271 +1,320 @@
 # ==========================================================
-# DASHBOARD COMPLETO — SIG Job Architecture (Final Revisado)
+# HEADER — padrão SIG (56px, alinhado, sem erros)
 # ==========================================================
-
 import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
+import base64
+import os
 
-# ----------------------------------------------------------
-# Carrega a base real
-# ----------------------------------------------------------
-file_path = "data/Job Profile.xlsx"
-df = pd.read_excel(file_path)
+def load_icon_png(path):
+    if not os.path.exists(path):
+        return ""  # evita NameError mesmo se o arquivo não existir
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
 
-# Normaliza colunas
-df.columns = [c.strip().replace(" ", "_").lower() for c in df.columns]
+icon_path = "assets/icons/data_2_perfromance.png"
+icon_b64 = load_icon_png(icon_path)
 
-# Checagem das colunas esperadas
-expected_cols = ["job_family", "sub_job_family", "job_profile", "career_level"]
-missing = [c for c in expected_cols if c not in df.columns]
+st.markdown(f"""
+<div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
+    <img src="data:image/png;base64,{icon_b64}" style="width:56px; height:56px;">
+    <h1 style="font-size:36px; font-weight:700; margin:0; padding:0;">
+        Dashboard
+    </h1>
+</div>
 
-if missing:
-    st.error(f"Colunas ausentes no Excel: {missing}")
-    st.stop()
-
-# ----------------------------------------------------------
-# Paleta SIG
-# ----------------------------------------------------------
-SIG_SKY     = "#145efc"
-SIG_SPARK   = "#dca0ff"
-SIG_BLACK   = "#000000"
-SIG_FOREST2 = "#167665"
-SIG_MOSS2   = "#c8c84e"
-
-SIG_COLORS = [SIG_SKY, SIG_SPARK, SIG_BLACK, SIG_FOREST2, SIG_MOSS2]
-
-# ----------------------------------------------------------
-# Métricas principais
-# ----------------------------------------------------------
-qtd_familias     = df['job_family'].nunique()
-qtd_subfamilias  = df['sub_job_family'].nunique()
-qtd_cargos       = df['job_profile'].nunique()
-
-cargos_por_familia = df.groupby('job_family')['job_profile'].nunique()
-cargos_por_subfamilia = df.groupby('sub_job_family')['job_profile'].nunique()
-carreiras_por_familia = df.groupby('job_family')['career_level'].nunique()
-carreiras_por_subfam = df.groupby('sub_job_family')['career_level'].nunique()
-
-# ----------------------------------------------------------
-# CSS — estilo SIG
-# ----------------------------------------------------------
-st.markdown("""
-<style>
-.metric-card {
-    background-color:#f7f7f7;
-    padding:22px;
-    border-radius:18px;
-    font-size:18px;
-    font-weight:600;
-    text-align:center;
-    border: 1px solid #e5e5e5;
-}
-.metric-value {
-    font-size:36px;
-    font-weight:800;
-    color:#145efc;
-}
-.section-title {
-    font-size:28px;
-    font-weight:700;
-    margin-top:40px;
-}
-</style>
+<hr style="margin-top:14px; margin-bottom:26px;">
 """, unsafe_allow_html=True)
 
-# ----------------------------------------------------------
-# MÉTRICAS GERAIS — CARDS
-# ----------------------------------------------------------
-st.markdown("<div class='section-title'>Visão Geral</div>", unsafe_allow_html=True)
-
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    st.markdown(f"""
-        <div class='metric-card'>
-            Famílias<br>
-            <span class='metric-value'>{qtd_familias}</span>
-        </div>
-    """, unsafe_allow_html=True)
-
-with c2:
-    st.markdown(f"""
-        <div class='metric-card'>
-            Subfamílias<br>
-            <span class='metric-value'>{qtd_subfamilias}</span>
-        </div>
-    """, unsafe_allow_html=True)
-
-with c3:
-    st.markdown(f"""
-        <div class='metric-card'>
-            Cargos<br>
-            <span class='metric-value'>{qtd_cargos}</span>
-        </div>
-    """, unsafe_allow_html=True)
-
-
 # ==========================================================
-# SEÇÃO 1 — DISTRIBUIÇÃO DE CARGOS
+# DASHBOARD — Job Architecture (Remuneração / RH)
 # ==========================================================
-with st.expander("📊 Distribuição Geral de Cargos (Família e Subfamília)", expanded=True):
+import pandas as pd
+import numpy as np
 
-    st.subheader("Cargos por Família")
-    fig_fam = px.pie(
-        names=cargos_por_familia.index,
-        values=cargos_por_familia.values,
-        hole=0.55,
-        color_discrete_sequence=SIG_COLORS
+# Paleta SIG (usando o azul como cor principal)
+SIG_PRIMARY = "#145EFC"
+SIG_DARK = "#002C6E"
+SIG_LIGHT = "#E7EFFF"
+
+# Pequeno ajuste visual para métricas
+st.markdown(
+    f"""
+    <style>
+    div[data-testid="stMetric"] > label {{
+        color: {SIG_DARK};
+        font-weight: 600;
+    }}
+    div[data-testid="stMetric"] > div {{
+        color: {SIG_PRIMARY};
+        font-weight: 700;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+@st.cache_data
+def load_job_profile():
+    path = os.path.join("data", "Job Profile.xlsx")
+    df = pd.read_excel(path)
+    return df
+
+df = load_job_profile()
+
+# Nomes de colunas conforme o arquivo Job Profile.xlsx
+COL_FAMILY = "Job Family"
+COL_SUBFAMILY = "Sub Job Family"
+COL_PROFILE = "Job Profile"
+COL_CAREER_PATH = "Career Path"
+COL_BAND = "Career Band Short"
+COL_LEVEL = "Career Level"
+COL_GRADE = "Global Grade"
+COL_FULL_CODE = "Full Job Code"
+
+required_cols = [
+    COL_FAMILY,
+    COL_SUBFAMILY,
+    COL_PROFILE,
+    COL_CAREER_PATH,
+    COL_BAND,
+    COL_LEVEL,
+    COL_GRADE,
+    COL_FULL_CODE,
+]
+
+missing = [c for c in required_cols if c not in df.columns]
+
+if missing:
+    st.error(
+        "As seguintes colunas obrigatórias não foram encontradas na base de Job Profile: "
+        + ", ".join(missing)
     )
-    fig_fam.update_traces(textinfo="percent+label")
-    st.plotly_chart(fig_fam, use_container_width=True)
+    st.stop()
 
-    st.subheader("Top 10 Subfamílias com mais Cargos")
-    sub_top = cargos_por_subfamilia.sort_values(ascending=False).head(10)
-    fig_sub = px.pie(
-        names=sub_top.index,
-        values=sub_top.values,
-        hole=0.55,
-        color_discrete_sequence=SIG_COLORS
+# ======================================================================
+# VISÃO GERAL — INDICADORES CHAVE
+# ======================================================================
+qtd_familias = df[COL_FAMILY].nunique()
+qtd_subfamilias = df[COL_SUBFAMILY].nunique()
+qtd_cargos = df[COL_PROFILE].nunique()
+qtd_career_paths = df[COL_CAREER_PATH].nunique()
+qtd_bands = df[COL_BAND].nunique()
+qtd_grades = df[COL_GRADE].nunique()
+
+st.markdown("### Visão geral da Job Architecture")
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Famílias", qtd_familias)
+col2.metric("Subfamílias", qtd_subfamilias)
+col3.metric("Job Profiles únicos", qtd_cargos)
+
+col4, col5, col6 = st.columns(3)
+col4.metric("Career Paths", qtd_career_paths)
+col5.metric("Career Bands", qtd_bands)
+col6.metric("Grades globais", qtd_grades)
+
+# ======================================================================
+# DISTRIBUIÇÃO DE CARGOS POR FAMÍLIA
+# ======================================================================
+st.markdown("---")
+st.markdown("### Distribuição de Job Profiles por Família")
+
+familia_profiles = (
+    df.groupby(COL_FAMILY)[COL_PROFILE]
+    .nunique()
+    .reset_index(name="Qtd de Job Profiles")
+    .sort_values("Qtd de Job Profiles", ascending=False)
+)
+
+st.bar_chart(
+    data=familia_profiles.set_index(COL_FAMILY)["Qtd de Job Profiles"]
+)
+
+with st.expander("Ver tabela detalhada por família"):
+    st.dataframe(familia_profiles, use_container_width=True)
+
+# ======================================================================
+# DISTRIBUIÇÃO DE CARGOS POR SUBFAMÍLIA (TOP 15)
+# ======================================================================
+st.markdown("### Top 15 Subfamílias por número de Job Profiles")
+
+subfamilia_profiles = (
+    df.groupby([COL_FAMILY, COL_SUBFAMILY])[COL_PROFILE]
+    .nunique()
+    .reset_index(name="Qtd de Job Profiles")
+    .sort_values("Qtd de Job Profiles", ascending=False)
+)
+
+top_sub = subfamilia_profiles.head(15)
+
+st.bar_chart(
+    data=top_sub.set_index(COL_SUBFAMILY)["Qtd de Job Profiles"]
+)
+
+with st.expander("Ver tabela completa de subfamílias"):
+    st.dataframe(subfamilia_profiles, use_container_width=True)
+
+# ======================================================================
+# PERSPECTIVA DE CARREIRA — BAND, LEVEL, GRADE
+# ======================================================================
+st.markdown("---")
+st.markdown("### Estrutura de Carreira (Band / Level / Grade)")
+
+col_a, col_b = st.columns(2)
+
+# Distribuição por Career Band
+band_dist = (
+    df.groupby(COL_BAND)[COL_PROFILE]
+    .nunique()
+    .reset_index(name="Qtd de Job Profiles")
+    .sort_values("Qtd de Job Profiles", ascending=False)
+)
+
+with col_a:
+    st.markdown("#### Distribuição por Career Band")
+    if not band_dist.empty:
+        st.bar_chart(
+            data=band_dist.set_index(COL_BAND)["Qtd de Job Profiles"]
+        )
+    st.dataframe(band_dist, use_container_width=True)
+
+# Distribuição por Grade Global (ordenada)
+grade_dist = (
+    df.groupby(COL_GRADE)[COL_PROFILE]
+    .nunique()
+    .reset_index(name="Qtd de Job Profiles")
+    .sort_values(COL_GRADE)
+)
+
+with col_b:
+    st.markdown("#### Distribuição por Grade Global")
+    if not grade_dist.empty:
+        st.bar_chart(
+            data=grade_dist.set_index(COL_GRADE)["Qtd de Job Profiles"]
+        )
+    st.dataframe(grade_dist, use_container_width=True)
+
+# Career Path — onde está concentrado o portfólio
+st.markdown("### Top 10 Career Paths por número de Job Profiles")
+
+career_path_dist = (
+    df.groupby(COL_CAREER_PATH)[COL_PROFILE]
+    .nunique()
+    .reset_index(name="Qtd de Job Profiles")
+    .sort_values("Qtd de Job Profiles", ascending=False)
+)
+
+top_career_paths = career_path_dist.head(10)
+
+st.bar_chart(
+    data=top_career_paths.set_index(COL_CAREER_PATH)["Qtd de Job Profiles"]
+)
+
+with st.expander("Ver todos os Career Paths"):
+    st.dataframe(career_path_dist, use_container_width=True)
+
+# ======================================================================
+# PERSPECTIVA DE REMUNERAÇÃO / RH
+# (qualidade da job architecture para suportar decisões)
+# ======================================================================
+st.markdown("---")
+st.markdown("### Qualidade da Job Architecture (perspectiva Remuneração / RH)")
+
+# 1) Perfis sem Grade / Band / Level
+missing_grade = df[df[COL_GRADE].isna()]
+missing_band = df[df[COL_BAND].isna()]
+missing_level = df[df[COL_LEVEL].isna()]
+missing_career_path = df[df[COL_CAREER_PATH].isna()]
+
+col_q1, col_q2, col_q3, col_q4 = st.columns(4)
+col_q1.metric("Job Profiles sem Grade", missing_grade[COL_PROFILE].nunique())
+col_q2.metric("Job Profiles sem Band", missing_band[COL_PROFILE].nunique())
+col_q3.metric("Job Profiles sem Level", missing_level[COL_PROFILE].nunique())
+col_q4.metric("Job Profiles sem Career Path", missing_career_path[COL_PROFILE].nunique())
+
+# 2) Duplicidade de Full Job Code (mesmo código, múltiplos perfis)
+dup_code = df[df.duplicated(subset=[COL_FULL_CODE], keep=False)]
+dup_code_grouped = (
+    dup_code.groupby(COL_FULL_CODE)[COL_PROFILE]
+    .nunique()
+    .reset_index(name="Qtd de Job Profiles")
+)
+dup_code_problem = dup_code_grouped[dup_code_grouped["Qtd de Job Profiles"] > 1]
+
+# 3) Famílias com poucos profiles (possível gap de desenho)
+family_low = familia_profiles[familia_profiles["Qtd de Job Profiles"] <= 2]
+
+with st.expander("Possíveis problemas de desenho / governança"):
+    st.markdown("#### 1. Códigos de Job duplicados (mesmo Full Job Code para múltiplos perfis)")
+    if not dup_code_problem.empty:
+        st.dataframe(dup_code_problem, use_container_width=True)
+        st.caption("Idealmente, cada Full Job Code deve estar associado a um único Job Profile.")
+    else:
+        st.success("Não foram encontradas duplicidades relevantes de Full Job Code em Job Profiles.")
+
+    st.markdown("#### 2. Famílias com poucos Job Profiles (≤ 2)")
+    if not family_low.empty:
+        st.dataframe(family_low, use_container_width=True)
+        st.caption(
+            "Famílias com poucos profiles podem indicar oportunidades de melhor detalhamento / consolidação."
+        )
+    else:
+        st.success("Todas as famílias possuem portfólio de Job Profiles razoavelmente distribuído.")
+
+    st.markdown("#### 3. Job Profiles sem Career Path / Band / Grade / Level")
+    st.write("**Sem Grade:**")
+    if not missing_grade.empty:
+        st.dataframe(
+            missing_grade[[COL_FAMILY, COL_SUBFAMILY, COL_PROFILE, COL_GRADE]],
+            use_container_width=True,
+        )
+    else:
+        st.info("Não há Job Profiles sem Grade.")
+
+    st.write("**Sem Band:**")
+    if not missing_band.empty:
+        st.dataframe(
+            missing_band[[COL_FAMILY, COL_SUBFAMILY, COL_PROFILE, COL_BAND]],
+            use_container_width=True,
+        )
+    else:
+        st.info("Não há Job Profiles sem Band.")
+
+    st.write("**Sem Level:**")
+    if not missing_level.empty:
+        st.dataframe(
+            missing_level[[COL_FAMILY, COL_SUBFAMILY, COL_PROFILE, COL_LEVEL]],
+            use_container_width=True,
+        )
+    else:
+        st.info("Não há Job Profiles sem Level.")
+
+    st.write("**Sem Career Path:**")
+    if not missing_career_path.empty:
+        st.dataframe(
+            missing_career_path[
+                [COL_FAMILY, COL_SUBFAMILY, COL_PROFILE, COL_CAREER_PATH]
+            ],
+            use_container_width=True,
+        )
+    else:
+        st.info("Não há Job Profiles sem Career Path.")
+
+# ======================================================================
+# TABELA DE APOIO — VISÃO RESUMIDA POR FAMÍLIA E SUBFAMÍLIA
+# ======================================================================
+st.markdown("---")
+st.markdown("### Resumo por Família e Subfamília")
+
+resumo_family_sub = (
+    df.groupby([COL_FAMILY, COL_SUBFAMILY])
+    .agg(
+        qtd_job_profiles=(COL_PROFILE, "nunique"),
+        qtd_career_paths=(COL_CAREER_PATH, "nunique"),
+        qtd_grades=(COL_GRADE, "nunique"),
     )
-    st.plotly_chart(fig_sub, use_container_width=True)
+    .reset_index()
+    .sort_values(["Job Family", "Sub Job Family"])
+)
 
-
-# ==========================================================
-# SEÇÃO 2 — ESTRUTURA DE CARREIRA
-# ==========================================================
-with st.expander("🧱 Estrutura de Carreira (Career Level × Family)"):
-
-    st.subheader("Heatmap — Career Level × Family")
-
-    pivot = pd.pivot_table(
-        df,
-        values="job_profile",
-        index="career_level",
-        columns="job_family",
-        aggfunc="count",
-        fill_value=0
-    )
-
-    fig_heat = px.imshow(
-        pivot,
-        text_auto=True,
-        color_continuous_scale=[SIG_SPARK, SIG_SKY]
-    )
-    st.plotly_chart(fig_heat, use_container_width=True)
-
-    st.subheader("Pirâmide de Senioridade (Distribuição)")
-    senioridade = df['career_level'].value_counts().sort_index()
-
-    fig_pyr = px.bar(
-        x=senioridade.values,
-        y=senioridade.index,
-        orientation="h",
-        color=senioridade.values,
-        color_continuous_scale=[SIG_SPARK, SIG_SKY]
-    )
-    fig_pyr.update_layout(xaxis_title="Qtde", yaxis_title="Career Level")
-    st.plotly_chart(fig_pyr, use_container_width=True)
-
-    st.subheader("Profundidade de Carreira por Família")
-
-    fam_sel = st.selectbox("Selecione a família:", cargos_por_familia.index)
-
-    valor = carreiras_por_familia[fam_sel]
-    max_val = carreiras_por_familia.max()
-
-    fig_gauge = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=valor,
-        title={'text': fam_sel},
-        gauge={
-            'axis': {'range': [0, max_val]},
-            'bar': {'color': SIG_SKY},
-            'steps': [
-                {'range': [0, max_val*0.25], 'color': SIG_SPARK},
-                {'range': [max_val*0.25, max_val*0.5], 'color': SIG_MOSS2},
-                {'range': [max_val*0.5, max_val*0.75], 'color': SIG_FOREST2},
-                {'range': [max_val*0.75, max_val], 'color': SIG_BLACK},
-            ]
-        }
-    ))
-    st.plotly_chart(fig_gauge, use_container_width=True)
-
-
-# ==========================================================
-# SEÇÃO 3 — GOVERNANÇA, GAPS E CONSISTÊNCIA
-# ==========================================================
-with st.expander("🧭 Governança, Gaps e Consistências (Auditoria Automática)"):
-
-    st.subheader("Inconsistências de Nomenclatura")
-    inconsist = df['job_profile'].str.lower().str.contains("jr|junior|sr|senior")
-    st.dataframe(df[incons][['job_family','sub_job_family','job_profile']])
-
-    st.subheader("Subfamílias com apenas 1 cargo")
-    sub_1 = cargos_por_subfamilia[cargos_por_subfamilia==1]
-    st.write(sub_1)
-
-    st.subheader("Job Architecture Health Score")
-
-    score = (
-        (1 - (sub_1.count() / qtd_subfamilias)) * 0.4 +
-        (cargos_por_familia.std() / cargos_por_familia.mean()) * (-0.3) +
-        (carreiras_por_familia.mean() / carreiras_por_familia.max()) * 0.3
-    )
-
-    score_final = max(0, min(100, round(score*100,1)))
-    st.metric("Health Score", f"{score_final}/100")
-
-
-# ==========================================================
-# SEÇÃO 4 — TRAJETÓRIA (SANKEY)
-# ==========================================================
-with st.expander("🔗 Trajetórias e Progressão (Sankey)"):
-
-    st.subheader("Fluxo de Progressão — Career Level")
-
-    df_sorted = df.sort_values(by="career_level").copy()
-    df_sorted["next_level"] = df_sorted["career_level"].shift(-1)
-
-    sankey = df_sorted.dropna(subset=["next_level"])
-
-    labels = list(pd.unique(sankey["career_level"].tolist() + sankey["next_level"].tolist()))
-    source = sankey["career_level"].apply(lambda x: labels.index(x))
-    target = sankey["next_level"].apply(lambda x: labels.index(x))
-
-    fig_sankey = go.Figure(data=[go.Sankey(
-        node=dict(label=labels, pad=20, thickness=20),
-        link=dict(source=source, target=target, value=[1]*len(source))
-    )])
-
-    st.plotly_chart(fig_sankey, use_container_width=True)
-
-
-# ==========================================================
-# SEÇÃO 5 — CLUSTERIZAÇÃO
-# ==========================================================
-with st.expander("🧬 Clusterização e Similaridade entre Cargos"):
-
-    st.subheader("Clusterização por Complexidade (simplificada)")
-
-    df["len"] = df["job_profile"].str.len()
-
-    X = StandardScaler().fit_transform(df[["len"]])
-    kmeans = KMeans(n_clusters=4, random_state=42).fit(X)
-    df["cluster"] = kmeans.labels_
-
-    fig_cluster = px.scatter(
-        df,
-        x="len",
-        y="cluster",
-        color=df["cluster"].astype(str),
-        color_discrete_sequence=SIG_COLORS
-    )
-
-    st.plotly_chart(fig_cluster, use_container_width=True)
-
-    st.write("Clusterização baseada no tamanho do nome como feature simplificada.")
+st.dataframe(resumo_family_sub, use_container_width=True)
