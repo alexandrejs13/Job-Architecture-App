@@ -1,18 +1,6 @@
 [theme]
-
-# Cor principal SIG (azul corporativo)
-primaryColor = "#145efc"
-
-# Fundo neutro para o app
-backgroundColor = "#ffffff"
-
-# Fundo neutro suave (pode combinar com sand1)
-secondaryBackgroundColor = "#f5efe6"
-
-# Texto padrão preto (100% legível)
+primaryColor = "#145efc"          # SIG Sky
+backgroundColor = "#ffffff"       # White
+secondaryBackgroundColor = "#f2efeb"  # SIG Sand 1 (OFICIAL)
 textColor = "#000000"
-
-# MUITO IMPORTANTE:
-# Não defina nenhuma fonte aqui.
-# Isto permite que o CSS global carregue PPSIGFlow corretamente.
-font = ""
+font = ""                          # Permite PPSIGFlow assumir via CSS
