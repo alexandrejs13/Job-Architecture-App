@@ -1,55 +1,64 @@
 /* ============================================================
-   FONTS PPSIGFlow
+   FONTS PPSIGFlow — Caminho ABSOLUTO (funciona em app.py e páginas)
    ============================================================ */
 @font-face {
     font-family: "PPSIGFlow";
-    src: url("../fonts/PPSIGFlow-Regular.otf") format("opentype");
+    src: url("/assets/fonts/PPSIGFlow-Regular.otf") format("opentype");
     font-weight: 400;
 }
+
 @font-face {
     font-family: "PPSIGFlow";
-    src: url("../fonts/PPSIGFlow-SemiBold.otf") format("opentype");
+    src: url("/assets/fonts/PPSIGFlow-SemiBold.otf") format("opentype");
     font-weight: 600;
 }
+
 @font-face {
     font-family: "PPSIGFlow";
-    src: url("../fonts/PPSIGFlow-Bold.otf") format("opentype");
+    src: url("/assets/fonts/PPSIGFlow-Bold.otf") format("opentype");
     font-weight: 700;
 }
 
-/* aplica a fonte e fundo */
+/* aplica a fonte global */
 html, body, [data-testid="stAppViewContainer"] {
     font-family: "PPSIGFlow", sans-serif !important;
     background: white !important;
 }
 
 /* ============================================================
-   GLOBAL LAYOUT SIG
+   SIDEBAR SIG
    ============================================================ */
 
-/* sidebar fixa, padrão SIG */
 [data-testid="stSidebar"] {
     background: #f5efe6 !important;   /* sand1 */
     width: 300px !important;
     min-width: 300px !important;
     max-width: 300px !important;
-    resize: none !important;
+    border-right: 1px solid #eee !important;
     overflow-y: auto !important;
-    border-right: 1px solid #eee;
 }
 
-/* texto da sidebar */
 [data-testid="stSidebar"] * {
     font-family: "PPSIGFlow" !important;
 }
 
-/* área principal centralizada */
+/* header lateral (nome da página atual) */
+[data-testid="stSidebar"] .css-1v0mbdj {
+    font-family: "PPSIGFlow" !important;
+    font-weight: 600 !important;
+}
+
+/* ============================================================
+   ÁREA PRINCIPAL CENTRALIZADA
+   ============================================================ */
 .block-container {
     max-width: 1500px !important;
     padding-top: 1rem;
 }
 
-/* botões SIG */
+/* ============================================================
+   BOTÕES SIG
+   ============================================================ */
 .stButton > button {
     background: #145efc !important;
     color: white !important;
@@ -59,14 +68,14 @@ html, body, [data-testid="stAppViewContainer"] {
     border: none !important;
 }
 
-/* remove contorno azul */
+/* remove contorno azul feio */
 button:focus, button:active, *:focus {
     outline: none !important;
     box-shadow: none !important;
 }
 
 /* ============================================================
-   GRID RESPONSIVO
+   GRID RESPONSIVO — 1–2–3 COLUNAS
    ============================================================ */
 .jp-grid {
     display: grid;
@@ -74,21 +83,18 @@ button:focus, button:active, *:focus {
     width: 100%;
 }
 
-/* 1 coluna (mobile) */
 @media (max-width: 899px) {
     .jp-grid {
         grid-template-columns: 1fr;
     }
 }
 
-/* 2 colunas */
 @media (min-width: 900px) and (max-width: 1299px) {
     .jp-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-/* 3 colunas */
 @media (min-width: 1300px) {
     .jp-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -110,7 +116,6 @@ button:focus, button:active, *:focus {
     position: relative;
 }
 
-/* header fixo interno */
 .jp-header {
     padding: 22px;
     border-bottom: 1px solid #dfdad3;
@@ -120,13 +125,11 @@ button:focus, button:active, *:focus {
     z-index: 10;
 }
 
-/* área rolável */
 .jp-scroll {
     padding: 20px 24px;
     overflow-y: auto;
 }
 
-/* título */
 .jp-title {
     font-size: 1.35rem;
     font-weight: 800;
@@ -140,7 +143,6 @@ button:focus, button:active, *:focus {
     color: #145efc;
 }
 
-/* bloco meta */
 .jp-meta-block {
     margin-top: 15px;
     padding: 16px;
@@ -154,7 +156,6 @@ button:focus, button:active, *:focus {
     font-size: 0.92rem;
 }
 
-/* seção */
 .jp-section {
     margin-top: 24px;
     padding: 16px;
@@ -190,13 +191,12 @@ button:focus, button:active, *:focus {
     line-height: 1.4;
 }
 
-/* botão PDF removido */
 .jp-pdf-btn {
     display: none !important;
 }
 
 /* ============================================================
-   FIX DEFINITIVO — HTML NÃO ESCAPA NO MARKDOWN
+   FIX DEFINITIVO — Streamlit NÃO ESCAPA HTML MAIS
    ============================================================ */
 
 [data-testid="stMarkdown"] pre,
