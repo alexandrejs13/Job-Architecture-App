@@ -102,74 +102,74 @@ icons = {
     "Competencies 1": "Setting_Cog.svg",
     "Competencies 2": "Setting_Cog.svg",
     "Competencies 3": "Setting_Cog.svg",
-]
+}
 
 # ---------------------------------------------------------
-# HTML FINAL — CARDS DO TOPO + SEÇÕES SEM CARD
+# BUILD HTML SAFELY
 # ---------------------------------------------------------
+
 def build_html(profiles):
 
     n = len(profiles)
 
-    html_code = f"""
+    html_template = r"""
 <html>
 <head>
 <meta charset="UTF-8">
 
 <style>
 
-html, body {{
+html, body {
     margin: 0;
     padding: 0;
     height: 100%;
     overflow: hidden;
     font-family: 'Segoe UI', sans-serif;
-}}
+}
 
-#viewport {{
+#viewport {
     height: 100vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-}}
+}
 
-/* TOPO COM SAND — DO JEITO ORIGINAL */
-#top-area {{
+/* TOPO */
+#top-area {
     background: white;
     padding: 12px 18px;
     position: sticky;
     top: 0;
     z-index: 20;
-    box-shadow: none;
-}}
+}
 
-.grid-top {{
+.grid-top {
     display: grid;
-    grid-template-columns: repeat({n}, 1fr);
+    grid-template-columns: repeat(FILL_COLS, 1fr);
     gap: 24px;
-}}
+}
 
-.card-top {{
+.card-top {
     background: white;
     border-radius: 16px;
     padding: 22px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-}}
+}
 
-.title {{
+.title {
     font-size: 21px;
     font-weight: 700;
     line-height: 1.15;
-}}
+}
 
-.gg {{
+.gg {
     color: #145efc;
     font-size: 18px;
     font-weight: 700;
     margin-top: 6px;
-}}
+}
 
-.meta {{
+.meta {
     background: #f5f3ee;
     padding: 14px;
     border-radius: 12px;
@@ -177,40 +177,40 @@ html, body {{
     border: 1px solid #e3e1dd;
     font-size: 15px;
     line-height: 1.45;
-}}
+}
 
-/* SCROLL AREA */
-#scroll-area {{
+/* SCROLL */
+#scroll-area {
     flex: 1;
     overflow-y: auto;
     padding: 22px;
-}}
+}
 
-.grid-row {{
+.grid-row {
     display: grid;
-    grid-template-columns: repeat({n}, 1fr);
+    grid-template-columns: repeat(FILL_COLS, 1fr);
     gap: 36px;
     margin-bottom: 36px;
-}}
+}
 
-.section-title {{
+.section-title {
     font-size: 17px;
     font-weight: 700;
     margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 8px;
-}}
+}
 
-.section-title img {{
+.section-title img {
     width: 20px;
-}}
+}
 
-.text {{
+.text {
     font-size: 15px;
     line-height: 1.45;
     white-space: pre-wrap;
-}}
+}
 
 </style>
 </head>
@@ -220,64 +220,60 @@ html, body {{
 
     <div id="top-area">
         <div class="grid-top">
-    """
-
-    # ------------------ TOP CARDS (COM SAND) ------------------
-    for p in profiles:
-        job = html.escape(p["Job Profile"])
-        gg = html.escape(str(p["Global Grade"]))
-        jf = html.escape(p["Job Family"])
-        sf = html.escape(p["Sub Job Family"])
-        cp = html.escape(p["Career Path"])
-        fc = html.escape(p["Full Job Code"])
-
-        html_code += f"""
-        <div class="card-top">
-            <div class="title">{job}</div>
-            <div class="gg">GG {gg}</div>
-            <div class="meta">
-                <b>Job Family:</b> {jf}<br>
-                <b>Sub Job Family:</b> {sf}<br>
-                <b>Career Path:</b> {cp}<br>
-                <b>Full Job Code:</b> {fc}
-            </div>
-        </div>
-        """
-
-    html_code += """
+TOP_CARDS
         </div>
     </div>
 
     <div id="scroll-area">
-    """
-
-    # ------------------ SEÇÕES SEM CARD — SOMENTE TEXTO ------------------
-    for sec in sections:
-        html_code += f"""<div class="grid-row">"""
-
-        for p in profiles:
-            val = p.get(sec, "").strip()
-            icon = icons[sec]
-
-            html_code += f"""
-            <div>
-                <div class="section-title">
-                    <img src="assets/icons/sig/{icon}">
-                    {html.escape(sec)}
-                </div>
-                <div class="text">{html.escape(val)}</div>
-            </div>
-            """
-
-        html_code += "</div>"
-
-    html_code += """
+SECTIONS_HTML
     </div>
+
 </div>
 </body>
 </html>
 """
 
-    return html_code
+    # ---------- BUILD TOP CARDS ----------
+    top_cards = ""
+    for p in profiles:
+        top_cards += f"""
+<div class="card-top">
+    <div class="title">{html.escape(p['Job Profile'])}</div>
+    <div class="gg">GG {html.escape(str(p['Global Grade']))}</div>
+    <div class="meta">
+        <b>Job Family:</b> {html.escape(p['Job Family'])}<br>
+        <b>Sub Job Family:</b> {html.escape(p['Sub Job Family'])}<br>
+        <b>Career Path:</b> {html.escape(p['Career Path'])}<br>
+        <b>Full Job Code:</b> {html.escape(p['Full Job Code'])}
+    </div>
+</div>
+"""
+
+    # ---------- BUILD SECTIONS ----------
+    sections_html = ""
+    for sec in sections:
+        row = f'<div class="grid-row">\n'
+        for p in profiles:
+            txt = html.escape(str(p.get(sec, "")).strip())
+            ic = icons[sec]
+            row += f"""
+<div>
+    <div class="section-title">
+        <img src="assets/icons/sig/{ic}">
+        {sec}
+    </div>
+    <div class="text">{txt}</div>
+</div>
+"""
+        row += "</div>"
+        sections_html += row
+
+    # ---------- FINAL HTML ----------
+    html_final = html_template.replace("FILL_COLS", str(n)) \
+                              .replace("TOP_CARDS", top_cards) \
+                              .replace("SECTIONS_HTML", sections_html)
+
+    return html_final
+
 
 components.html(build_html(profiles), height=900, scrolling=False)
