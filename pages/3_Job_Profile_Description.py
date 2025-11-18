@@ -11,33 +11,35 @@ import os
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ---------------------------------------------------------
-# LOAD PAGE ICON (PNG) -> INLINE BASE64
+# LOAD PAGE ICON (PNG) AS BASE64
 # ---------------------------------------------------------
-def load_page_icon():
-    path = "assets/icons/business_review_clipboard.png"
-    if not os.path.exists(path):
-        return ""
+def load_icon_png(path):
     with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
+        return base64.b64encode(f.read()).decode("utf-8")
 
-page_icon_b64 = load_page_icon()
+page_icon_b64 = load_icon_png("assets/icons/business_review_clipboard.png")
 
 # ---------------------------------------------------------
-# HEADER (ÍCONE GRANDE + ALINHAMENTO PERFEITO)
+# HEADER — ÍCONE + TÍTULO + ESPAÇO + SUBTÍTULO
 # ---------------------------------------------------------
 st.markdown(f"""
-<div style="display:flex; align-items:center; gap:16px; margin-bottom:6px;">
-    <img src="data:image/png;base64,{page_icon_b64}" style="width:42px; height:42px; margin-top:2px;">
+<div style="display:flex; align-items:center; gap:18px; margin-bottom:6px; margin-top:10px;">
+    <img src="data:image/png;base64,{page_icon_b64}" style="width:48px; height:48px;">
     <h1 style="font-size:36px; font-weight:700; margin:0; padding:0;">
         Job Profile Description
     </h1>
 </div>
 
-<hr style="margin-top:8px; margin-bottom:0;">
+<hr style="margin-top:14px; margin-bottom:36px;">
 """, unsafe_allow_html=True)
 
+# Subtítulo sem ícone de lupa
+st.markdown("""
+### Job Profile Description Explorer
+""")
+
 # ---------------------------------------------------------
-# LOAD EXCEL
+# LOAD DATA
 # ---------------------------------------------------------
 @st.cache_data
 def load_profiles():
@@ -55,7 +57,7 @@ def load_svg(svg_name):
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
-# MAP FINAL
+# Icones SVG
 icons_svg = {
     "Sub Job Family Description": load_svg("Hierarchy.svg"),
     "Job Profile Description": load_svg("Content_Book_Phone.svg"),
@@ -72,8 +74,6 @@ icons_svg = {
 # ---------------------------------------------------------
 # TOP FILTERS
 # ---------------------------------------------------------
-st.subheader("🔍 Job Profile Description Explorer")
-
 c1, c2, c3 = st.columns([1, 1, 1])
 
 with c1:
@@ -134,7 +134,7 @@ sections = [
 ]
 
 # ---------------------------------------------------------
-# BUILD HTML FINAL
+# BUILD HTML
 # ---------------------------------------------------------
 def build_html(profiles):
 
@@ -162,32 +162,34 @@ html, body {{
     overflow: hidden;
 }}
 
-/* --------------------------
-   TOP GRID – SAND1 CARDS
---------------------------- */
-#top-area {{
-    background: white;
-    padding: 18px 24px;
-    flex-shrink: 0;
-}}
-
+/* GRID PERFEITAMENTE DISTRIBUÍDO (FULL WIDTH) */
 .grid-top {{
     display: grid;
     grid-template-columns: repeat({n}, 1fr);
-    gap: 26px;
+    gap: 24px;
+    width: 100%;
 }}
 
+.grid-desc {{
+    display: grid;
+    grid-template-columns: repeat({n}, 1fr);
+    gap: 28px;
+    width: 100%;
+}}
+
+/* CARD SUPERIOR → AGORA FUNDO SAND1 */
 .card-top {{
-    background: #f5f3ee;        /* SAND1 */
+    background: #f5f3ee;
     border-radius: 16px;
-    padding: 24px 26px;
-    box-shadow: none;           /* sem sombra */
+    padding: 22px 24px;
+    box-shadow: none;
+    border: 1px solid #e3e1dd;
 }}
 
 .title {{
     font-size: 20px;
     font-weight: 700;
-    line-height: 1.28;
+    line-height: 1.25;
 }}
 
 .gg {{
@@ -198,57 +200,48 @@ html, body {{
 }}
 
 .meta {{
-    background: white;     /* AGORA O BLOCO MENOR É BRANCO */
+    background: white;
     padding: 14px;
-    border-radius: 12px;
     margin-top: 14px;
-    border: 1px solid #e6e4df;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     font-size: 14px;
 }}
 
-/* --------------------------
-   SCROLL AREA
---------------------------- */
+/* SCROLL AREA */
 #scroll-area {{
     flex: 1;
     overflow-y: auto;
-    padding: 28px 24px 40px 24px;
+    padding: 20px 4px 32px 4px;
 }}
 
-.grid-desc {{
-    display: grid;
-    grid-template-columns: repeat({n}, 1fr);
-    gap: 28px;
-}}
-
+/* SECTION PERFEITAMENTE ALINHADA POR LINHAS */
 .row {{
     display: contents;
 }}
 
 .section-box {{
-    padding-bottom: 32px;
+    padding-bottom: 28px;
 }}
 
 .section-title {{
     font-size: 16px;
     font-weight: 700;
-    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }}
 
 .section-line {{
     height: 1px;
-    background: #e7e5e0;
+    background: #e8e6e1;
     width: 100%;
-    margin: 6px 0 14px 0;
+    margin: 8px 0 14px 0;
 }}
 
 .section-text {{
     font-size: 14px;
-    line-height: 1.42;
+    line-height: 1.45;
     white-space: pre-wrap;
 }}
 
@@ -264,12 +257,11 @@ html, body {{
 
 <div id="viewport">
 
-    <!-- TOP CARDS -->
     <div id="top-area">
         <div class="grid-top">
     """
 
-    # ---------- TOP CARDS ----------
+    # Top Cards
     for p in profiles:
         job = html.escape(p["Job Profile"])
         gg = html.escape(str(p["Global Grade"]))
@@ -282,6 +274,7 @@ html, body {{
         <div class="card-top">
             <div class="title">{job}</div>
             <div class="gg">GG {gg}</div>
+
             <div class="meta">
                 <b>Job Family:</b> {jf}<br>
                 <b>Sub Job Family:</b> {sf}<br>
@@ -295,29 +288,25 @@ html, body {{
         </div>
     </div>
 
-    <!-- BODY -->
     <div id="scroll-area">
         <div class="grid-desc">
     """
 
-    # ---------- CONTENT ----------
     for sec in sections:
-
         html_code += "<div class='row'>"
-
         for p in profiles:
             val = p.get(sec, "")
             icon = icons_svg.get(sec, "")
-            icon_block = f"<span class='icon-inline'>{icon}</span>"
-
             html_code += f"""
             <div class="section-box">
-                <div class="section-title">{icon_block} {html.escape(sec)}</div>
+                <div class="section-title">
+                    <span class="icon-inline">{icon}</span>
+                    {html.escape(sec)}
+                </div>
                 <div class="section-line"></div>
                 <div class="section-text">{html.escape(str(val))}</div>
             </div>
             """
-
         html_code += "</div>"
 
     html_code += """
@@ -326,14 +315,9 @@ html, body {{
 
 </div>
 
-</body>
-</html>
+</body></html>
 """
-
     return html_code
 
-
-# ---------------------------------------------------------
-# RENDER HTML
-# ---------------------------------------------------------
+# Render
 components.html(build_html(profiles), height=900, scrolling=False)
