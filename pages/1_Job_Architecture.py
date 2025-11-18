@@ -32,3 +32,55 @@ st.markdown(f"""
 
 <hr style="margin-top:14px; margin-bottom:26px;">
 """, unsafe_allow_html=True)
+
+# ==========================================================
+# CSS E BLOCO CENTRAL
+# ==========================================================
+html = f"""
+<style>
+@font-face {{
+    font-family: 'SIGFlowBold';
+    src: url('assets/css/fonts/PPSIGFlow-Bold.otf') format('opentype');
+}}
+
+@font-face {{
+    font-family: 'SIGFlowRegular';
+    src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
+}}
+
+h1.sig-title {{
+    font-family: 'SIGFlowBold', sans-serif;
+    font-size: 52px;
+    text-align: center;
+    margin: 0;
+}}
+
+p.sig-subtitle {{
+    font-family: 'SIGFlowRegular', sans-serif;
+    font-size: 20px;
+    color: #555;
+    text-align: center;
+    max-width: 900px;
+    margin: 14px auto 0 auto;
+    line-height: 1.45;
+}}
+</style>
+
+<div style="text-align:center; padding-top:20px;">
+
+    <h1 class="sig-title">O que é Job Architecture?</h1>
+
+    <p class="sig-subtitle">
+        Job Architecture é a estrutura que organiza todos os cargos da empresa de forma clara, lógica e comparável. 
+        Ela define famílias, níveis, escopos e critérios objetivos que diferenciam cada papel, permitindo consistência 
+        global na classificação e avaliação das funções. Essa organização cria um padrão único para entender senioridade, 
+        complexidade e responsabilidade, fortalecendo governança, equidade interna e decisões transparentes de 
+        remuneração e carreira. Com uma arquitetura bem desenhada, a empresa consegue alinhar expectativas, facilitar 
+        mobilidade interna e garantir que posições semelhantes sejam tratadas com a mesma lógica em todas as áreas 
+        e geografias.
+    </p>
+
+</div>
+"""
+
+st.components.v1.html(html, height=700)
