@@ -9,7 +9,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Job Profile Description", layout="wide")
 
 # ---------------------------------------------------------
-# HEADER (fora do HTML principal)
+# HEADER
 # ---------------------------------------------------------
 st.markdown("""
 <h1 style="font-size:36px; font-weight:700; margin-bottom:4px;">
@@ -105,7 +105,7 @@ icons = {
 }
 
 # ---------------------------------------------------------
-# BUILD HTML (VERSÃO DEFINITIVA)
+# BUILD HTML FINAL
 # ---------------------------------------------------------
 def build_html(profiles):
 
@@ -122,7 +122,7 @@ html, body {{
     margin: 0;
     padding: 0;
     height: 100%;
-    overflow: hidden; /* 🔥 streamlit NÃO controla mais scroll */
+    overflow: hidden;
     font-family: 'Segoe UI', sans-serif;
 }}
 
@@ -130,10 +130,10 @@ html, body {{
     height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* 🔥 garante que só scroll-area role */
+    overflow: hidden;
 }}
 
-/* BLOCO SUPERIOR FIXO */
+/* 🔥 CABEÇALHO FIXO SEM SOMBRA */
 #top-area {{
     background: white;
     padding: 12px 18px;
@@ -141,7 +141,10 @@ html, body {{
     position: sticky;
     top: 0;
     z-index: 20;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+
+    /* remove linha e sombra */
+    box-shadow: none !important;
+    border-bottom: none !important;
 }}
 
 .grid-top {{
@@ -155,6 +158,16 @@ html, body {{
     border-radius: 16px;
     padding: 22px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+}}
+
+/* 🔥 Altura fixa para alinhar títulos */
+.header-block {{
+    min-height: 90px; /* Ajuste fino se quiser */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
 }}
 
 .title {{
@@ -177,10 +190,10 @@ html, body {{
     border: 1px solid #e3e1dd;
 }}
 
-/* ÁREA DE ROLAGEM ÚNICA */
+/* 🔥 ÁREA DE SCROLL ÚNICO */
 #scroll-area {{
     flex: 1;
-    overflow-y: auto;    /* 🔥 rolagem REAL está aqui */
+    overflow-y: auto;
     overflow-x: hidden;
     padding: 20px;
 }}
@@ -224,7 +237,7 @@ html, body {{
 
 <div id="viewport">
 
-    <!-- 🔥 CABEÇALHO FIXO -->
+    <!-- CARDS SUPERIORES -->
     <div id="top-area">
         <div class="grid-top">
     """
@@ -240,8 +253,11 @@ html, body {{
 
         html_code += f"""
         <div class="card-top">
-            <div class="title">{job}</div>
-            <div class="gg">GG {gg}</div>
+            <div class="header-block">
+                <div class="title">{job}</div>
+                <div class="gg">GG {gg}</div>
+            </div>
+
             <div class="meta">
                 <b>Job Family:</b> {jf}<br>
                 <b>Sub Job Family:</b> {sf}<br>
@@ -255,7 +271,7 @@ html, body {{
         </div>
     </div>
 
-    <!-- 🔥 ÁREA ROLÁVEL ÚNICA -->
+    <!-- ÁREA ROLÁVEL ÚNICA -->
     <div id="scroll-area">
         <div class="grid-desc">
     """
@@ -294,6 +310,6 @@ html, body {{
     return html_code
 
 # ---------------------------------------------------------
-# RENDER HTML — COMPONENTE AGORA NÃO ROLA MAIS
+# RENDER HTML
 # ---------------------------------------------------------
 components.html(build_html(profiles), height=900, scrolling=False)
