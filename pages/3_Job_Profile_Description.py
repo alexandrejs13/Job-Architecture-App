@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import html
 import streamlit.components.v1 as components
+import base64
 import os
 
 # ---------------------------------------------------------
@@ -29,15 +30,28 @@ def load_profiles():
 df = load_profiles()
 
 # ---------------------------------------------------------
-# SVG INLINE LOADER
+# INLINE SVG LOADER
 # ---------------------------------------------------------
-def load_svg(name):
-    path = f"assets/icons/sig/{name}"
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read()
-    return ""
+def load_svg(svg_name):
+    path = f"assets/icons/sig/{svg_name}"
+    if not os.path.exists(path):
+        return ""
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
 
+# Mapeamento DEFINITIVO
+icons_svg = {
+    "Sub Job Family Description": load_svg("Hierarchy.svg"),
+    "Job Profile Description": load_svg("Content_Book_Phone.svg"),
+    "Career Band Description": load_svg("File_Clipboard_Text.svg"),
+    "Role Description": load_svg("Shopping_Business_Target.svg"),
+    "Grade Differentiator": load_svg("User_Add.svg"),
+    "Qualifications": load_svg("Edit_Pencil.svg"),
+    "Specific parameters / KPIs": load_svg("Graph_Bar.svg"),
+    "Competencies 1": load_svg("Setting_Cog.svg"),
+    "Competencies 2": load_svg("Setting_Cog.svg"),
+    "Competencies 3": load_svg("Setting_Cog.svg"),
+}
 
 # ---------------------------------------------------------
 # TOP FILTERS
@@ -88,7 +102,7 @@ if not selected:
 profiles = [flt[flt["label"] == s].iloc[0].to_dict() for s in selected]
 
 # ---------------------------------------------------------
-# SECTIONS CONFIG + SVG MAP
+# SECTION ORDER
 # ---------------------------------------------------------
 sections = [
     "Sub Job Family Description",
@@ -102,23 +116,6 @@ sections = [
     "Competencies 2",
     "Competencies 3",
 ]
-
-icon_map = {
-    "Sub Job Family Description": "Hierarchy.svg",
-    "Job Profile Description": "Content_Book_Phone.svg",
-    "Career Band Description": "File_Clipboard_Text.svg",
-    "Role Description": "Shopping_Business_Target.svg",
-    "Grade Differentiator": "User_Add.svg",
-    "Qualifications": "Edit_Pencil.svg",
-    "Specific parameters / KPIs": "Graph_Bar.svg",
-    "Competencies 1": "Setting_Cog.svg",
-    "Competencies 2": "Setting_Cog.svg",
-    "Competencies 3": "Setting_Cog.svg",
-}
-
-# Precarregar SVGs inline
-svg_inline = {k: load_svg(v) for k, v in icon_map.items()}
-
 
 # ---------------------------------------------------------
 # BUILD HTML FINAL
@@ -149,11 +146,10 @@ html, body {{
     overflow: hidden;
 }}
 
-/* --------- HEADER SUPERIOR --------- */
-
+/* 🔥 TOPO FIXO */
 #top-area {{
     background: white;
-    padding: 12px 18px;
+    padding: 16px 24px;
     flex-shrink: 0;
     position: sticky;
     top: 0;
@@ -163,32 +159,25 @@ html, body {{
 .grid-top {{
     display: grid;
     grid-template-columns: repeat({n}, 1fr);
-    gap: 24px;
+    gap: 28px;
 }}
 
 .card-top {{
     background: white;
     border-radius: 16px;
-    padding: 22px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-}}
-
-/* Alinha títulos mesmo quebrando linha */
-.header-block {{
-    min-height: 90px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    padding: 18px 22px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.10);
 }}
 
 .title {{
-    font-size: 21px;
+    font-size: 20px;
     font-weight: 700;
+    line-height: 1.25;
 }}
 
 .gg {{
     color: #145efc;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     margin-top: 6px;
 }}
@@ -197,66 +186,73 @@ html, body {{
     background: #f5f3ee;
     padding: 14px;
     border-radius: 12px;
-    margin-top: 10px;
+    margin-top: 12px;
     border: 1px solid #e3e1dd;
+    font-size: 14px;
 }}
 
-/* --------- ÁREA ROLÁVEL --------- */
-
+/* 🔥 ÁREA DE ROLAGEM ÚNICA */
 #scroll-area {{
     flex: 1;
     overflow-y: auto;
-    padding: 24px 18px 40px 18px;
+    padding: 28px;
 }}
 
 .grid-desc {{
     display: grid;
     grid-template-columns: repeat({n}, 1fr);
-    gap: 36px;
+    gap: 28px;
 }}
 
-/* LINHA FINÍSSIMA estilo ChatGPT */
-.divider {{
-    width: 100%;
-    height: 1px;
-    background: #e5e3df;
-    margin: 6px 0 14px 0;
+/* 🔥 CADA SEÇÃO É UMA LINHA — ALINHAMENTO PERFEITO */
+.row {{
+    display: contents;
 }}
 
-/* TÍTULO + ÍCONE INLINE */
+.section-box {{
+    padding-bottom: 26px;
+}}
+
 .section-title {{
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 17px;
-    font-weight: 700;
-    margin-bottom: 4px;
 }}
 
-.section-title svg {{
-    width: 20px;
-    height: 20px;
+.section-line {{
+    height: 1px;
+    background: #e8e6e1;
+    width: 100%;
+    margin: 6px 0 14px 0;
 }}
 
-.text {{
-    font-size: 15px;
-    line-height: 1.45;
+.section-text {{
+    font-size: 14px;
+    line-height: 1.42;
     white-space: pre-wrap;
 }}
 
+.icon-inline {{
+    width: 20px;
+    height: 20px;
+}}
 </style>
+
 </head>
 
 <body>
 
 <div id="viewport">
 
-    <!-- HEADER SUPERIOR -->
+    <!-- 🔥 TOPO -->
     <div id="top-area">
         <div class="grid-top">
     """
 
-    # TOP CARDS
+    # ---------- TOP CARDS ----------
     for p in profiles:
         job = html.escape(p["Job Profile"])
         gg = html.escape(str(p["Global Grade"]))
@@ -267,10 +263,8 @@ html, body {{
 
         html_code += f"""
         <div class="card-top">
-            <div class="header-block">
-                <div class="title">{job}</div>
-                <div class="gg">GG {gg}</div>
-            </div>
+            <div class="title">{job}</div>
+            <div class="gg">GG {gg}</div>
             <div class="meta">
                 <b>Job Family:</b> {jf}<br>
                 <b>Sub Job Family:</b> {sf}<br>
@@ -284,30 +278,28 @@ html, body {{
         </div>
     </div>
 
-    <!-- ÁREA ROLÁVEL -->
+    <!-- 🔥 CONTEÚDO ROLÁVEL -->
     <div id="scroll-area">
         <div class="grid-desc">
     """
 
-    # DESCRIÇÕES
-    for p in profiles:
-        html_code += "<div>"
+    # ---------- CONTEÚDO ALINHADO POR LINHAS ----------
+    for sec in sections:
 
-        for sec in sections:
+        html_code += "<div class='row'>"
+
+        for p in profiles:
             val = p.get(sec, "")
-            if not val or str(val).strip() == "":
-                continue
 
-            icon_svg = svg_inline[sec]
+            icon = icons_svg.get(sec, "")
+            icon_block = f"<span class='icon-inline'>{icon}</span>"
 
             html_code += f"""
-                <div class="section-title">
-                    {icon_svg}
-                    {html.escape(sec)}
-                </div>
-                <div class="divider"></div>
-                <div class="text">{html.escape(str(val))}</div>
-                <br>
+            <div class="section-box">
+                <div class="section-title">{icon_block} {html.escape(sec)}</div>
+                <div class="section-line"></div>
+                <div class="section-text">{html.escape(str(val))}</div>
+            </div>
             """
 
         html_code += "</div>"
@@ -325,6 +317,6 @@ html, body {{
     return html_code
 
 # ---------------------------------------------------------
-# RENDER
+# RENDER HTML
 # ---------------------------------------------------------
 components.html(build_html(profiles), height=900, scrolling=False)
