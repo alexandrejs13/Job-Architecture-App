@@ -43,16 +43,18 @@ p.sig-subtitle {{
 </style>
 
 <div style="text-align:center; padding-top:40px;">
+
+    <!-- ICON ABOVE TITLE (doubled size) -->
+    <img src="data:image/png;base64,{icon_b64}"
+         style="width:520px; margin-bottom:26px;">  
+
     <h1 class="sig-title">Job Architecture</h1>
 
     <p class="sig-subtitle">
         A global job framework designed to standardize governance and harmonize roles across the organization.
     </p>
 
-    <img src="data:image/png;base64,{icon_b64}"
-         style="width:260px; margin-top:26px;">
 </div>
 """
 
-# 🎯 AQUI está a correção:
-st.components.v1.html(html, height=600)
+st.components.v1.html(html, height=900)
