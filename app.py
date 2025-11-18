@@ -1,24 +1,11 @@
 import streamlit as st
 import base64
 import os
-import textwrap
 
 # ==========================================================
 # CONFIG
 # ==========================================================
 st.set_page_config(page_title="Job Architecture", layout="wide")
-
-# ==========================================================
-# DESBLOQUEIO DE HTML
-# ==========================================================
-st.markdown(
-    """
-    <meta http-equiv="Content-Security-Policy"
-          content="default-src * 'unsafe-inline' 'unsafe-eval' data:;
-                   style-src * 'unsafe-inline' 'unsafe-eval' data:;">
-    """,
-    unsafe_allow_html=True,
-)
 
 # ==========================================================
 # FUNÇÃO PARA CARREGAR PNG INLINE
@@ -36,61 +23,50 @@ icon_path = "assets/icons/governance.png"
 icon_b64 = load_icon_png(icon_path)
 
 # ==========================================================
-# HTML DA TELA INICIAL
+# HTML
 # ==========================================================
 html = f"""
 <style>
 @font-face {{
     font-family: 'SIGFlowBold';
     src: url('assets/css/fonts/PPSIGFlow-Bold.otf') format('opentype');
-    font-weight: bold;
 }}
 
 @font-face {{
     font-family: 'SIGFlowRegular';
     src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
-    font-weight: normal;
 }}
 
 h1.sig-title {{
     font-family: 'SIGFlowBold', sans-serif;
     font-size: 64px;
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     text-align: center;
 }}
 
 p.sig-subtitle {{
     font-family: 'SIGFlowRegular', sans-serif;
     font-size: 20px;
-    margin-top: 10px;
+    margin-top: 12px;
     color: #555;
     text-align: center;
     max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
 }}
 </style>
 
-<div style="
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:flex-start;
-    height:100vh;
-    padding-top:40px;
-">
+<div style="text-align:center; padding-top:40px;">
 
-    <!-- TITLE -->
     <h1 class="sig-title">Job Architecture</h1>
 
-    <!-- SUBTITLE -->
     <p class="sig-subtitle">
         A global job framework designed to standardize governance and harmonize roles across the organization.
     </p>
 
-    <!-- GOVERNANCE ICON BELOW -->
     <img src="data:image/png;base64,{icon_b64}"
-         style="width:260px; margin-top:28px;">
-
+         style="width:260px; margin-top:26px;">
 </div>
 """
 
