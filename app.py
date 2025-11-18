@@ -38,15 +38,15 @@ p.sig-subtitle {{
     color: #555;
     text-align: center;
     max-width: 800px;
-    margin: 12px auto 0 auto;
+    margin: 10px auto 0 auto;
 }}
 </style>
 
 <div style="text-align:center; padding-top:40px;">
 
-    <!-- ICON ABOVE TITLE (doubled size) -->
+    <!-- Elegant icon size + closer spacing -->
     <img src="data:image/png;base64,{icon_b64}"
-         style="width:520px; margin-bottom:26px;">  
+         style="width:360px; margin-bottom:16px;">  
 
     <h1 class="sig-title">Job Architecture</h1>
 
@@ -57,4 +57,4 @@ p.sig-subtitle {{
 </div>
 """
 
-st.components.v1.html(html, height=900)
+st.components.v1.html(html, height=800)
