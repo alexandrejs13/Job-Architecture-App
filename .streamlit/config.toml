@@ -1,6 +1,16 @@
 [theme]
-primaryColor = "#145efc"          # SIG Sky
-backgroundColor = "#ffffff"       # White
-secondaryBackgroundColor = "#f2efeb"  # SIG Sand 1 (OFICIAL)
+# Azul institucional SIG (SIG Sky)
+primaryColor = "#145efc"
+
+# Fundo principal da área de conteúdo (já está branco no seu layout)
+backgroundColor = "#ffffff"
+
+# Fundo secundário / sidebar (SIG Sand 1)
+secondaryBackgroundColor = "#f2efeb"
+
+# Texto padrão
 textColor = "#000000"
-font = ""                          # Permite PPSIGFlow assumir via CSS
+
+# Aqui o Streamlit só aceita fontes padrão.
+# A PPSIGFlow continua sendo carregada via layout_global.css
+font = "sans serif"
