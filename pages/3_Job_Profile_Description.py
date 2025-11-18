@@ -102,10 +102,10 @@ icons = {
     "Competencies 1": "Setting_Cog.svg",
     "Competencies 2": "Setting_Cog.svg",
     "Competencies 3": "Setting_Cog.svg",
-}
+]
 
 # ---------------------------------------------------------
-# HTML — versão topo minimalista
+# HTML FINAL — CARDS DO TOPO + SEÇÕES SEM CARD
 # ---------------------------------------------------------
 def build_html(profiles):
 
@@ -133,7 +133,7 @@ html, body {{
     overflow: hidden;
 }}
 
-/* TOP FIXO — sem sombra */
+/* TOPO COM SAND — DO JEITO ORIGINAL */
 #top-area {{
     background: white;
     padding: 12px 18px;
@@ -150,8 +150,10 @@ html, body {{
 }}
 
 .card-top {{
-    padding: 12px;
+    background: white;
     border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }}
 
 .title {{
@@ -164,31 +166,31 @@ html, body {{
     color: #145efc;
     font-size: 18px;
     font-weight: 700;
-    margin-top: 4px;
+    margin-top: 6px;
 }}
 
-.meta-line {{
+.meta {{
+    background: #f5f3ee;
+    padding: 14px;
+    border-radius: 12px;
+    margin-top: 10px;
+    border: 1px solid #e3e1dd;
     font-size: 15px;
-    margin-top: 2px;
+    line-height: 1.45;
 }}
 
+/* SCROLL AREA */
 #scroll-area {{
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 22px;
 }}
 
 .grid-row {{
     display: grid;
     grid-template-columns: repeat({n}, 1fr);
-    gap: 24px;
-}}
-
-.cell {{
-    background: white;
-    border-radius: 16px;
-    padding: 18px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    gap: 36px;
+    margin-bottom: 36px;
 }}
 
 .section-title {{
@@ -196,8 +198,8 @@ html, body {{
     font-weight: 700;
     margin-bottom: 6px;
     display: flex;
-    gap: 8px;
     align-items: center;
+    gap: 8px;
 }}
 
 .section-title img {{
@@ -220,7 +222,7 @@ html, body {{
         <div class="grid-top">
     """
 
-    # ------------------ TOP CARDS CLEAN ------------------
+    # ------------------ TOP CARDS (COM SAND) ------------------
     for p in profiles:
         job = html.escape(p["Job Profile"])
         gg = html.escape(str(p["Global Grade"]))
@@ -233,11 +235,12 @@ html, body {{
         <div class="card-top">
             <div class="title">{job}</div>
             <div class="gg">GG {gg}</div>
-
-            <div class="meta-line"><b>Job Family:</b> {jf}</div>
-            <div class="meta-line"><b>Sub Job Family:</b> {sf}</div>
-            <div class="meta-line"><b>Career Path:</b> {cp}</div>
-            <div class="meta-line"><b>Full Job Code:</b> {fc}</div>
+            <div class="meta">
+                <b>Job Family:</b> {jf}<br>
+                <b>Sub Job Family:</b> {sf}<br>
+                <b>Career Path:</b> {cp}<br>
+                <b>Full Job Code:</b> {fc}
+            </div>
         </div>
         """
 
@@ -248,34 +251,33 @@ html, body {{
     <div id="scroll-area">
     """
 
-    # ------------------ SEÇÕES ALINHADAS ------------------
+    # ------------------ SEÇÕES SEM CARD — SOMENTE TEXTO ------------------
     for sec in sections:
         html_code += f"""<div class="grid-row">"""
 
         for p in profiles:
-            val = p.get(sec, "")
+            val = p.get(sec, "").strip()
             icon = icons[sec]
 
             html_code += f"""
-            <div class="cell">
+            <div>
                 <div class="section-title">
                     <img src="assets/icons/sig/{icon}">
                     {html.escape(sec)}
                 </div>
-                <div class="text">{html.escape(str(val))}</div>
+                <div class="text">{html.escape(val)}</div>
             </div>
             """
+
         html_code += "</div>"
 
     html_code += """
     </div>
-
 </div>
 </body>
 </html>
 """
 
     return html_code
-
 
 components.html(build_html(profiles), height=900, scrolling=False)
