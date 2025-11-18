@@ -9,7 +9,7 @@ import textwrap
 st.set_page_config(page_title="Job Architecture", layout="wide")
 
 # ==========================================================
-# DESBLOQUEIO DE HTML (resolve escape/sanitização)
+# DESBLOQUEIO DE HTML
 # ==========================================================
 st.markdown(
     """
@@ -46,6 +46,12 @@ html = f"""
     font-weight: bold;
 }}
 
+@font-face {{
+    font-family: 'SIGFlowRegular';
+    src: url('assets/css/fonts/PPSIGFlow-Regular.otf') format('opentype');
+    font-weight: normal;
+}}
+
 h1.sig-title {{
     font-family: 'SIGFlowBold', sans-serif;
     font-size: 64px;
@@ -55,10 +61,10 @@ h1.sig-title {{
 }}
 
 p.sig-subtitle {{
-    font-family: 'Inter', sans-serif;
+    font-family: 'SIGFlowRegular', sans-serif;
     font-size: 20px;
-    margin-top: 6px;
-    color: #666;
+    margin-top: 10px;
+    color: #555;
     text-align: center;
     max-width: 800px;
 }}
@@ -73,17 +79,19 @@ p.sig-subtitle {{
     padding-top:40px;
 ">
 
-    <img src="data:image/png;base64,{icon_b64}"
-         style="width:360px; height:360px; margin-bottom:20px;">
-
+    <!-- TITLE -->
     <h1 class="sig-title">Job Architecture</h1>
 
+    <!-- SUBTITLE -->
     <p class="sig-subtitle">
-        Integrated global job framework enabling standardized governance and consistent role alignment
+        A global job framework designed to standardize governance and harmonize roles across the organization.
     </p>
+
+    <!-- GOVERNANCE ICON BELOW -->
+    <img src="data:image/png;base64,{icon_b64}"
+         style="width:260px; margin-top:28px;">
 
 </div>
 """
 
-# Renderiza corretamente
 st.markdown(html, unsafe_allow_html=True)
