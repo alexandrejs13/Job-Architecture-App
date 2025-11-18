@@ -9,7 +9,7 @@ import altair as alt
 st.set_page_config(page_title="Dashboard", layout="wide")
 
 # ==========================================================
-# ICON
+# ICON LOADING
 # ==========================================================
 def load_icon_png(path):
     if not os.path.exists(path):
@@ -17,6 +17,10 @@ def load_icon_png(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
+
+# ==========================================================
+# HEADER SIG (PADRÃO)
+# ==========================================================
 icon_path = "assets/icons/data_2_perfromance.png"
 icon_b64 = load_icon_png(icon_path)
 
@@ -30,6 +34,8 @@ st.markdown(f"""
 <hr style="margin-top:14px; margin-bottom:26px;">
 """, unsafe_allow_html=True)
 
+
+
 # ==========================================================
 # LOAD DATA
 # ==========================================================
@@ -39,15 +45,32 @@ def load_job_profile():
 
 df = load_job_profile()
 
-# column mapping
-COL_FAMILY = "Job Family"
-COL_SUBFAMILY = "Sub Job Family"
-COL_PROFILE = "Job Profile"
-COL_GRADE = "Global Grade"
-COL_PATH = "Career Path"
+COL_FAMILY     = "Job Family"
+COL_SUBFAMILY  = "Sub Job Family"
+COL_PROFILE    = "Job Profile"
+COL_CAREER_PATH = "Career Path"
+COL_BAND       = "Career Band Short"
+COL_GRADE      = "Global Grade"
+COL_LEVEL      = "Career Level"
+
 
 # ==========================================================
-# CSS — Cards SIG
+# SIG COLORS
+# ==========================================================
+SIG_PALETTE = [
+    "#145EFC",  # Sky
+    "#DCA0FF",  # Spark
+    "#00493B",  # Forest 3
+    "#167665",  # Forest 2
+    "#4FA593",  # Forest 1
+    "#F2EFEB",  # Sand 1
+    "#E5DFD9",  # Sand 2
+    "#000000",  # Black
+]
+
+
+# ==========================================================
+# CSS — CARDS SLIM PADRÃO SIG
 # ==========================================================
 st.markdown("""
 <style>
@@ -58,50 +81,49 @@ section.main > div {
     padding-right: 10px;
 }
 
-/* Grid auto-fit responsivo */
-.sig-grid {
+.sig-card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
+    gap: 18px;
 }
 
-/* Card SIG */
 .sig-card {
-    background: #F2EFEB;  /* SIG Sand 1 */
+    background: #F2EFEB;
+    padding: 12px 16px;
     border-radius: 14px;
     border: 1px solid #E5E0D8;
-    padding: 14px 18px;
-    height: 92px;
+    height: 88px;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
-.sig-title {
+.sig-card-title {
     font-size: 14px;
     font-weight: 600;
-    color: #000;
+    margin-bottom: 6px;
+    color: #000000;
 }
 
-.sig-value {
+.sig-card-value {
     font-size: 24px;
     font-weight: 800;
-    color: #145EFC;  /* SIG Sky */
+    color: #145EFC;
 }
 
 .block-space {
-    margin-top: 32px;
+    margin-top: 36px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 
+
 # ==========================================================
-# TABS
+# ABAS
 # ==========================================================
 tab1, tab2 = st.tabs(["Overview", "Family Micro-Analysis"])
-
 
 # ==========================================================
 # TAB 1 — OVERVIEW
@@ -110,22 +132,21 @@ with tab1:
 
     st.markdown("## Overview")
 
-    # KPIs
     kpis = {
-        "Families": df[COL_FAMILY].nunique(),
-        "Subfamilies": df[COL_SUBFAMILY].nunique(),
-        "Job Profiles": df[COL_PROFILE].nunique(),
-        "Global Grades": df[COL_GRADE].nunique(),
-        "Career Paths": df[COL_PATH].nunique(),
+        "Families":       df[COL_FAMILY].nunique(),
+        "Subfamilies":    df[COL_SUBFAMILY].nunique(),
+        "Job Profiles":   df[COL_PROFILE].nunique(),
+        "Global Grades":  df[COL_GRADE].nunique(),
+        "Career Paths":   df[COL_CAREER_PATH].nunique(),
     }
 
-    st.markdown("<div class='sig-grid'>", unsafe_allow_html=True)
+    st.markdown("<div class='sig-card-grid'>", unsafe_allow_html=True)
     for title, value in kpis.items():
         st.markdown(
             f"""
-            <div class="sig-card">
-                <div class="sig-title">{title}</div>
-                <div class="sig-value">{value}</div>
+            <div class='sig-card'>
+                <div class='sig-card-title'>{title}</div>
+                <div class='sig-card-value'>{value}</div>
             </div>
             """,
             unsafe_allow_html=True
@@ -133,48 +154,45 @@ with tab1:
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-    # ======================================================
-    # GRAPH 1 — Subfamilies per Family (Pizza SIG)
-    # ======================================================
+    # ==========================================================
+    # DONUT — Subfamilies per Family
+    # ==========================================================
     st.markdown("<div class='block-space'></div>", unsafe_allow_html=True)
     st.markdown("## Subfamilies per Family")
 
-    pizza_df = (
+    donut_df = (
         df.groupby(COL_FAMILY)[COL_SUBFAMILY]
         .nunique()
         .reset_index(name="Count")
         .sort_values("Count", ascending=False)
     )
 
-    # SIG cores oficiais
-    SIG_COLORS = [
-        "#145EFC", "#dca0ff", "#4fa593", "#167665",
-        "#00493b", "#f5f073", "#c0b846", "#a0b905"
-    ]
+    donut_df["Color"] = [SIG_PALETTE[i % len(SIG_PALETTE)] for i in range(len(donut_df))]
 
-    base = alt.Chart(pizza_df).encode(
-        theta=alt.Theta("Count:Q"),
-        color=alt.Color("Job Family:N", scale=alt.Scale(range=SIG_COLORS)),
-        tooltip=[COL_FAMILY, "Count"]
-    )
-
-    chart_pizza = base.mark_arc(innerRadius=65, outerRadius=120)
-
-    colA, colB = st.columns([1,1])
+    colA, colB = st.columns([1, 1])
 
     with colA:
-        st.altair_chart(chart_pizza, use_container_width=True)
+        chart = (
+            alt.Chart(donut_df)
+            .mark_arc(innerRadius=60, outerRadius=120)
+            .encode(
+                theta="Count:Q",
+                color=alt.Color("Color:N", scale=None, legend=None),
+                tooltip=[COL_FAMILY, "Count"],
+            )
+        )
+        st.altair_chart(chart, use_container_width=True)
 
     with colB:
-        for i, row in pizza_df.iterrows():
-            color = SIG_COLORS[i % len(SIG_COLORS)]
+        for _, row in donut_df.iterrows():
             st.markdown(
                 f"""
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                    <div style="width:12px; height:12px; background:{color}; border-radius:50%;"></div>
-                    <div style="font-weight:600; font-size:16px;">{row[COL_FAMILY]}</div>
-                    <div style="margin-left:auto; background:{color}; color:white; padding:2px 10px; font-size:13px; border-radius:10px;">
-                        {row["Count"]}
+                    <div style="width:14px; height:14px; background:{row['Color']}; border-radius:50%;"></div>
+                    <div style="font-size:16px; font-weight:600;">{row[COL_FAMILY]}</div>
+                    <div style="margin-left:auto; background:{row['Color']}; color:white;
+                                padding:2px 12px; border-radius:12px; font-weight:700;">
+                        {row['Count']}
                     </div>
                 </div>
                 """,
@@ -182,9 +200,9 @@ with tab1:
             )
 
 
-    # ======================================================
-    # GRAPH 2 — Profiles per Subfamily (Total)
-    # ======================================================
+    # ==========================================================
+    # BAR CHART — Profiles per Subfamily (Total)
+    # ==========================================================
     st.markdown("<div class='block-space'></div>", unsafe_allow_html=True)
     st.markdown("## Profiles per Subfamily (Total)")
 
@@ -197,11 +215,12 @@ with tab1:
 
     bar_chart = (
         alt.Chart(bar_df)
-        .mark_bar(size=22, color="#145EFC")
+        .mark_bar(size=28, cornerRadius=4)
         .encode(
             x=alt.X("Count:Q", title="Count"),
-            y=alt.Y("Sub Job Family:N", sort="-x", title=""),
-            tooltip=["Sub Job Family", "Count"]
+            y=alt.Y(COL_SUBFAMILY + ":N", sort="-x"),
+            color=alt.value("#145EFC"),
+            tooltip=[COL_SUBFAMILY, "Count"],
         )
         .properties(height=650)
     )
@@ -218,25 +237,24 @@ with tab2:
     st.markdown("## Family Micro-Analysis")
 
     families = sorted(df[COL_FAMILY].unique())
-    fam = st.selectbox("Select Family:", families)
+    family_sel = st.selectbox("Select Family:", families)
 
-    fam_df = df[df[COL_FAMILY] == fam]
+    fam_df = df[df[COL_FAMILY] == family_sel]
 
     metrics = {
-        "Subfamilies": fam_df[COL_SUBFAMILY].nunique(),
+        "Subfamilies":  fam_df[COL_SUBFAMILY].nunique(),
         "Job Profiles": fam_df[COL_PROFILE].nunique(),
         "Global Grades": fam_df[COL_GRADE].nunique(),
-        "Career Paths": fam_df[COL_PATH].nunique(),
-        "Profiles / Subfamily": round(fam_df[COL_PROFILE].nunique() / max(fam_df[COL_SUBFAMILY].nunique(),1), 1),
+        "Career Paths": fam_df[COL_CAREER_PATH].nunique(),
     }
 
-    st.markdown("<div class='sig-grid'>", unsafe_allow_html=True)
+    st.markdown("<div class='sig-card-grid'>", unsafe_allow_html=True)
     for title, value in metrics.items():
         st.markdown(
             f"""
-            <div class="sig-card">
-                <div class="sig-title">{title}</div>
-                <div class="sig-value">{value}</div>
+            <div class='sig-card'>
+                <div class='sig-card-title'>{title}</div>
+                <div class='sig-card-value'>{value}</div>
             </div>
             """,
             unsafe_allow_html=True
@@ -244,35 +262,36 @@ with tab2:
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-    # Bar chart local (clean)
+    # Subfamily bar chart for selected family
     st.markdown("<div class='block-space'></div>", unsafe_allow_html=True)
-    st.markdown(f"## Profiles per Subfamily — {fam}")
+    st.markdown("## Profiles per Subfamily")
 
-    sub_df = (
+    fam_sub = (
         fam_df.groupby(COL_SUBFAMILY)[COL_PROFILE]
         .nunique()
         .reset_index(name="Count")
         .sort_values("Count", ascending=False)
     )
 
-    chart_local = (
-        alt.Chart(sub_df)
-        .mark_bar(size=22, color="#145EFC")
+    fam_chart = (
+        alt.Chart(fam_sub)
+        .mark_bar(size=28, cornerRadius=4)
         .encode(
-            x="Count:Q",
-            y=alt.Y("Sub Job Family:N", sort="-x", title=""),
-            tooltip=["Sub Job Family", "Count"]
+            x=alt.X("Count:Q", title="Count"),
+            y=alt.Y(COL_SUBFAMILY + ":N", sort="-x"),
+            color=alt.value("#145EFC"),
+            tooltip=[COL_SUBFAMILY, "Count"],
         )
-        .properties(height=500)
+        .properties(height=450)
     )
 
-    st.altair_chart(chart_local, use_container_width=True)
+    st.altair_chart(fam_chart, use_container_width=True)
 
 
-    # Table
     st.markdown("<div class='block-space'></div>", unsafe_allow_html=True)
-    st.markdown("### Full Job Profile Listing")
+    st.markdown("## Full Job Profile Listing")
+
     st.dataframe(
-        fam_df[[COL_SUBFAMILY, COL_PROFILE, COL_PATH, COL_GRADE]],
+        fam_df[[COL_SUBFAMILY, COL_PROFILE, COL_CAREER_PATH, COL_BAND, COL_LEVEL, COL_GRADE]],
         use_container_width=True
     )
