@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import html
 import streamlit.components.v1 as components
+import os
 
 # ---------------------------------------------------------
 # PAGE CONFIG
@@ -28,7 +29,18 @@ def load_profiles():
 df = load_profiles()
 
 # ---------------------------------------------------------
-# FILTERS
+# SVG INLINE LOADER
+# ---------------------------------------------------------
+def load_svg(name):
+    path = f"assets/icons/sig/{name}"
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
+
+
+# ---------------------------------------------------------
+# TOP FILTERS
 # ---------------------------------------------------------
 st.subheader("🔍 Job Profile Description Explorer")
 
@@ -76,7 +88,7 @@ if not selected:
 profiles = [flt[flt["label"] == s].iloc[0].to_dict() for s in selected]
 
 # ---------------------------------------------------------
-# SECTIONS
+# SECTIONS CONFIG + SVG MAP
 # ---------------------------------------------------------
 sections = [
     "Sub Job Family Description",
@@ -91,189 +103,228 @@ sections = [
     "Competencies 3",
 ]
 
-icons = {
+icon_map = {
     "Sub Job Family Description": "Hierarchy.svg",
-    "Job Profile Description": "File_Clipboard_Text.svg",
-    "Career Band Description": "Hierarchy.svg",
-    "Role Description": "Shopping_Business_Suitcase.svg",
-    "Grade Differentiator": "Edit_Pencil.svg",
-    "Qualifications": "Content_Book_Phone.svg",
+    "Job Profile Description": "Content_Book_Phone.svg",
+    "Career Band Description": "File_Clipboard_Text.svg",
+    "Role Description": "Shopping_Business_Target.svg",
+    "Grade Differentiator": "User_Add.svg",
+    "Qualifications": "Edit_Pencil.svg",
     "Specific parameters / KPIs": "Graph_Bar.svg",
     "Competencies 1": "Setting_Cog.svg",
     "Competencies 2": "Setting_Cog.svg",
     "Competencies 3": "Setting_Cog.svg",
 }
 
-# ---------------------------------------------------------
-# BUILD HTML SAFELY
-# ---------------------------------------------------------
+# Precarregar SVGs inline
+svg_inline = {k: load_svg(v) for k, v in icon_map.items()}
 
+
+# ---------------------------------------------------------
+# BUILD HTML FINAL
+# ---------------------------------------------------------
 def build_html(profiles):
 
     n = len(profiles)
 
-    html_template = r"""
+    html_code = f"""
 <html>
 <head>
 <meta charset="UTF-8">
 
 <style>
 
-html, body {
+html, body {{
     margin: 0;
     padding: 0;
     height: 100%;
     overflow: hidden;
     font-family: 'Segoe UI', sans-serif;
-}
+}}
 
-#viewport {
+#viewport {{
     height: 100vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-}
+}}
 
-/* TOPO */
-#top-area {
+/* --------- HEADER SUPERIOR --------- */
+
+#top-area {{
     background: white;
     padding: 12px 18px;
+    flex-shrink: 0;
     position: sticky;
     top: 0;
     z-index: 20;
-}
+}}
 
-.grid-top {
+.grid-top {{
     display: grid;
-    grid-template-columns: repeat(FILL_COLS, 1fr);
+    grid-template-columns: repeat({n}, 1fr);
     gap: 24px;
-}
+}}
 
-.card-top {
+.card-top {{
     background: white;
     border-radius: 16px;
     padding: 22px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-}
+}}
 
-.title {
+/* Alinha títulos mesmo quebrando linha */
+.header-block {{
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}}
+
+.title {{
     font-size: 21px;
     font-weight: 700;
-    line-height: 1.15;
-}
+}}
 
-.gg {
+.gg {{
     color: #145efc;
     font-size: 18px;
     font-weight: 700;
     margin-top: 6px;
-}
+}}
 
-.meta {
+.meta {{
     background: #f5f3ee;
     padding: 14px;
     border-radius: 12px;
     margin-top: 10px;
     border: 1px solid #e3e1dd;
-    font-size: 15px;
-    line-height: 1.45;
-}
+}}
 
-/* SCROLL */
-#scroll-area {
+/* --------- ÁREA ROLÁVEL --------- */
+
+#scroll-area {{
     flex: 1;
     overflow-y: auto;
-    padding: 22px;
-}
+    padding: 24px 18px 40px 18px;
+}}
 
-.grid-row {
+.grid-desc {{
     display: grid;
-    grid-template-columns: repeat(FILL_COLS, 1fr);
+    grid-template-columns: repeat({n}, 1fr);
     gap: 36px;
-    margin-bottom: 36px;
-}
+}}
 
-.section-title {
-    font-size: 17px;
-    font-weight: 700;
-    margin-bottom: 6px;
+/* LINHA FINÍSSIMA estilo ChatGPT */
+.divider {{
+    width: 100%;
+    height: 1px;
+    background: #e5e3df;
+    margin: 6px 0 14px 0;
+}}
+
+/* TÍTULO + ÍCONE INLINE */
+.section-title {{
     display: flex;
     align-items: center;
     gap: 8px;
-}
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}}
 
-.section-title img {
+.section-title svg {{
     width: 20px;
-}
+    height: 20px;
+}}
 
-.text {
+.text {{
     font-size: 15px;
     line-height: 1.45;
     white-space: pre-wrap;
-}
+}}
 
 </style>
 </head>
 
 <body>
+
 <div id="viewport">
 
+    <!-- HEADER SUPERIOR -->
     <div id="top-area">
         <div class="grid-top">
-TOP_CARDS
+    """
+
+    # TOP CARDS
+    for p in profiles:
+        job = html.escape(p["Job Profile"])
+        gg = html.escape(str(p["Global Grade"]))
+        jf = html.escape(p["Job Family"])
+        sf = html.escape(p["Sub Job Family"])
+        cp = html.escape(p["Career Path"])
+        fc = html.escape(p["Full Job Code"])
+
+        html_code += f"""
+        <div class="card-top">
+            <div class="header-block">
+                <div class="title">{job}</div>
+                <div class="gg">GG {gg}</div>
+            </div>
+            <div class="meta">
+                <b>Job Family:</b> {jf}<br>
+                <b>Sub Job Family:</b> {sf}<br>
+                <b>Career Path:</b> {cp}<br>
+                <b>Full Job Code:</b> {fc}
+            </div>
+        </div>
+        """
+
+    html_code += """
         </div>
     </div>
 
+    <!-- ÁREA ROLÁVEL -->
     <div id="scroll-area">
-SECTIONS_HTML
+        <div class="grid-desc">
+    """
+
+    # DESCRIÇÕES
+    for p in profiles:
+        html_code += "<div>"
+
+        for sec in sections:
+            val = p.get(sec, "")
+            if not val or str(val).strip() == "":
+                continue
+
+            icon_svg = svg_inline[sec]
+
+            html_code += f"""
+                <div class="section-title">
+                    {icon_svg}
+                    {html.escape(sec)}
+                </div>
+                <div class="divider"></div>
+                <div class="text">{html.escape(str(val))}</div>
+                <br>
+            """
+
+        html_code += "</div>"
+
+    html_code += """
+        </div>
     </div>
 
 </div>
+
 </body>
 </html>
 """
 
-    # ---------- BUILD TOP CARDS ----------
-    top_cards = ""
-    for p in profiles:
-        top_cards += f"""
-<div class="card-top">
-    <div class="title">{html.escape(p['Job Profile'])}</div>
-    <div class="gg">GG {html.escape(str(p['Global Grade']))}</div>
-    <div class="meta">
-        <b>Job Family:</b> {html.escape(p['Job Family'])}<br>
-        <b>Sub Job Family:</b> {html.escape(p['Sub Job Family'])}<br>
-        <b>Career Path:</b> {html.escape(p['Career Path'])}<br>
-        <b>Full Job Code:</b> {html.escape(p['Full Job Code'])}
-    </div>
-</div>
-"""
+    return html_code
 
-    # ---------- BUILD SECTIONS ----------
-    sections_html = ""
-    for sec in sections:
-        row = f'<div class="grid-row">\n'
-        for p in profiles:
-            txt = html.escape(str(p.get(sec, "")).strip())
-            ic = icons[sec]
-            row += f"""
-<div>
-    <div class="section-title">
-        <img src="assets/icons/sig/{ic}">
-        {sec}
-    </div>
-    <div class="text">{txt}</div>
-</div>
-"""
-        row += "</div>"
-        sections_html += row
-
-    # ---------- FINAL HTML ----------
-    html_final = html_template.replace("FILL_COLS", str(n)) \
-                              .replace("TOP_CARDS", top_cards) \
-                              .replace("SECTIONS_HTML", sections_html)
-
-    return html_final
-
-
+# ---------------------------------------------------------
+# RENDER
+# ---------------------------------------------------------
 components.html(build_html(profiles), height=900, scrolling=False)
