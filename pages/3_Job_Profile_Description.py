@@ -1,6 +1,6 @@
 # pages/3_Job_Profile_Description.py
-# FINAL VERSION – Sticky inside isolated iframe (Streamlit Components)
-# 100% working: 1–3 columns, sticky header, global scroll, no overflow issues.
+# FINAL VERSION – Sticky header + internal scrolling area per card
+# Fully functional: 1–3 columns, top frozen, bottom scrollable, SIG design.
 
 import streamlit as st
 import pandas as pd
@@ -23,7 +23,6 @@ st.markdown("""
 <hr style='margin-top:6px;margin-bottom:12px;'>
 """, unsafe_allow_html=True)
 
-
 # ==========================================================
 # LOAD DATA
 # ==========================================================
@@ -35,7 +34,6 @@ def load_job_profile():
     df = pd.read_excel(path)
     df.columns = df.columns.str.strip()
     return df
-
 
 df = load_job_profile()
 if df.empty:
@@ -52,42 +50,45 @@ families = sorted(df["Job Family"].dropna().unique())
 col1, col2, col3 = st.columns(3)
 with col1:
     family = st.selectbox("Job Family", ["Select..."] + families)
+
 with col2:
-    sub_fams = sorted(df[df["Job Family"] == family]["Sub Job Family"].dropna().unique()) if family != "Select..." else []
-    sub_family = st.selectbox("Sub Job Family", ["Select..."] + sub_fams)
+    subs = sorted(df[df["Job Family"] == family]["Sub Job Family"].dropna().unique()) if family != "Select..." else []
+    sub_family = st.selectbox("Sub Job Family", ["Select..."] + subs)
+
 with col3:
     paths = sorted(df[df["Sub Job Family"] == sub_family]["Career Path"].dropna().unique()) if sub_family != "Select..." else []
     cpath = st.selectbox("Career Path", ["Select..."] + paths)
 
-flt = df.copy()
-if family != "Select...": flt = flt[flt["Job Family"] == family]
-if sub_family != "Select...": flt = flt[flt["Sub Job Family"] == sub_family]
-if cpath != "Select...": flt = flt[flt["Career Path"] == cpath]
+filtered = df.copy()
+if family != "Select...":
+    filtered = filtered[filtered["Job Family"] == family]
+if sub_family != "Select...":
+    filtered = filtered[filtered["Sub Job Family"] == sub_family]
+if cpath != "Select...":
+    filtered = filtered[filtered["Career Path"] == cpath]
 
-if flt.empty:
-    st.info("No profiles match your filters.")
+if filtered.empty:
+    st.info("No profiles match your filter.")
     st.stop()
-
 
 # ==========================================================
 # MULTISELECT
 # ==========================================================
-flt["label"] = flt.apply(
+filtered["label"] = filtered.apply(
     lambda r: f"GG {str(r['Global Grade']).replace('.0','')} • {r['Job Profile']}",
     axis=1,
 )
 
 selected = st.multiselect(
     "Select up to 3 profiles:",
-    list(flt["label"]),
+    filtered["label"].tolist(),
     max_selections=3
 )
 
 if not selected:
     st.stop()
 
-data = [flt[flt["label"] == s].iloc[0].to_dict() for s in selected]
-
+profiles = [filtered[filtered["label"] == s].iloc[0].to_dict() for s in selected]
 
 # ==========================================================
 # SECTIONS + ICONS
@@ -107,110 +108,127 @@ ICONS = {
 
 SECTIONS = list(ICONS.keys())
 
-
 # ==========================================================
-# BUILD HTML FOR IFRAME (sticky works perfectly here)
+# BUILD HTML FOR IFRAME
 # ==========================================================
-html = """
+html = f"""
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 
 <style>
-
-body {
+body {{
     margin: 0;
-    padding: 0 20px;
+    padding: 0 22px;
     font-family: 'PPSIGFlow', sans-serif;
-}
+}}
 
-/* GRID: 1 → 3 columns */
-.jp-grid {
+/* GRID 1→3 Columns */
+.jp-grid {{
     display: grid;
     gap: 28px;
-    grid-template-columns: repeat(""" + str(len(data)) + """, minmax(340px, 1fr));
-}
+    grid-template-columns: repeat({len(profiles)}, minmax(340px, 1fr));
+}}
 
 /* CARD */
-.jp-card {
+.jp-card {{
     background: #fff;
     border: 1px solid #e6e6e6;
     border-radius: 14px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.06);
     overflow: hidden;
     position: relative;
-}
+    height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+}}
 
-/* STICKY HEADER INSIDE CARD */
-.jp-header {
+/* STICKY HEADER */
+.jp-header {{
     position: sticky;
-    top: 0; 
+    top: 0;
     background: #ffffff;
     padding: 22px 24px 16px 24px;
     z-index: 10;
     border-bottom: 1px solid #eee;
-}
+}}
 
 /* TITLE + GG */
-.jp-title {
-    font-size: 1.30rem;
+.jp-title {{
+    font-size: 1.32rem;
     font-weight: 700;
     margin-bottom: 4px;
-}
-.jp-gg {
+}}
+.jp-gg {{
     font-weight: 700;
     font-size: 1.05rem;
     color: #145efc;
     margin-bottom: 12px;
-}
+}}
 
 /* META BLOCK */
-.jp-meta {
+.jp-meta {{
     background: #f5f4f1;
     padding: 12px 14px;
     border-radius: 10px;
     font-size: .95rem;
     line-height: 1.45;
-}
+}}
 
-/* CONTENT BELOW */
-.jp-body {
+/* SCROLLING BODY */
+.jp-body-scroll {{
+    overflow-y: auto;
     padding: 22px 24px 28px 24px;
-}
+    flex-grow: 1;
+}}
+.jp-body-scroll::-webkit-scrollbar {{
+    width: 8px;
+}}
+.jp-body-scroll::-webkit-scrollbar-thumb {{
+    background: #d4d4d4;
+    border-radius: 8px;
+}}
+.jp-body-scroll::-webkit-scrollbar-thumb:hover {{
+    background: #bcbcbc;
+}}
 
-.jp-section {
+/* SECTIONS */
+.jp-section {{
     border-bottom: 1px solid #f0f0f0;
     padding-bottom: 18px;
     margin-bottom: 22px;
-}
-.jp-section-title {
+}}
+.jp-section-title {{
     display: flex;
     gap: 8px;
     font-weight: 700;
     margin-bottom: 8px;
     align-items: center;
     font-size: .95rem;
-}
-.jp-section-title img {
+}}
+.jp-section-title img {{
     width: 20px;
     opacity: .85;
-}
-.jp-text {
+}}
+.jp-text {{
     white-space: pre-wrap;
     font-size: .94rem;
     line-height: 1.45;
-}
-
+}}
 </style>
+
 </head>
 <body>
 
 <div class="jp-grid">
 """
 
-# BUILD CARDS
-for c in data:
+# ==========================================================
+# GENERATE EACH CARD
+# ==========================================================
+for c in profiles:
+
     job = html_lib.escape(c["Job Profile"])
     gg = html_lib.escape(str(c["Global Grade"]))
     jf = html_lib.escape(c["Job Family"])
@@ -220,6 +238,7 @@ for c in data:
 
     html += f"""
     <div class="jp-card">
+
         <div class="jp-header">
             <div class="jp-title">{job}</div>
             <div class="jp-gg">GG {gg}</div>
@@ -231,36 +250,39 @@ for c in data:
             </div>
         </div>
 
-        <div class="jp-body">
+        <div class="jp-body-scroll">
     """
 
     for sec in SECTIONS:
         content = c.get(sec, "")
+
         if not content or str(content).lower() == "nan":
             continue
 
         icon = ICONS[sec]
 
         html += f"""
-        <div class="jp-section">
-            <div class="jp-section-title">
-                <img src="../assets/icons/sig/{icon}">
-                {sec}
+            <div class="jp-section">
+                <div class="jp-section-title">
+                    <img src="../assets/icons/sig/{icon}">
+                    {sec}
+                </div>
+                <div class="jp-text">{html_lib.escape(str(content))}</div>
             </div>
-            <div class="jp-text">{html_lib.escape(str(content))}</div>
-        </div>
         """
 
-    html += "</div></div>"
+    html += """
+        </div><!-- end scroll area -->
+    </div><!-- end card -->
+    """
 
 html += """
-</div>
+</div><!-- grid -->
 </body>
 </html>
 """
 
-
 # ==========================================================
-# RENDER IN IFRAME (STICKY WORKS 100%)
+# RENDER
 # ==========================================================
 st.components.v1.html(html, height=2000, scrolling=True)
