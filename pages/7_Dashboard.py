@@ -9,18 +9,16 @@ import base64, os
 st.set_page_config(page_title="Dashboard", layout="wide")
 
 # ==========================================================
-# LOAD FONT (PP SIG FLOW)
+# SAFE FONT LOADER (SIG Flow)
 # ==========================================================
 def load_font_base64(path):
-    with open(path, "rb") as f:
-       def load_font_base64(path):
     """Load font safely without breaking app if file does not exist."""
     if not os.path.exists(path):
         return None
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-
+# tenta carregar fontes
 font_regular = load_font_base64("assets/fonts/PP-SIG-Flow-Regular.ttf")
 font_semibold = load_font_base64("assets/fonts/PP-SIG-Flow-Semibold.ttf")
 
@@ -44,35 +42,22 @@ if font_semibold:
     }}
     """
 
-
+# ==========================================================
+# GLOBAL CSS — layout premium + tipografia
+# ==========================================================
 st.markdown(f"""
 <style>
+
 {css_fonts}
 
-*, body {{
+* {{
     font-family: 'SIGFlow', sans-serif !important;
 }}
 
 section.main > div {{
     max-width: 1180px;
-}}
-</style>
-""", unsafe_allow_html=True)
-
-}}
-
-@font-face {{
-    font-family: 'SIGFlow';
-    src: url(data:font/ttf;base64,{font_semibold}) format('truetype');
-    font-weight: 600;
-}}
-
-*, body {{
-    font-family: 'SIGFlow', sans-serif !important;
-}}
-
-section.main > div {{
-    max-width: 1180px;
+    margin-left: auto;
+    margin-right: auto;
 }}
 
 .kpi-grid {{
@@ -132,14 +117,13 @@ section.main > div {{
 """, unsafe_allow_html=True)
 
 # ==========================================================
-# HEADER
+# HEADER SIG
 # ==========================================================
 def load_icon_png(path):
     if not os.path.exists(path): return ""
     with open(path,"rb") as f: return base64.b64encode(f.read()).decode("utf-8")
 
-icon_path = "assets/icons/data_2_perfromance.png"
-icon_b64 = load_icon_png(icon_path)
+icon_b64 = load_icon_png("assets/icons/data_2_perfromance.png")
 
 st.markdown(f"""
 <div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
@@ -172,7 +156,7 @@ COL_GRADE = "Global Grade"
 tab1, tab2 = st.tabs(["Overview", "Family Micro-Analysis"])
 
 # ==========================================================
-# TAB 1
+# TAB 1 — OVERVIEW
 # ==========================================================
 with tab1:
 
@@ -186,7 +170,6 @@ with tab1:
         "Career Paths": df[COL_CAREER_PATH].nunique(),
     }
 
-    # CARDS — HORIZONTAIS DE VERDADE
     st.markdown("<div class='kpi-grid'>", unsafe_allow_html=True)
     for t, v in kpis.items():
         st.markdown(
@@ -213,8 +196,8 @@ with tab1:
     )
 
     SIG_COLORS = [
-        "#145EFC", "#dca0ff", "#167665", "#f5f073", 
-        "#73706d", "#bfba b5", "#e5dfd9", "#4fa593"
+        "#145EFC", "#dca0ff", "#167665", "#f5f073",
+        "#73706d", "#bfbab5", "#e5dfd9", "#4fa593"
     ]
 
     subf["Color"] = [SIG_COLORS[i % len(SIG_COLORS)] for i in range(len(subf))]
@@ -247,7 +230,7 @@ with tab1:
             )
 
     # ------------------------------------------------------
-    # BARRAS — ESPAÇADAS, ALTURA PREMIUM
+    # BAR CHART
     # ------------------------------------------------------
     st.markdown("## Profiles per Subfamily (Total)")
 
@@ -272,7 +255,7 @@ with tab1:
     st.altair_chart(bars, use_container_width=True)
 
 # ==========================================================
-# TAB 2
+# TAB 2 — FAMILY MICRO ANALYSIS
 # ==========================================================
 with tab2:
 
