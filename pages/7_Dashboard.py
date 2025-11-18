@@ -1,11 +1,11 @@
 # ==========================================================
-# TAB 1 — OVERVIEW (FINAL SIG)
+# TAB 1 — OVERVIEW
 # ==========================================================
 with tab1:
 
     st.markdown("## Overview")
 
-    # KPIs gerais
+    # ---- KPI CARDS ----
     kpis = {
         "Families": df[COL_FAMILY].nunique(),
         "Subfamilies": df[COL_SUBFAMILY].nunique(),
@@ -17,7 +17,6 @@ with tab1:
         "Avg Profiles / Subfamily": round(df[COL_PROFILE].nunique() / df[COL_SUBFAMILY].nunique(), 1),
     }
 
-    # ---- CARDS PEQUENOS ----
     st.markdown("<div class='sig-card-grid'>", unsafe_allow_html=True)
     for title, value in kpis.items():
         st.markdown(
@@ -32,9 +31,8 @@ with tab1:
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-
     # ==========================================================
-    # 1) DONUT — Subfamilies per Family (SIG)
+    # DONUT — Subfamilies per Family (SIG)
     # ==========================================================
     st.markdown("<div class='block-space'></div>", unsafe_allow_html=True)
     st.markdown("## Subfamilies per Family")
@@ -49,16 +47,15 @@ with tab1:
     colA, colB = st.columns([1, 1])
 
     with colA:
-        chart = sig_donut_chart(df_sub, COL_FAMILY, "Count")
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(sig_donut_chart(df_sub, COL_FAMILY, "Count"),
+                        use_container_width=True)
 
     with colB:
         sig_legend(df_sub, COL_FAMILY, "Count")
 
 
-
     # ==========================================================
-    # 2) BARRA HORIZONTAL SIG — Profiles per Subfamily
+    # BARRA HORIZONTAL SIG — Profiles per Subfamily
     # ==========================================================
     st.markdown("<div class='block-space'></div>", unsafe_allow_html=True)
     st.markdown("## Profiles per Subfamily")
@@ -72,24 +69,20 @@ with tab1:
 
     colL, colR = st.columns([1.2, 1])
 
-    # ---- GRÁFICO DE BARRA ----
     with colL:
-        chart_bar = (
+        bar = (
             alt.Chart(df_prof)
             .mark_bar(size=22)
             .encode(
                 x=alt.X("Count:Q", title=""),
                 y=alt.Y(COL_SUBFAMILY, sort='-x', title=""),
-                color=alt.Color(
-                    COL_SUBFAMILY,
-                    scale=alt.Scale(range=SIG_COLORS),
-                    legend=None
-                ),
-                tooltip=[COL_SUBFAMILY, "Count"]
+                color=alt.Color(COL_SUBFAMILY,
+                                scale=alt.Scale(range=SIG_COLORS),
+                                legend=None),
+                tooltip=[COL_SUBFAMILY, "Count"],
             )
         )
-        st.altair_chart(chart_bar, use_container_width=True)
+        st.altair_chart(bar, use_container_width=True)
 
-    # ---- LEGENDA À DIREITA ----
     with colR:
         sig_legend(df_prof, COL_SUBFAMILY, "Count")
