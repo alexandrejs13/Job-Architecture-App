@@ -1,13 +1,18 @@
 # ==========================================================
-# HEADER — padrão visual premium SIG (56px + alinhamento)
+# HEADER — padrão SIG (56px, alinhado, sem erros)
 # ==========================================================
+import streamlit as st
 import base64
+import os
 
 def load_icon_png(path):
+    if not os.path.exists(path):
+        return ""  # evita NameError mesmo se o arquivo não existir
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-icon_b64 = load_icon_png("assets/icons/data_2_perfromance.png")
+icon_path = "assets/icons/data_2_perfromance.png"
+icon_b64 = load_icon_png(icon_path)
 
 st.markdown(f"""
 <div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
