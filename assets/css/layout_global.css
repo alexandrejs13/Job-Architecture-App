@@ -281,3 +281,16 @@ code, pre {
     font-family: "PPSIGFlow" !important;
     display: inline !important;
 }
+/* ============================================================
+   FIX DEFINITIVO — impedir qualquer esticamento das páginas
+   (equivalente ao layout das páginas Job Architecture)
+   ============================================================ */
+
+section.main > div {
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+
