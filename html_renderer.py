@@ -1,87 +1,120 @@
-# ==========================================================
-# html_renderer.py — Render do HTML do Job Match
-# ==========================================================
+import pandas as pd
 
-import base64
-import os
+def render_job_description(best_match_row: pd.Series, final_score: float) -> str:
+    """
+    Renderiza o cartão HTML do Job recomendado.
+    best_match_row é uma linha (Series) do DataFrame final.
+    """
 
+    # Garantir fallback limpo
+    def safe(x):
+        if pd.isna(x):
+            return ""
+        return str(x)
 
-ICON_MAP = {
-    "Sub Job Family Description": "Hierarchy.svg",
-    "Job Profile Description": "Content_Book_Phone.svg",
-    "Career Band Description": "File_Clipboard_Text.svg",
-    "Role Description": "Shopping_Business_Target.svg",
-    "Grade Differentiator": "User_Add.svg",
-    "Qualifications": "Edit_Pencil.svg",
-    "Specific Parameters / KPIs": "Graph_Bar.svg",
-    "Competencies 1": "Setting_Cog.svg",
-    "Competencies 2": "Setting_Cog.svg",
-    "Competencies 3": "Setting_Cog.svg",
-}
+    job_title = safe(best_match_row.get("Job Profile"))
+    gg = safe(best_match_row.get("GG"))
+    job_family = safe(best_match_row.get("Job Family"))
+    sub_family = safe(best_match_row.get("Sub Job Family"))
+    job_category = safe(best_match_row.get("Job Category"))
+    geo_scope = safe(best_match_row.get("Geo Scope"))
+    org_impact = safe(best_match_row.get("Org Impact"))
+    autonomy = safe(best_match_row.get("Autonomy"))
+    knowledge_depth = safe(best_match_row.get("Knowledge Depth"))
+    operational_complexity = safe(best_match_row.get("Operational Complexity"))
+    experience = safe(best_match_row.get("Experience"))
+    education = safe(best_match_row.get("Education"))
 
+    description = safe(best_match_row.get("Description"))
+    responsibilities = safe(best_match_row.get("Responsibilities"))
+    qualifications = safe(best_match_row.get("Qualifications"))
 
-def load_svg_icon(path):
-    if not os.path.exists(path):
-        return ""
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+    html = f"""
+    <style>
+        .ja-card {{
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 24px 28px;
+            border: 1px solid #e6e6e6;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            font-family: PPSIGFlow, sans-serif;
+            width: 100%;
+        }}
 
+        .ja-title {{
+            font-size: 30px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }}
 
-# ----------------------------------------------------------
-# Função principal
-# ----------------------------------------------------------
-def render_job_description(best_match_row, score):
-    html = []
+        .ja-gg {{
+            font-size: 18px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 12px;
+        }}
 
-    # ------------------------------------------------------
-    # Card Superior
-    # ------------------------------------------------------
-    html.append(f"""
-    <div class="card">
-        <div class="job-title">{best_match_row['job_title']}</div>
-        <div class="gg">{best_match_row['gg']}</div>
+        .ja-meta {{
+            margin-top: 4px;
+            margin-bottom: 22px;
+            color: #444;
+            font-size: 15px;
+        }}
 
-        <div class="meta">
-            <b>Job Family:</b> {best_match_row['job_family']}<br>
-            <b>Sub Job Family:</b> {best_match_row['sub_job_family']}<br>
-            <b>Career Path:</b> {best_match_row['career_path']}<br>
-            <b>Full Job Code:</b> {best_match_row['full_job_code']}<br>
-            <b>Match Score:</b> {round(score,2)}%
+        .ja-section-title {{
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 26px;
+            margin-bottom: 6px;
+        }}
+
+        .ja-text {{
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+        }}
+
+        .ja-score {{
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            color: #145efc;
+        }}
+    </style>
+
+    <div class="ja-card">
+
+        <div class="ja-title">{job_title}</div>
+        <div class="ja-gg">Global Grade: {gg}</div>
+
+        <div class="ja-score">
+            🎯 Match Score: {final_score:.1f}%
         </div>
+
+        <div class="ja-meta">
+            <strong>Job Family:</strong> {job_family}<br>
+            <strong>Sub Job Family:</strong> {sub_family}<br>
+            <strong>Job Category:</strong> {job_category}<br>
+            <strong>Geo Scope:</strong> {geo_scope}<br>
+            <strong>Org Impact:</strong> {org_impact}<br>
+            <strong>Autonomy:</strong> {autonomy}<br>
+            <strong>Knowledge Depth:</strong> {knowledge_depth}<br>
+            <strong>Operational Complexity:</strong> {operational_complexity}<br>
+            <strong>Experience:</strong> {experience}<br>
+            <strong>Education:</strong> {education}<br>
+        </div>
+
+        <div class="ja-section-title">Description</div>
+        <div class="ja-text">{description}</div>
+
+        <div class="ja-section-title">Responsibilities</div>
+        <div class="ja-text">{responsibilities}</div>
+
+        <div class="ja-section-title">Qualifications</div>
+        <div class="ja-text">{qualifications}</div>
+
     </div>
-    """)
+    """
 
-    # ------------------------------------------------------
-    # Seções da descrição
-    # ------------------------------------------------------
-    sections = [
-        ("Sub Job Family Description", "sub_job_family_description"),
-        ("Job Profile Description", "job_profile_description"),
-        ("Career Band Description", "career_band_description"),
-        ("Role Description", "role_description"),
-        ("Grade Differentiator", "grade_differentiator"),
-        ("Qualifications", "qualifications"),
-        ("Specific Parameters / KPIs", "specific_parameters_kpis"),
-        ("Competencies 1", "competencies_1"),
-        ("Competencies 2", "competencies_2"),
-        ("Competencies 3", "competencies_3"),
-    ]
-
-    for label, column in sections:
-        icon_file = ICON_MAP.get(label, "")
-        icon_path = f"assets/icons/{icon_file}"
-        svg = load_svg_icon(icon_path)
-
-        text = best_match_row.get(column, "")
-        if not text:
-            continue
-
-        html.append(f"""
-        <div class="section-title">
-            <span class="icon">{svg}</span>
-            {label}
-        </div>
-        <div class="section-text">{text}</div>
-        """)
-
-    return "\n".join(html)
+    return html
