@@ -2,9 +2,10 @@
 import html
 import os
 import pandas as pd
+from typing import Dict
 
 # ---------------------------------------------------------
-# Carrega SVGs da pasta /assets/icons/sig/
+# Carrega SVG
 # ---------------------------------------------------------
 def load_svg(svg_name: str) -> str:
     path = os.path.join("assets", "icons", "sig", svg_name)
@@ -15,7 +16,7 @@ def load_svg(svg_name: str) -> str:
         svg = svg.replace('<?xml version="1.0" encoding="utf-8"?>', '')
         return svg
 
-ICONS = {
+ICONS_SVG: Dict[str, str] = {
     "Sub Job Family Description": load_svg("Hierarchy.svg"),
     "Job Profile Description": load_svg("Content_Book_Phone.svg"),
     "Career Band Description": load_svg("File_Clipboard_Text.svg"),
@@ -28,156 +29,167 @@ ICONS = {
     "Competencies 3": load_svg("Setting_Cog.svg"),
 }
 
-SECTIONS_ORDER = list(ICONS.keys())
+SECTIONS_ORDER = [
+    "Sub Job Family Description",
+    "Job Profile Description",
+    "Career Band Description",
+    "Role Description",
+    "Grade Differentiator",
+    "Qualifications",
+    "Specific parameters / KPIs",
+    "Competencies 1",
+    "Competencies 2",
+    "Competencies 3",
+]
 
-# ---------------------------------------------------------
-# HTML FINAL — IDÊNTICO AO JOB PROFILE DESCRIPTION
-# ---------------------------------------------------------
-def render_job_description(row: pd.Series, score_pct: int) -> str:
 
-    job_title = html.escape(row.get("Job Profile", ""))
-    gg = html.escape(str(row.get("Global Grade", "")))
 
-    jf = html.escape(row.get("Job Family", ""))
-    sf = html.escape(row.get("Sub Job Family", ""))
-    cp = html.escape(row.get("Career Path", ""))
-    fc = html.escape(row.get("Full Job Code", ""))
+# =====================================================================
+# FUNÇÃO PRINCIPAL — GERA HTML IGUAL AO JOB PROFILE DESCRIPTION
+# =====================================================================
+def render_job_description(best_match_row: pd.Series, final_score: float) -> str:
 
-    # -----------------------------------------------------
-    # HTML completo
-    # -----------------------------------------------------
-    return f"""
-<html>
-<head>
-<meta charset="UTF-8">
+    job_title = html.escape(str(best_match_row.get("Job Profile", "")))
+    gg = html.escape(str(best_match_row.get("Global Grade", "")))
+    jf = html.escape(str(best_match_row.get("Job Family", "")))
+    sf = html.escape(str(best_match_row.get("Sub Job Family", "")))
+    cp = html.escape(str(best_match_row.get("Career Path", "")))
+    fc = html.escape(str(best_match_row.get("Full Job Code", "")))
+
+    # HTML
+    out = []
+
+    out.append("""
 <style>
-
-html, body {{
+body {
+    background: #ffffff !important;
     margin: 0;
-    padding: 0;
-    background: #ffffff;
-    font-family: 'Segoe UI', sans-serif;
-}}
+    font-family: "Segoe UI", sans-serif;
+}
 
-.container {{
-    width: 100%;
-    margin-top: 10px;
-}}
-
-.card-top {{
+/* Card principal */
+.job-card {
     background: #f5f3ee;
     border-radius: 16px;
-    padding: 26px 28px;
+    padding: 26px 30px;
     border: 1px solid #e3e1dd;
-    margin-bottom: 28px;
-}}
+    margin-bottom: 32px;
+}
 
-.title {{
+/* Título */
+.job-title {
     font-size: 26px;
     font-weight: 700;
-    margin-bottom: 6px;
-}}
+}
 
-.gg {{
-    color: #145efc;
+/* GG + Match */
+.job-subtitle {
     font-size: 18px;
     font-weight: 700;
-    margin-top: 2px;
-}}
+    color: #145efc;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-.match-pill {{
-    display: inline-block;
+/* Pílula */
+.pill {
     background: #145efc;
     color: white;
+    padding: 4px 12px;
     border-radius: 20px;
-    padding: 4px 14px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
-    margin-left: 8px;
-}}
+}
 
-.meta {{
-    background: #ffffff;
-    padding: 16px;
+/* Meta card branco */
+.meta-card {
+    background: white;
+    padding: 14px 18px;
     margin-top: 18px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     font-size: 15px;
-    line-height: 1.5;
-}}
+    line-height: 1.55;
+}
 
-.section {{
-    margin-bottom: 34px;
-}}
+/* Seções */
+.section-box {
+    margin-bottom: 30px;
+}
 
-.section-title {{
+.section-title {
     font-size: 18px;
     font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 6px;
-}}
+    gap: 8px;
+}
 
-.section-title svg {{
+.section-title svg {
     width: 22px;
     height: 22px;
-}}
+}
 
-.section-line {{
-    width: 100%;
+.section-line {
     height: 1px;
     background: #e8e6e1;
     margin: 10px 0 14px 0;
-}}
+}
 
-.section-text {{
+.section-text {
     font-size: 15px;
     line-height: 1.55;
     white-space: pre-wrap;
-}}
+}
+
+/* Remove scroll interno */
+html, body {
+    overflow-y: auto !important;
+}
 
 </style>
-</head>
+""")
 
-<body>
+    out.append("<div class='job-card'>")
 
-<div class="container">
+    out.append(f"""
+        <div class="job-title">{job_title}</div>
 
-    <div class="card-top">
-        <div class="title">{job_title}</div>
-
-        <div class="gg">
-            GG {gg}
-            <span class="match-pill">{score_pct}% Match</span>
+        <div class="job-subtitle">
+            GG {gg} • Job Match
+            <span class="pill">{final_score}%</span>
         </div>
 
-        <div class="meta">
+        <div class="meta-card">
             <b>Job Family:</b> {jf}<br>
             <b>Sub Job Family:</b> {sf}<br>
             <b>Career Path:</b> {cp}<br>
             <b>Full Job Code:</b> {fc}
         </div>
-    </div>
+    """)
 
-    <!-- SEÇÕES -->
-    <div class="sections">
-"""
+    out.append("</div>")  # job-card
 
-    + "\n".join([
-        f"""
-        <div class="section">
-            <div class="section-title">{ICONS.get(sec, '')} {html.escape(sec)}</div>
-            <div class="section-line"></div>
-            <div class="section-text">{html.escape(str(row.get(sec, '')))}</div>
-        </div>
-        """
-        for sec in SECTIONS_ORDER
-    ]) + """
+    # ===========================
+    # SEÇÕES COMPLETAS
+    # ===========================
+    for sec in SECTIONS_ORDER:
+        text_val = best_match_row.get(sec, "")
+        try:
+            text_val = "" if pd.isna(text_val) else str(text_val)
+        except:
+            text_val = str(text_val)
 
-    </div>
-</div>
+        icon_svg = ICONS_SVG.get(sec, "")
 
-</body>
-</html>
-"""
+        out.append(f"""
+            <div class="section-box">
+                <div class="section-title">{icon_svg} {html.escape(sec)}</div>
+                <div class="section-line"></div>
+                <div class="section-text">{html.escape(text_val)}</div>
+            </div>
+        """)
 
+    return "\n".join(out)
