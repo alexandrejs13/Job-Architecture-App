@@ -10,20 +10,19 @@ import os
 from match_engine import compute_match
 from html_renderer import render_job_match_description
 
+
 # ----------------------------------------------------------
 # PAGE CONFIG
 # ----------------------------------------------------------
 st.set_page_config(page_title="Job Match", layout="wide")
 
+
 # ----------------------------------------------------------
-# GLOBAL CSS — SIG
+# GLOBAL CSS — SIG padrão
 # ----------------------------------------------------------
 st.markdown("""
 <style>
 
-    /* ========================================== */
-    /* CONTAINER PRINCIPAL */
-    /* ========================================== */
     .main > div {
         max-width: 1400px;
         margin-left: auto;
@@ -32,9 +31,6 @@ st.markdown("""
         padding-right: 20px;
     }
 
-    /* ========================================== */
-    /* TÍTULOS DE SEÇÕES */
-    /* ========================================== */
     .section-title {
         font-size: 22px;
         font-weight: 700;
@@ -48,9 +44,7 @@ st.markdown("""
         margin-bottom: 18px;
     }
 
-    /* ========================================== */
     /* BOTÃO AZUL */
-    /* ========================================== */
     .blue-btn > button {
         background-color: #145efc !important;
         color: white !important;
@@ -59,13 +53,11 @@ st.markdown("""
         border-radius: 10px !important;
         width: 420px !important;
         border: none !important;
-        text-align: left !important;
         justify-content: flex-start !important;
+        text-align: left !important;
     }
 
-    /* ========================================== */
-    /* ERRO — LABEL ACIMA */
-    /* ========================================== */
+    /* LABEL DE ERRO */
     .error-label {
         color: #d90429 !important;
         font-weight: 700;
@@ -74,17 +66,15 @@ st.markdown("""
         display: block;
     }
 
-    /* ========================================== */
-    /* BORDA VERMELHA NA CAIXA */
-    /* ========================================== */
-    .error-border select, 
-    .error-border input, 
+    /* BORDA VERMELHA */
+    .error-border select,
+    .error-border input,
     .error-border div[data-baseweb="select"] {
         border: 2px solid #d90429 !important;
         border-radius: 6px !important;
     }
 
-    /* CAIXA DE ERRO */
+    /* MENSAGEM DE ERRO */
     .error-box {
         background: #fdecec;
         border-left: 6px solid #e63946;
@@ -99,14 +89,27 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+
 # ----------------------------------------------------------
-# LOAD DATA
+# LOAD & NORMALIZE DATA
 # ----------------------------------------------------------
 @st.cache_data
 def load_profiles():
-    return pd.read_excel("data/Job Profile.xlsx")
+    df = pd.read_excel("data/Job Profile.xlsx")
+
+    # normalização necessária
+    df.columns = (
+        df.columns
+        .str.strip()
+        .str.lower()
+        .str.replace(" ", "_")
+        .str.replace("/", "_")
+    )
+
+    return df
 
 df_profiles = load_profiles()
+
 
 
 # ----------------------------------------------------------
@@ -122,9 +125,8 @@ st.markdown("""
 
 
 # ==========================================================
-# FORMULÁRIO COMPLETO
+# FUNÇÃO PARA LABELS COM ERRO
 # ==========================================================
-
 def label_html(label, error_list):
     if label in error_list:
         return f"<span class='error-label'>{label}</span>"
@@ -134,10 +136,16 @@ def label_html(label, error_list):
 missing_fields_display = []
 
 
+# ==========================================================
+# FORMULÁRIO COMPLETO
+# ==========================================================
+
+
 # ----------------------------------------------------------
 # JOB FAMILY INFORMATION
 # ----------------------------------------------------------
-st.markdown("<div class='section-title'>Job Family Information</div><div class='divider-line'></div>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Job Family Information</div><div class='divider-line'></div>",
+            unsafe_allow_html=True)
 
 cjf1, cjf2 = st.columns(2)
 
@@ -145,7 +153,9 @@ job_families = sorted(df_profiles["job_family"].dropna().unique().tolist())
 
 with cjf1:
     st.markdown(label_html("Job Family", missing_fields_display), unsafe_allow_html=True)
-    job_family = st.selectbox("", ["Choose option"] + job_families, key="jf")
+    job_family = st.selectbox("",
+                              ["Choose option"] + job_families,
+                              key="jf")
 
 with cjf2:
     st.markdown(label_html("Sub Job Family", missing_fields_display), unsafe_allow_html=True)
@@ -157,40 +167,43 @@ with cjf2:
             df_profiles[df_profiles["job_family"] == job_family]["sub_job_family"]
             .dropna().unique().tolist()
         )
-        sub_job_family = st.selectbox("", ["Choose option"] + sorted(sub_list), key="subjf")
+        sub_job_family = st.selectbox("",
+                                      ["Choose option"] + sorted(sub_list),
+                                      key="subjf")
 
 
 # ----------------------------------------------------------
 # SECTION 1 — STRATEGIC IMPACT & SCOPE
 # ----------------------------------------------------------
-st.markdown("<div class='section-title'>Strategic Impact & Scope</div><div class='divider-line'></div>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Strategic Impact & Scope</div><div class='divider-line'></div>",
+            unsafe_allow_html=True)
 
 c1a, c1b, c1c = st.columns(3)
 
 with c1a:
     st.markdown(label_html("Job Category", missing_fields_display), unsafe_allow_html=True)
-    job_category = st.selectbox("", ["Choose option", "Executive", "Manager", "Professional", 
+    job_category = st.selectbox("", ["Choose option", "Executive", "Manager", "Professional",
                                      "Technical Support", "Business Support", "Production"])
 
     st.markdown(label_html("Geographic Scope", missing_fields_display), unsafe_allow_html=True)
     geo_scope = st.selectbox("", ["Choose option", "Local", "Regional", "Multi-country", "Global"])
 
     st.markdown(label_html("Organizational Impact", missing_fields_display), unsafe_allow_html=True)
-    org_impact = st.selectbox("", ["Choose option", "Team", "Department / Subfunction", 
+    org_impact = st.selectbox("", ["Choose option", "Team", "Department / Subfunction",
                                    "Function", "Business Unit", "Enterprise-wide"])
 
 with c1b:
     st.markdown(label_html("Span of Control", missing_fields_display), unsafe_allow_html=True)
-    span_control = st.selectbox("", ["Choose option", "No direct reports", "Supervises team", 
+    span_control = st.selectbox("", ["Choose option", "No direct reports", "Supervises team",
                                      "Leads professionals", "Leads multiple teams", "Leads managers"])
 
     st.markdown(label_html("Nature of Work", missing_fields_display), unsafe_allow_html=True)
-    nature_work = st.selectbox("", ["Choose option", "Process-oriented", "Analysis-oriented", 
+    nature_work = st.selectbox("", ["Choose option", "Process-oriented", "Analysis-oriented",
                                     "Specialist", "Leadership-driven"])
 
     st.markdown(label_html("Financial Impact", missing_fields_display), unsafe_allow_html=True)
-    financial_impact = st.selectbox("", ["Choose option", "No impact", "Cost center impact", 
-                                         "Department-level impact", "Business Unit impact", 
+    financial_impact = st.selectbox("", ["Choose option", "No impact", "Cost center impact",
+                                         "Department-level impact", "Business Unit impact",
                                          "Company-wide impact"])
 
 with c1c:
@@ -205,16 +218,18 @@ with c1c:
     decision_horizon = st.selectbox("", ["Choose option", "Daily", "Weekly", "Monthly", "Annual", "Multi-year"])
 
 
+
 # ----------------------------------------------------------
 # SECTION 2 — AUTONOMY & COMPLEXITY
 # ----------------------------------------------------------
-st.markdown("<div class='section-title'>Autonomy & Complexity</div><div class='divider-line'></div>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Autonomy & Complexity</div><div class='divider-line'></div>",
+            unsafe_allow_html=True)
 
 c2a, c2b, c2c = st.columns(3)
 
 with c2a:
     st.markdown(label_html("Autonomy Level", missing_fields_display), unsafe_allow_html=True)
-    autonomy = st.selectbox("", ["Choose option", "Close supervision", "Regular guidance", 
+    autonomy = st.selectbox("", ["Choose option", "Close supervision", "Regular guidance",
                                  "Independent", "Sets direction for others", "Defines strategy"])
 
     st.markdown(label_html("Problem Solving Complexity", missing_fields_display), unsafe_allow_html=True)
@@ -236,10 +251,12 @@ with c2c:
                                         "External vendors/clients", "Industry-level influence"])
 
 
+
 # ----------------------------------------------------------
 # SECTION 3 — KNOWLEDGE, KPIs & COMPETENCIES
 # ----------------------------------------------------------
-st.markdown("<div class='section-title'>Knowledge, KPIs & Competencies</div><div class='divider-line'></div>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Knowledge, KPIs & Competencies</div><div class='divider-line'></div>",
+            unsafe_allow_html=True)
 
 c3a, c3b, c3c = st.columns(3)
 
@@ -279,8 +296,9 @@ with c3d:
 
 with c3e:
     st.markdown(label_html("Organizational Influence", missing_fields_display), unsafe_allow_html=True)
-    org_influence = st.selectbox("", ["Choose option", "Team", "Department", "Business Unit",
-                                      "Function", "Enterprise-wide"])
+    org_influence = st.selectbox("", ["Choose option", "Team", "Department",
+                                      "Business Unit", "Function", "Enterprise-wide"])
+
 
 
 # ----------------------------------------------------------
@@ -290,14 +308,15 @@ btn_col, _, _ = st.columns([2, 5, 1])
 
 with btn_col:
     generate = st.button("Generate Job Match Description",
-                         key="btn_generate",
-                         use_container_width=False)
+                         key="btn_generate")
     st.markdown("<div class='blue-btn'></div>", unsafe_allow_html=True)
 
 
+
 # ==========================================================
-# PROCESSAMENTO DO MATCH
+# VALIDATION + MATCH ENGINE CALL
 # ==========================================================
+
 fields_dict = {
     "Job Family": job_family,
     "Sub Job Family": sub_job_family,
@@ -323,7 +342,6 @@ fields_dict = {
     "Organizational Influence": org_influence,
 }
 
-# Campos MULTI obrigatórios
 multi_required = {
     "Primary KPIs": kpis_selected,
     "Core Competencies": competencies_selected
@@ -331,12 +349,10 @@ multi_required = {
 
 missing = []
 
-# Validação normal
 for k, v in fields_dict.items():
     if v == "Choose option":
         missing.append(k)
 
-# Validação multiselect
 for k, v in multi_required.items():
     if not v:
         missing.append(k)
@@ -348,7 +364,8 @@ if generate:
         st.markdown("<div class='error-box'>Please fill all required fields.</div>", unsafe_allow_html=True)
 
         for m in missing:
-            st.markdown(f"<div class='error-label'>{m} is required.</div>", unsafe_allow_html=True)
+            st.markdown(f"<span class='error-label'>{m} is required.</span>", unsafe_allow_html=True)
+
     else:
         result, _ = compute_match(fields_dict, df_profiles)
 
