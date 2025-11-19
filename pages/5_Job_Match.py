@@ -236,7 +236,6 @@ html, body {{
     <div id="scroll-area">
 """
 
-    # sections
     for sec in sections:
         icon = icons_svg.get(sec, "")
         text = html.escape(str(p.get(sec, "")))
@@ -271,9 +270,7 @@ def clean_text(t):
     return t
 
 def extract_keywords(text):
-    text = clean_text(text)
-    words = set(text.split())
-    return words
+    return set(clean_text(text).split())
 
 def score_match(user_tags, row):
     weights = {
@@ -287,13 +284,11 @@ def score_match(user_tags, row):
         "Role Description": 3,
         "Career Band Description": 2,
     }
-
     score = 0
     for col, w in weights.items():
         kw = extract_keywords(row.get(col, ""))
         overlap = len(user_tags.intersection(kw))
         score += overlap * w
-
     return score
 
 
@@ -315,7 +310,7 @@ if flt.empty:
     st.stop()
 
 # ==========================================================
-# 3 COLUMN LAYOUT WITH CARDS
+# 3 COLUMN LAYOUT WITH CARDS (CORRECTED)
 # ==========================================================
 colA, colB, colC = st.columns(3)
 
@@ -412,7 +407,7 @@ with colB:
 
 
 # ----------------------------------------------------------
-# BLOCK 3 — KNOWLEDGE, KPIs & SKILLS
+# BLOCK 3 — KNOWLEDGE, KPIs & COMPETENCIES
 # ----------------------------------------------------------
 with colC:
     st.markdown('<div class="card-block">', unsafe_allow_html=True)
@@ -454,36 +449,20 @@ with colC:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================================
-# VALIDATION + TAGGING
+# TAG GENERATOR
 # ==========================================================
 def build_user_tags():
     tags = set()
 
-    # Category
     tags.update(job_category.lower().split())
-
-    # Geography
     tags.update(geo_scope.lower().split())
-
-    # Org Impact (keywords)
     tags.update(org_impact.lower().replace("/", " ").split())
-
-    # Span of control
     tags.update(span_control.lower().split())
-
-    # Autonomy
     tags.update(autonomy.lower().split())
-
-    # Problem solving
     tags.update(problem_solving.lower().split())
-
-    # Knowledge depth
     tags.update(knowledge_depth.lower().split())
-
-    # Influence
     tags.update(influence.lower().split())
 
-    # Education mapping
     edu_map = {
         "High School": ["basic"],
         "Technical Degree": ["technical"],
@@ -494,7 +473,6 @@ def build_user_tags():
     }
     tags.update(edu_map.get(education, []))
 
-    # Experience mapping
     exp_map = {
         "< 2 years": ["junior"],
         "2–5 years": ["intermediate"],
@@ -504,11 +482,9 @@ def build_user_tags():
     }
     tags.update(exp_map.get(experience, []))
 
-    # KPIs
     for k in kpis:
         tags.add(k.lower())
 
-    # competencies
     for c in competencies:
         tags.add(c.lower())
 
@@ -527,7 +503,6 @@ generate = st.button("Generate Job Match Description", type="primary")
 # ==========================================================
 if generate:
 
-    # *** VALIDATION ***
     if not kpis:
         st.error("Please select at least one KPI.")
         st.stop()
@@ -545,7 +520,6 @@ if generate:
 
     st.success(f"Matched Job Profile: **{best['Job Profile']}** (GG {best['Global Grade']})")
 
-    # Render full description
     components.html(
         build_single_profile_html(best),
         height=900,
