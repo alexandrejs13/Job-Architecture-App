@@ -1,120 +1,182 @@
+# html_renderer.py
+import html
+import os
+from typing import Dict
 import pandas as pd
+
+# ---------------------------------------------------------
+# Carrega SVGs igual à página de Job Profile Description
+# ---------------------------------------------------------
+def load_svg(svg_name: str) -> str:
+    path = os.path.join("assets", "icons", "sig", svg_name)
+    if not os.path.exists(path):
+        return ""
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+ICONS_SVG: Dict[str, str] = {
+    "Sub Job Family Description": load_svg("Hierarchy.svg"),
+    "Job Profile Description": load_svg("Content_Book_Phone.svg"),
+    "Career Band Description": load_svg("File_Clipboard_Text.svg"),
+    "Role Description": load_svg("Shopping_Business_Target.svg"),
+    "Grade Differentiator": load_svg("User_Add.svg"),
+    "Qualifications": load_svg("Edit_Pencil.svg"),
+    "Specific parameters / KPIs": load_svg("Graph_Bar.svg"),
+    "Competencies 1": load_svg("Setting_Cog.svg"),
+    "Competencies 2": load_svg("Setting_Cog.svg"),
+    "Competencies 3": load_svg("Setting_Cog.svg"),
+}
+
+SECTIONS_ORDER = [
+    "Sub Job Family Description",
+    "Job Profile Description",
+    "Career Band Description",
+    "Role Description",
+    "Grade Differentiator",
+    "Qualifications",
+    "Specific parameters / KPIs",
+    "Competencies 1",
+    "Competencies 2",
+    "Competencies 3",
+]
+
 
 def render_job_description(best_match_row: pd.Series, final_score: float) -> str:
     """
-    Renderiza o cartão HTML do Job recomendado.
-    best_match_row é uma linha (Series) do DataFrame final.
+    Recebe uma linha do df_profiles (pandas.Series) e o score final
+    e devolve o HTML com o mesmo layout base da página Job Profile Description,
+    porém em UMA coluna.
     """
 
-    # Garantir fallback limpo
-    def safe(x):
-        if pd.isna(x):
-            return ""
-        return str(x)
+    # Campos de cabeçalho
+    job_title = html.escape(str(best_match_row.get("Job Profile", "")))
+    gg = html.escape(str(best_match_row.get("Global Grade", "")))
+    jf = html.escape(str(best_match_row.get("Job Family", "")))
+    sf = html.escape(str(best_match_row.get("Sub Job Family", "")))
+    cp = html.escape(str(best_match_row.get("Career Path", "")))
+    fc = html.escape(str(best_match_row.get("Full Job Code", "")))
 
-    job_title = safe(best_match_row.get("Job Profile"))
-    gg = safe(best_match_row.get("GG"))
-    job_family = safe(best_match_row.get("Job Family"))
-    sub_family = safe(best_match_row.get("Sub Job Family"))
-    job_category = safe(best_match_row.get("Job Category"))
-    geo_scope = safe(best_match_row.get("Geo Scope"))
-    org_impact = safe(best_match_row.get("Org Impact"))
-    autonomy = safe(best_match_row.get("Autonomy"))
-    knowledge_depth = safe(best_match_row.get("Knowledge Depth"))
-    operational_complexity = safe(best_match_row.get("Operational Complexity"))
-    experience = safe(best_match_row.get("Experience"))
-    education = safe(best_match_row.get("Education"))
+    # Montagem do HTML
+    out = []
 
-    description = safe(best_match_row.get("Description"))
-    responsibilities = safe(best_match_row.get("Responsibilities"))
-    qualifications = safe(best_match_row.get("Qualifications"))
+    out.append("""
+<style>
+.job-match-wrapper {
+    background: #ffffff;
+    padding: 0;
+    margin-top: 18px;
+    margin-bottom: 30px;
+    font-family: "Segoe UI", sans-serif;
+}
 
-    html = f"""
-    <style>
-        .ja-card {{
-            background: #ffffff;
-            border-radius: 14px;
-            padding: 24px 28px;
-            border: 1px solid #e6e6e6;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-            font-family: PPSIGFlow, sans-serif;
-            width: 100%;
-        }}
+/* Card superior */
+.job-match-card {
+    background: #f5f3ee;
+    border-radius: 16px;
+    padding: 22px 24px;
+    border: 1px solid #e3e1dd;
+    margin-bottom: 24px;
+}
 
-        .ja-title {{
-            font-size: 30px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }}
+.job-title {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 4px;
+}
 
-        .ja-gg {{
-            font-size: 18px;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 12px;
-        }}
+.job-gg {
+    color: #145efc;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
 
-        .ja-meta {{
-            margin-top: 4px;
-            margin-bottom: 22px;
-            color: #444;
-            font-size: 15px;
-        }}
+.job-meta {
+    background: #ffffff;
+    padding: 14px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    font-size: 14px;
+}
 
-        .ja-section-title {{
-            font-size: 20px;
-            font-weight: 700;
-            margin-top: 26px;
-            margin-bottom: 6px;
-        }}
+/* Seções de descrição */
+.job-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
 
-        .ja-text {{
-            font-size: 15px;
-            line-height: 1.5;
-            margin-bottom: 12px;
-            white-space: pre-wrap;
-        }}
+.section-box {
+    padding-bottom: 4px;
+}
 
-        .ja-score {{
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 18px;
-            color: #145efc;
-        }}
-    </style>
+.section-title {
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 
-    <div class="ja-card">
+.section-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+}
 
-        <div class="ja-title">{job_title}</div>
-        <div class="ja-gg">Global Grade: {gg}</div>
+.section-line {
+    height: 1px;
+    background: #e8e6e1;
+    width: 100%;
+    margin: 8px 0 12px 0;
+}
 
-        <div class="ja-score">
-            🎯 Match Score: {final_score:.1f}%
+.section-text {
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+</style>
+""")
+
+    out.append('<div class="job-match-wrapper">')
+
+    # Card do topo
+    out.append("""
+    <div class="job-match-card">
+        <div class="job-title">{job_title}</div>
+        <div class="job-gg">GG {gg}</div>
+
+        <div class="job-meta">
+            <b>Job Family:</b> {jf}<br>
+            <b>Sub Job Family:</b> {sf}<br>
+            <b>Career Path:</b> {cp}<br>
+            <b>Full Job Code:</b> {fc}
         </div>
-
-        <div class="ja-meta">
-            <strong>Job Family:</strong> {job_family}<br>
-            <strong>Sub Job Family:</strong> {sub_family}<br>
-            <strong>Job Category:</strong> {job_category}<br>
-            <strong>Geo Scope:</strong> {geo_scope}<br>
-            <strong>Org Impact:</strong> {org_impact}<br>
-            <strong>Autonomy:</strong> {autonomy}<br>
-            <strong>Knowledge Depth:</strong> {knowledge_depth}<br>
-            <strong>Operational Complexity:</strong> {operational_complexity}<br>
-            <strong>Experience:</strong> {experience}<br>
-            <strong>Education:</strong> {education}<br>
-        </div>
-
-        <div class="ja-section-title">Description</div>
-        <div class="ja-text">{description}</div>
-
-        <div class="ja-section-title">Responsibilities</div>
-        <div class="ja-text">{responsibilities}</div>
-
-        <div class="ja-section-title">Qualifications</div>
-        <div class="ja-text">{qualifications}</div>
-
     </div>
-    """
+    """.format(job_title=job_title, gg=gg, jf=jf, sf=sf, cp=cp, fc=fc))
 
-    return html
+    # Seções
+    out.append('<div class="job-sections">')
+
+    for sec in SECTIONS_ORDER:
+        raw_val = best_match_row.get(sec, "")
+        text_val = html.escape("" if pd.isna(raw_val) else str(raw_val))
+        icon_svg = ICONS_SVG.get(sec, "")
+
+        out.append(f"""
+        <div class="section-box">
+            <div class="section-title">
+                <span class="section-icon">{icon_svg}</span>
+                {html.escape(sec)}
+            </div>
+            <div class="section-line"></div>
+            <div class="section-text">{text_val}</div>
+        </div>
+        """)
+
+    out.append("</div>")  # job-sections
+    out.append("</div>")  # job-match-wrapper
+
+    return "\n".join(out)
