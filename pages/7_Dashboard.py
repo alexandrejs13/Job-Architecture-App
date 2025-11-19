@@ -42,7 +42,7 @@ if font_semibold:
 
 
 # ==========================================================
-# GLOBAL CSS — SIG DESIGN
+# GLOBAL CSS — SIG DESIGN (CORRIGIDO)
 # ==========================================================
 st.markdown(f"""
 <style>
@@ -53,10 +53,11 @@ st.markdown(f"""
     font-family: "SIGFlow", sans-serif !important;
 }}
 
-section.main > div {{
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
+/* <<< AQUI ESTÁ A CORREÇÃO QUE VOCÊ PRECISAVA >>> */
+.main > div {{
+    max-width: 1280px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
 }}
 
 .sig-divider {{
@@ -107,19 +108,19 @@ COL_GRADE = "Global Grade"
 # SIG COLOR PALETTE
 # ==========================================================
 SIG_COLORS = [
-    "#145efc",  # Sky
-    "#dca0ff",  # Spark
-    "#4fa593",  # Forest 1
-    "#167665",  # Forest 2
-    "#00493b",  # Forest 3
-    "#f5f073",  # Moss 1
-    "#c0b846",  # Moss 2
-    "#bfbab5",  # Sand 3
+    "#145efc",
+    "#dca0ff",
+    "#4fa593",
+    "#167665",
+    "#00493b",
+    "#f5f073",
+    "#c0b846",
+    "#bfbab5",
 ]
 
 
 # ==========================================================
-# TABS (sem emojis)
+# TABS
 # ==========================================================
 tab1, tab2 = st.tabs(["Overview", "Family Micro-Analysis"])
 
@@ -192,8 +193,7 @@ with tab1:
     st.altair_chart(chart, use_container_width=True)
 
 
-
-    # --------------------- SUBFAMILIES PER FAMILY — BARRAS VERTICAIS SIG --------------------------
+    # --------------------- SUBFAMILIES PER FAMILY — BARRAS VERTICAIS --------------------------
     st.markdown("### Subfamilies per Family")
 
     subf = (
@@ -239,7 +239,7 @@ with tab2:
         (df[COL_SUBFAMILY] == selected_subfamily)
     ]
 
-    # ========== NEW KPI: Subfamilies in Family ==========
+    # ========== KPI: Subfamilies in Family ==========
     total_subf = df[df[COL_FAMILY] == selected_family][COL_SUBFAMILY].nunique()
 
     top_cols = st.columns(3)
@@ -265,7 +265,7 @@ with tab2:
         </div>
     """, unsafe_allow_html=True)
 
-    # ========== KPIs HORIZONTAIS (SUBFAMILY) ==========
+    # KPIs de Subfamily
     sub_kpis = {
         "Profiles": sub_df[COL_PROFILE].nunique(),
         "Grades": sub_df[COL_GRADE].nunique(),
@@ -298,7 +298,7 @@ with tab2:
     st.markdown("<hr class='sig-divider'>", unsafe_allow_html=True)
 
 
-    # --------------------- Grade Spread (Vertical Bars) --------------------------
+    # --------------------- Grade Spread --------------------------
     st.markdown("### Grade Spread")
 
     g_spread = (
@@ -312,7 +312,7 @@ with tab2:
         alt.Chart(g_spread)
         .mark_bar(size=40)
         .encode(
-            x=alt.X(f"{COL_GRADE}:N", sort=None, title="Global Grade"),
+            x=alt.X(f"{COL_GRADE}:N", title="Global Grade"),
             y=alt.Y("Profiles:Q", title="Profiles"),
             color=alt.value("#145efc"),
             tooltip=[COL_GRADE, "Profiles"]
