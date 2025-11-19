@@ -24,6 +24,9 @@ def load_icon_png(path):
 icon_path = "assets/icons/checkmark_success.png"
 icon_b64 = load_icon_png(icon_path)
 
+# ----------------------------------------------------------
+# HEADER (SIG standard)
+# ----------------------------------------------------------
 st.markdown(f"""
 <div style="
     display:flex;
@@ -46,31 +49,51 @@ st.markdown(f"""
 <hr style="margin-top:14px; margin-bottom:26px;">
 """, unsafe_allow_html=True)
 
-# ----------------------------------------------------------
-# GLOBAL LAYOUT STYLE
-# ----------------------------------------------------------
+# ==========================================================
+# GLOBAL LAYOUT — SIG WIDTH CONTROL (FULL VERSION)
+# ==========================================================
 st.markdown("""
 <style>
-.main > div {
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 20px;
-    padding-right: 20px;
-}
-.card-block {
-    background: #f8f7f5;
-    padding: 20px 22px;
-    border-radius: 14px;
-    border: 1px solid #e4e2dd;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    margin-bottom: 18px;
-}
-.card-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 14px;
-}
+
+    /* Main container */
+    .main > div {
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    /* Dataframes */
+    .stDataFrame {
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Block container */
+    .block-container, .stColumn {
+        max-width: 1400px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    /* Cards */
+    .card-block {
+        background: #f8f7f5;
+        padding: 20px 22px;
+        border-radius: 14px;
+        border: 1px solid #e4e2dd;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        margin-bottom: 18px;
+    }
+
+    .card-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 14px;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -447,6 +470,7 @@ with colC:
     )
 
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 # ==========================================================
 # TAG GENERATOR
