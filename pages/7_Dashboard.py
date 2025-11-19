@@ -90,38 +90,6 @@ st.markdown(f"""
 <hr style="margin-top:14px; margin-bottom:26px;">
 """, unsafe_allow_html=True)
 
-# ==========================================================
-# GLOBAL LAYOUT — limita largura e impede esticar infinito
-# ==========================================================
-st.markdown("""
-<style>
-
-    /* Container principal do Streamlit */
-    .main > div {
-        max-width: 1400px;    /* limite máximo elegante */
-        margin-left: auto;
-        margin-right: auto;
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-
-    /* Estilo para dataframes */
-    .stDataFrame {
-        max-width: 1400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    /* Estilo para cards / container padrão */
-    .block-container, .stColumn {
-        max-width: 1400px !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-    }
-
-</style>
-""", unsafe_allow_html=True)
-
 
 # ==========================================================
 # LOAD DATA
@@ -136,9 +104,9 @@ COL_GRADE = "Global Grade"
 
 
 # ==========================================================
-# TABS
+# TABS (sem emojis)
 # ==========================================================
-tab1, tab2 = st.tabs(["📊 Overview", "🔎 Family Micro-Analysis"])
+tab1, tab2 = st.tabs(["Overview", "Family Micro-Analysis"])
 
 
 # ==========================================================
@@ -210,6 +178,30 @@ with tab1:
 
 
 
+    # --------------------- NOVO: Pizza Subfamilies per Family --------------------------
+    st.markdown("### Subfamilies per Family")
+
+    subf = (
+        df.groupby(COL_FAMILY)[COL_SUBFAMILY]
+        .nunique()
+        .reset_index(name="Count")
+        .sort_values("Count", ascending=False)
+    )
+
+    pie = (
+        alt.Chart(subf)
+        .mark_arc(innerRadius=60)
+        .encode(
+            theta="Count:Q",
+            color=alt.Color(f"{COL_FAMILY}:N", legend=None),
+            tooltip=[COL_FAMILY, "Count"]
+        )
+    )
+
+    st.altair_chart(pie, use_container_width=True)
+
+
+
 # ==========================================================
 # TAB 2 — FAMILY MICRO ANALYSIS
 # ==========================================================
@@ -261,7 +253,7 @@ with tab2:
     st.markdown("<hr class='sig-divider'>", unsafe_allow_html=True)
 
 
-    # --------------------- Grade Spread --------------------------
+    # --------------------- Grade Spread (Vertical Bars) --------------------------
     st.markdown("### Grade Spread")
 
     g_spread = (
@@ -273,10 +265,10 @@ with tab2:
 
     bars = (
         alt.Chart(g_spread)
-        .mark_bar(size=26)
+        .mark_bar(size=40)
         .encode(
-            x="Profiles:Q",
-            y=alt.Y(f"{COL_GRADE}:N", sort='-x'),
+            x=alt.X(f"{COL_GRADE}:N", sort=None, title="Global Grade"),
+            y=alt.Y("Profiles:Q", title="Profiles"),
             color=alt.value("#145efc"),
             tooltip=[COL_GRADE, "Profiles"]
         )
