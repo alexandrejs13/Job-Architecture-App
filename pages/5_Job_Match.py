@@ -1,48 +1,22 @@
-# ==========================================================
-# 5_Job_Match.py — PÁGINA FINAL DO JOB MATCH (VERSÃO FECHADA)
-# ==========================================================
-
 import streamlit as st
 import pandas as pd
+import html
+import streamlit.components.v1 as components
 import base64
 import os
 
-from match_engine import compute_job_match
-from html_renderer import render_job_description
-
-# ----------------------------------------------------------
-# PAGE CONFIG SIG
-# ----------------------------------------------------------
+# ==========================================================
+# PAGE CONFIG
+# ==========================================================
 st.set_page_config(page_title="Job Match", layout="wide")
 
-# ----------------------------------------------------------
-# LOAD ICON (PADRÃO SIG)
-# ----------------------------------------------------------
-def load_icon_png(path):
-    if not os.path.exists(path):
-        return ""
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
-
-icon_b64 = load_icon_png("assets/icons/checkmark_success.png")
-
-# ----------------------------------------------------------
-# HEADER (PADRÃO DAS OUTRAS PÁGINAS)
-# ----------------------------------------------------------
-st.markdown(f"""
-<div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
-    <img src="data:image/png;base64,{icon_b64}" style="width:56px; height:56px;">
-    <h1 style="font-size:36px; font-weight:700; margin:0; padding:0;">Job Match</h1>
-</div>
-<hr style="margin-top:14px; margin-bottom:26px;">
-""", unsafe_allow_html=True)
-
-# ----------------------------------------------------------
-# GLOBAL CSS - SIG STYLE
-# ----------------------------------------------------------
-st.markdown("""
+# ==========================================================
+# GLOBAL CSS (layout + botão + estados de erro)
+# ==========================================================
+st.markdown(
+    """
 <style>
-
+/* ====== LAYOUT GERAL (igual às demais páginas) ====== */
 .main > div {
     max-width: 1400px;
     margin-left: auto;
@@ -50,221 +24,494 @@ st.markdown("""
     padding-left: 20px;
     padding-right: 20px;
 }
-
-/* Título vermelho quando faltar */
-.error-title {
-    color: #C62828 !important;
-    font-weight: 700;
+.stDataFrame {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.block-container, .stColumn {
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
-/* Borda vermelha */
-.error-border {
-    border: 2px solid #C62828 !important;
-    border-radius: 6px !important;
-}
-
-/* BOTÃO AZUL SIG */
-.generate-btn {
-    background-color: #145efc;
-    color: #fff !important;
-    border-radius: 12px;
-    padding: 12px 26px;
-    font-size: 18px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    display: inline-block;
-}
-
-/* CARD SUPERIOR */
-.card {
-    background: #f4f1ec;
-    padding: 24px;
-    border-radius: 20px;
-    margin-bottom: 30px;
-}
-
-.job-title {
-    font-size: 32px;
-    font-weight: 800;
-}
-
-.gg {
+/* ====== TÍTULOS DE SEÇÃO DO FORM ====== */
+.section-title-form {
     font-size: 20px;
-    font-weight: 600;
-    color: #145efc;
-    margin-bottom: 14px;
+    font-weight: 700;
+    margin-top: 24px;
+    margin-bottom: 6px;
+}
+.section-divider {
+    height: 1px;
+    background: #e4e1dc;
+    margin-bottom: 18px;
 }
 
-/* SECTION TITLE */
-.section-title {
-    font-size: 22px;
+/* ====== LABELS DOS CAMPOS ====== */
+.field-label {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+.field-label.error {
+    color: #d32f2f;
+}
+
+/* wrapper pra conseguir pintar a borda do select em vermelho */
+.field-wrapper.error div[data-baseweb="select"] {
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 1px #d32f2f33;
+}
+
+/* ====== BOTÃO AZUL, UMA LINHA, ALINHADO ESQUERDA ====== */
+.stButton > button {
+    background: #145efc !important;
+    color: #ffffff !important;
+    border-radius: 12px !important;
+    border: none !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    padding: 8px 26px !important;
+    white-space: nowrap !important;   /* não quebra linha */
+    width: auto !important;           /* largura só do texto */
+}
+
+/* ====== HTML DA DESCRIÇÃO (mesmo padrão Job Profile) ====== */
+html, body {
+    margin: 0;
+    padding: 0;
+}
+.jobmatch-viewport {
+    font-family: 'Segoe UI', sans-serif;
+    background: #ffffff;
+}
+.jobmatch-card-top {
+    background: #f5f3ee;
+    border-radius: 16px;
+    padding: 22px 24px;
+    border: 1px solid #e3e1dd;
+}
+.jobmatch-title {
+    font-size: 28px;
     font-weight: 700;
-    margin-top: 42px;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
+}
+.jobmatch-gg {
+    color: #145efc;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.jobmatch-meta {
+    background: #ffffff;
+    padding: 14px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    font-size: 14px;
+}
+
+/* seções */
+.jobmatch-section-box {
+    margin-top: 28px;
+}
+.jobmatch-section-title {
+    font-size: 18px;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
-
-.section-text {
-    font-size: 17px;
-    line-height: 1.48;
-    color: #333;
-    margin-bottom: 28px;
+.jobmatch-section-line {
+    height: 1px;
+    background: #e8e6e1;
+    width: 100%;
+    margin: 8px 0 14px 0;
 }
-
-.icon svg {
-    width: 28px;
-    height: 28px;
+.jobmatch-section-text {
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-wrap;
 }
-
+.jobmatch-icon-inline {
+    width: 24px;
+    height: 24px;
+}
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-# ----------------------------------------------------------
-# LOAD SPREADSHEET (VERSÃO DEFINITIVA)
-# ----------------------------------------------------------
-excel_path = "data/Job Profile.xlsx"
+# ==========================================================
+# HELPERS – LOAD ICONS / DATA
+# ==========================================================
+def load_icon_png(path: str) -> str:
+    try:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    except FileNotFoundError:
+        return ""
 
-if not os.path.exists(excel_path):
-    st.error(f"""
-    ❌ **Arquivo não encontrado:**
+def load_svg(path: str) -> str:
+    if not os.path.exists(path):
+        return ""
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
 
-    `{excel_path}`
+# header icon (checkmark)
+page_icon_b64 = load_icon_png("assets/icons/checkmark_success.png")
 
-    Coloque o arquivo dentro da pasta:
-    `/Job-Architecture-App/data/Job Profile.xlsx`
-    """)
-    st.stop()
+# ==========================================================
+# HEADER
+# ==========================================================
+st.markdown(
+    f"""
+<div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
+    <img src="data:image/png;base64,{page_icon_b64}" style="width:56px; height:56px;">
+    <h1 style="font-size:36px; font-weight:700; margin:0; padding:0;">
+        Job Match
+    </h1>
+</div>
+<hr style="margin-top:14px; margin-bottom:26px;">
+""",
+    unsafe_allow_html=True,
+)
 
-df_profiles = pd.read_excel(excel_path).fillna("")
+# ==========================================================
+# LOAD JOB PROFILE DATA
+# ==========================================================
+@st.cache_data
+def load_profiles():
+    # caminho relativo dentro do app
+    df = pd.read_excel("data/Job Profile.xlsx").fillna("")
+    return df
 
-rename_map = {
-    "Job Family": "job_family",
-    "Sub Job Family": "sub_job_family",
-    "Job Title": "job_title",
-    "GG": "gg",
-    "Career Path": "career_path",
-    "Full Job Code": "full_job_code",
-    "Sub Job Family Description": "sub_job_family_description",
-    "Job Profile Description": "job_profile_description",
-    "Career Band Description": "career_band_description",
-    "Role Description": "role_description",
-    "Grade Differentiator": "grade_differentiator",
-    "Qualifications": "qualifications",
-    "Specific parameters / KPIs": "specific_parameters_kpis",
-    "Competencies 1": "competencies_1",
-    "Competencies 2": "competencies_2",
-    "Competencies 3": "competencies_3",
+df = load_profiles()
+
+# ==========================================================
+# SVG ICONS PARA A DESCRIÇÃO
+# ==========================================================
+icons_svg = {
+    "Sub Job Family Description": load_svg("assets/icons/sig/Hierarchy.svg"),
+    "Job Profile Description": load_svg("assets/icons/sig/Content_Book_Phone.svg"),
+    "Career Band Description": load_svg("assets/icons/sig/File_Clipboard_Text.svg"),
+    "Role Description": load_svg("assets/icons/sig/Shopping_Business_Target.svg"),
+    "Grade Differentiator": load_svg("assets/icons/sig/User_Add.svg"),
+    "Qualifications": load_svg("assets/icons/sig/Edit_Pencil.svg"),
+    "Specific parameters / KPIs": load_svg("assets/icons/sig/Graph_Bar.svg"),
+    "Competencies 1": load_svg("assets/icons/sig/Setting_Cog.svg"),
+    "Competencies 2": load_svg("assets/icons/sig/Setting_Cog.svg"),
+    "Competencies 3": load_svg("assets/icons/sig/Setting_Cog.svg"),
 }
 
-df_profiles.rename(columns=rename_map, inplace=True)
+sections_order = [
+    "Sub Job Family Description",
+    "Job Profile Description",
+    "Career Band Description",
+    "Role Description",
+    "Grade Differentiator",
+    "Qualifications",
+    "Specific parameters / KPIs",
+    "Competencies 1",
+    "Competencies 2",
+    "Competencies 3",
+]
 
-# ----------------------------------------------------------
-# FORM INPUTS (COM CORREÇÃO DE ERROS)
-# ----------------------------------------------------------
-form = {}
-errors = {}
+# ==========================================================
+# STATE: CAMPOS OBRIGATÓRIOS COM ERRO
+# ==========================================================
+if "missing_fields" not in st.session_state:
+    st.session_state.missing_fields = set()
 
-def required_select(label, options):
-    selected = st.selectbox(label, ["Choose option"] + options, key=label)
+# ==========================================================
+# FUNÇÃO PARA DESENHAR CADA CAMPO COM LABEL DINÂMICO
+# ==========================================================
+def select_with_error(label: str, options, key: str):
+    has_error = key in st.session_state.missing_fields
+    label_class = "field-label error" if has_error else "field-label"
 
-    missing = (selected == "Choose option")
-    errors[label] = missing
+    st.markdown(
+        f'<div class="{label_class}">{html.escape(label)}</div>',
+        unsafe_allow_html=True,
+    )
 
-    # highlight
-    title_class = "error-title" if missing else ""
-    box_class = "error-border" if missing else ""
-
-    st.markdown(f"""
-    <style>
-    div[data-testid="stSelectbox"][key="{label}"] .stSelectbox {{
-        border-radius: 6px;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
-
-    form[label] = selected
-    return selected
-
-
-# ----------------------------------------------------------
-# JOB FAMILY BLOCK
-# ----------------------------------------------------------
-st.markdown("""<h3 style="margin-bottom:4px; font-size:24px; font-weight:700;">Job Family Information</h3>
-<div style="height:1px; background:#ddd; margin-bottom:18px;"></div>
-""", unsafe_allow_html=True)
-
-colA, colB = st.columns(2)
-
-with colA:
-    job_fams = sorted(df_profiles["job_family"].unique().tolist())
-    job_family = required_select("Job Family", job_fams)
-
-with colB:
-    if job_family == "Choose option":
-        sub_job_family = st.selectbox("Sub Job Family", ["Choose option"])
-        errors["Sub Job Family"] = True
+    if has_error:
+        st.markdown('<div class="field-wrapper error">', unsafe_allow_html=True)
     else:
-        subs = df_profiles[df_profiles["job_family"] == job_family]["sub_job_family"].unique().tolist()
-        sub_job_family = required_select("Sub Job Family", sorted(subs))
+        st.markdown('<div class="field-wrapper">', unsafe_allow_html=True)
 
-# ----------------------------------------------------------
-# SEÇÃO 1 — STRATEGIC IMPACT & SCOPE
-# ----------------------------------------------------------
-st.markdown("""<h3 style="margin-bottom:4px; font-size:24px; font-weight:700;">Strategic Impact & Scope</h3>
-<div style="height:1px; background:#ddd; margin-bottom:18px;"></div>
-""", unsafe_allow_html=True)
+    value = st.selectbox("", options, key=key, label_visibility="collapsed")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    return value
+
+# ==========================================================
+# FORMULÁRIO
+# ==========================================================
+# ---------- Job Family Information ----------
+st.markdown('<div class="section-title-form">Job Family Information</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+
+col_jf1, col_jf2 = st.columns(2)
+
+job_families = sorted(df["Job Family"].unique().tolist())
+
+with col_jf1:
+    job_family = select_with_error(
+        "Job Family",
+        ["Choose option"] + job_families,
+        key="job_family",
+    )
+
+with col_jf2:
+    if job_family == "Choose option":
+        sub_list = []
+    else:
+        sub_list = (
+            df[df["Job Family"] == job_family]["Sub Job Family"]
+            .unique()
+            .tolist()
+        )
+    sub_job_family = select_with_error(
+        "Sub Job Family",
+        ["Choose option"] + sorted(sub_list),
+        key="sub_job_family",
+    )
+
+# ---------- Strategic Impact & Scope ----------
+st.markdown('<div class="section-title-form">Strategic Impact & Scope</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    job_category = required_select("Job Category", ["Executive","Manager","Professional","Technical Support","Business Support","Production"])
-    geo_scope = required_select("Geographic Scope", ["Local","Regional","Multi-country","Global"])
-    org_impact = required_select("Organizational Impact", ["Team","Department / Subfunction","Function","Business Unit","Enterprise-wide"])
+    job_category = select_with_error(
+        "Job Category",
+        [
+            "Choose option",
+            "Executive",
+            "Manager",
+            "Professional",
+            "Technical Support",
+            "Business Support",
+            "Production",
+        ],
+        key="job_category",
+    )
+
+    geo_scope = select_with_error(
+        "Geographic Scope",
+        ["Choose option", "Local", "Regional", "Multi-country", "Global"],
+        key="geo_scope",
+    )
+
+    org_impact = select_with_error(
+        "Organizational Impact",
+        [
+            "Choose option",
+            "Team",
+            "Department / Subfunction",
+            "Function",
+            "Business Unit",
+            "Enterprise-wide",
+        ],
+        key="org_impact",
+    )
 
 with c2:
-    autonomy = required_select("Autonomy Level", ["Close supervision","Regular guidance","Independent","Sets direction for others","Defines strategy"])
-    knowledge_depth = required_select("Knowledge Depth", ["Entry-level knowledge","Applied knowledge","Advanced expertise","Recognized expert","Thought leader"])
-    operational_complexity = required_select("Operational Complexity", ["Stable operations","Some variability","Complex operations","High-variability environment"])
+    autonomy = select_with_error(
+        "Autonomy Level",
+        [
+            "Choose option",
+            "Close supervision",
+            "Regular guidance",
+            "Independent",
+            "Sets direction for others",
+            "Defines strategy",
+        ],
+        key="autonomy",
+    )
+
+    knowledge_depth = select_with_error(
+        "Knowledge Depth",
+        [
+            "Choose option",
+            "Entry-level knowledge",
+            "Applied knowledge",
+            "Advanced expertise",
+            "Recognized expert",
+            "Thought leader",
+        ],
+        key="knowledge_depth",
+    )
+
+    operational_complexity = select_with_error(
+        "Operational Complexity",
+        [
+            "Choose option",
+            "Stable operations",
+            "Some variability",
+            "Complex operations",
+            "High-variability environment",
+        ],
+        key="operational_complexity",
+    )
 
 with c3:
-    experience = required_select("Experience Level", ["< 2 years","2–5 years","5–10 years","10–15 years","15+ years"])
-    education = required_select("Education Level", ["High School","Technical Degree","Bachelor’s","Post-graduate","Master’s","Doctorate"])
+    experience = select_with_error(
+        "Experience Level",
+        [
+            "Choose option",
+            "< 2 years",
+            "2–5 years",
+            "5–10 years",
+            "10–15 years",
+            "15+ years",
+        ],
+        key="experience",
+    )
 
-# ----------------------------------------------------------
-# BOTÃO GERAR — AZUL, ESQUERDA, 1 LINHA
-# ----------------------------------------------------------
-left, _, _ = st.columns([1,6,1])
-with left:
-    generate = st.button("Generate Job Match Description", key="generate", help="Generate", type="primary")
+    education = select_with_error(
+        "Education Level",
+        [
+            "Choose option",
+            "High School",
+            "Technical Degree",
+            "Bachelor’s",
+            "Post-graduate",
+            "Master’s",
+            "Doctorate",
+        ],
+        key="education",
+    )
 
-# ----------------------------------------------------------
-# EXECUTAR MATCH
-# ----------------------------------------------------------
+# ==========================================================
+# BOTÃO GERAR – ALINHADO À ESQUERDA
+# ==========================================================
+btn_col, _, _ = st.columns([1, 5, 1])
+with btn_col:
+    generate = st.button("Generate Job Match Description", key="generate_match")
+
+# ==========================================================
+# LÓGICA DE VALIDAÇÃO + CÁLCULO DO MATCH
+# ==========================================================
+match_profile = None
+match_score = None
+
 if generate:
+    # verifica campos obrigatórios
+    values = {
+        "job_family": job_family,
+        "sub_job_family": sub_job_family,
+        "job_category": job_category,
+        "geo_scope": geo_scope,
+        "org_impact": org_impact,
+        "autonomy": autonomy,
+        "knowledge_depth": knowledge_depth,
+        "operational_complexity": operational_complexity,
+        "experience": experience,
+        "education": education,
+    }
 
-    missing = [k for k, v in errors.items() if v]
+    missing = {k for k, v in values.items() if v == "Choose option" or v == []}
+    st.session_state.missing_fields = missing
 
     if missing:
-        st.error("⚠️ Please complete all required fields.")
-    else:
-        form_inputs = {
-            "job_family": job_family,
-            "sub_job_family": sub_job_family,
-            "job_category": job_category,
-            "geo_scope": geo_scope,
-            "org_impact": org_impact,
-            "autonomy": autonomy,
-            "knowledge_depth": knowledge_depth,
-            "operational_complexity": operational_complexity,
-            "experience": experience,
-            "education": education,
-        }
+        # não mostra banner gigantesco, só depende do vermelho nos campos
+        st.stop()
 
-        best = compute_job_match(form_inputs, df_profiles)
+    # ------- se passou na validação, limpa erros -------
+    st.session_state.missing_fields = set()
 
-        if best:
-            html = render_job_description(best["row"], best["final_score"])
-            st.markdown(html, unsafe_allow_html=True)
+    # ------- Match simples: dentro da mesma Job Family + Sub Job Family -------
+    pool = df[
+        (df["Job Family"] == job_family)
+        & (df["Sub Job Family"] == sub_job_family)
+    ].copy()
+
+    if pool.empty:
+        st.warning("No Job Profiles found for this Job Family / Sub Job Family.")
+        st.stop()
+
+    # mapeia experiência para um "GG alvo" aproximado
+    exp_to_gg = {
+        "< 2 years": 6,
+        "2–5 years": 8,
+        "5–10 years": 10,
+        "10–15 years": 12,
+        "15+ years": 14,
+    }
+    target_gg = exp_to_gg.get(experience, 10)
+
+    pool["gg_num"] = pd.to_numeric(pool["Global Grade"], errors="coerce").fillna(
+        target_gg
+    )
+    pool["gg_diff"] = (pool["gg_num"] - target_gg).abs()
+    pool = pool.sort_values("gg_diff")
+
+    match_profile = pool.iloc[0].to_dict()
+
+    # score só pra ter um número simpático
+    diff = float(pool.iloc[0]["gg_diff"])
+    match_score = max(40, 100 - diff * 8)
+
+# ==========================================================
+# RENDERIZAÇÃO DA DESCRIÇÃO (UM PERFIL, UMA COLUNA)
+# ==========================================================
+if match_profile is not None:
+    job = html.escape(str(match_profile.get("Job Profile", "")))
+    gg = html.escape(str(match_profile.get("Global Grade", "")))
+    jf = html.escape(str(match_profile.get("Job Family", "")))
+    sf = html.escape(str(match_profile.get("Sub Job Family", "")))
+    cp = html.escape(str(match_profile.get("Career Path", "")))
+    fc = html.escape(str(match_profile.get("Full Job Code", "")))
+    score_txt = f"{match_score:0.0f}%"
+
+    html_desc = """
+<div class="jobmatch-viewport">
+  <div class="jobmatch-card-top">
+    <div class="jobmatch-title">{job}</div>
+    <div class="jobmatch-gg">GG {gg} • Match Score: {score}</div>
+    <div class="jobmatch-meta">
+      <b>Job Family:</b> {jf}<br>
+      <b>Sub Job Family:</b> {sf}<br>
+      <b>Career Path:</b> {cp}<br>
+      <b>Full Job Code:</b> {fc}
+    </div>
+  </div>
+""".format(
+        job=job,
+        gg=gg,
+        score=html.escape(score_txt),
+        jf=jf,
+        sf=sf,
+        cp=cp,
+        fc=fc,
+    )
+
+    # seções na mesma ordem da página Job Profile Description
+    for sec in sections_order:
+        val = match_profile.get(sec, "")
+        if val == "":
+            continue
+
+        icon_svg = icons_svg.get(sec, "")
+        html_desc += """
+  <div class="jobmatch-section-box">
+    <div class="jobmatch-section-title">
+      <span class="jobmatch-icon-inline">{icon}</span>
+      {title}
+    </div>
+    <div class="jobmatch-section-line"></div>
+    <div class="jobmatch-section-text">{text}</div>
+  </div>
+""".format(
+            icon=icon_svg,
+            title=html.escape(sec),
+            text=html.escape(str(val)),
+        )
+
+    html_desc += "</div>"
+
+    components.html(html_desc, height=900, scrolling=False)
