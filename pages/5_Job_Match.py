@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import html
-import streamlit.components.v1 as components
 import base64
 import os
 
@@ -24,12 +22,6 @@ st.markdown("""
         padding-right: 20px;
     }
 
-    .stDataFrame {
-        max-width: 1400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
     .block-container, .stColumn {
         max-width: 1400px !important;
         margin-left: auto !important;
@@ -39,16 +31,16 @@ st.markdown("""
     /* CARD BLOCK */
     .card-block {
         background: #f7f5f2;
-        padding: 22px 26px;
+        padding: 24px 26px;
         border-radius: 16px;
         border: 1px solid #e6e2dc;
-        margin-bottom: 24px;
+        margin-bottom: 26px;
     }
 
     .card-title {
         font-size: 20px;
         font-weight: 700;
-        margin-bottom: 14px;
+        margin-bottom: 16px;
         color: #111;
     }
 
@@ -57,34 +49,21 @@ st.markdown("""
 
 
 # ---------------------------------------------------------
-# PAGE HEADER
+# HEADER
 # ---------------------------------------------------------
 def load_icon_png(path):
-    if not os.path.exists(path):
+    try:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    except:
         return ""
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
 
-icon_path = "assets/icons/checkmark_success.png"
-icon_b64 = load_icon_png(icon_path)
+icon_b64 = load_icon_png("assets/icons/checkmark_success.png")
 
 st.markdown(f"""
-<div style="
-    display:flex;
-    align-items:center;
-    gap:18px;
-    margin-top:12px;
-">
-    <img src="data:image/png;base64,{icon_b64}"
-         style="width:56px; height:56px;">
-    <h1 style="
-        font-size:36px;
-        font-weight:700;
-        margin:0;
-        padding:0;
-    ">
-        Job Match
-    </h1>
+<div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
+    <img src="data:image/png;base64,{icon_b64}" style="width:56px; height:56px;">
+    <h1 style="font-size:36px; font-weight:700; margin:0;">Job Match</h1>
 </div>
 
 <hr style="margin-top:14px; margin-bottom:26px;">
@@ -92,13 +71,13 @@ st.markdown(f"""
 
 
 # ---------------------------------------------------------
-# JOB FAMILY — BASIC FILTERS
+# JOB FAMILY SECTION
 # ---------------------------------------------------------
 st.markdown("## Job Family Information")
 
-col_f1, col_f2 = st.columns([1, 1])
+jf1, jf2 = st.columns([1, 1])
 
-with col_f1:
+with jf1:
     job_family = st.selectbox(
         "Job Family",
         [
@@ -113,7 +92,7 @@ with col_f1:
         ]
     )
 
-with col_f2:
+with jf2:
     sub_job_family = st.selectbox(
         "Sub Job Family",
         [
@@ -125,18 +104,14 @@ with col_f2:
         ]
     )
 
-
 # ==========================================================
-# MAIN QUESTIONNAIRE — THREE CARDS
+# MAIN QUESTIONNAIRE — THREE CARDS (NO EMPTY CONTAINERS)
 # ==========================================================
-
-st.write("")  # small spacer
 
 cA, cB, cC = st.columns([1, 1, 1])
 
-
 # ---------------------------------------------------------
-# CARD 1 – Strategic Impact & Scope  (FIX: title inside card)
+# CARD A – Strategic Impact & Scope
 # ---------------------------------------------------------
 with cA:
     st.markdown('<div class="card-block">', unsafe_allow_html=True)
@@ -181,7 +156,7 @@ with cA:
 
 
 # ---------------------------------------------------------
-# CARD 2 – Autonomy & Complexity (title inside)
+# CARD B – Autonomy & Complexity
 # ---------------------------------------------------------
 with cB:
     st.markdown('<div class="card-block">', unsafe_allow_html=True)
@@ -236,7 +211,7 @@ with cB:
 
 
 # ---------------------------------------------------------
-# CARD 3 – Knowledge, KPIs & Competencies (title inside)
+# CARD C – Knowledge, KPIs & Competencies
 # ---------------------------------------------------------
 with cC:
     st.markdown('<div class="card-block">', unsafe_allow_html=True)
@@ -300,7 +275,9 @@ with cC:
 # ==========================================================
 # BUTTON
 # ==========================================================
-generate = st.button("Generate Job Match Description")
+center = st.columns([4, 2, 4])[1]
+with center:
+    generate = st.button("Generate Job Match Description", use_container_width=True)
 
 if generate:
     st.success("Job Match Description generated successfully!")
