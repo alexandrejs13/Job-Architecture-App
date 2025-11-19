@@ -26,9 +26,8 @@ def load_font_base64(path: str) -> str | None:
     except FileNotFoundError:
         return None
 
-
 # ==========================================================
-# LOAD SIG FONT (SE EXISTIR) + GLOBAL LAYOUT/CSS
+# LOAD SIG FONT + GLOBAL CSS + MAX-WIDTH
 # ==========================================================
 font_regular_b64 = load_font_base64("assets/fonts/PP-SIG-Flow-Regular.ttf")
 font_semibold_b64 = load_font_base64("assets/fonts/PP-SIG-Flow-Semibold.ttf")
@@ -49,28 +48,16 @@ if font_regular_b64 and font_semibold_b64:
     }}
 
     *, body {{
-        font-family: 'SIGFlow', system-ui, -apple-system, BlinkMacSystemFont,
-                     'Segoe UI', sans-serif !important;
+        font-family: 'SIGFlow', sans-serif !important;
     }}
     """
-
-SIG_COLORS = [
-    "#145EFC",  # SIG Sky
-    "#DCA0FF",  # SIG Spark
-    "#167665",  # SIG Forest 2
-    "#F5F073",  # SIG Moss 1
-    "#73706D",  # SIG Sand 4
-    "#BFBAB5",  # SIG Sand 3
-    "#E5DFD9",  # SIG Sand 2
-    "#4FA593",  # SIG Moss 2
-]
 
 st.markdown(
     f"""
 <style>
 {font_css}
 
-    /* GLOBAL LAYOUT — impede esticar infinito e centraliza conteúdo */
+    /* MAX WIDTH GLOBAL */
     .main > div {{
         max-width: 1400px;
         margin-left: auto;
@@ -79,57 +66,66 @@ st.markdown(
         padding-right: 20px;
     }}
 
-    .stDataFrame {{
-        max-width: 1400px;
-        margin-left: auto;
-        margin-right: auto;
-    }}
-
-    .block-container, .stColumn {{
+    .block-container, .stDataFrame {{
         max-width: 1400px !important;
         margin-left: auto !important;
         margin-right: auto !important;
     }}
 
-    /* GRID PARA CARDS DE KPI */
+    /* KPI GRID RESTAURADO - HORIZONTAL */
     .kpi-grid {{
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 16px;
-        margin-bottom: 28px;
+        gap: 18px;
+        margin-bottom: 32px;
     }}
 
     .kpi-box {{
         background: #F8F6F3;
         border: 1px solid #E5E0D8;
         border-radius: 14px;
-        padding: 12px 16px;
-        min-height: 72px;
+        padding: 14px 16px;
+        height: 90px;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        box-shadow: 0 0 0 1px rgba(0,0,0,0.02);
+        box-shadow: 0 0 0 1px rgba(0,0,0,0.03);
     }}
 
     .kpi-title {{
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
-        color: #444;
+        color: #000;
     }}
 
     .kpi-value {{
-        font-size: 24px;
+        font-size: 26px;
         font-weight: 600;
         color: #145EFC;
-        margin-top: 2px;
+        margin-top: 4px;
     }}
+
 </style>
 """,
     unsafe_allow_html=True,
 )
 
 # ==========================================================
-# HEADER — padrão SIG
+# SIG COLORS
+# ==========================================================
+SIG_COLORS = [
+    "#145EFC",  # Sky
+    "#DCA0FF",  # Spark
+    "#167665",  # Forest 2
+    "#F5F073",  # Moss 1
+    "#73706D",  # Sand 4
+    "#BFBAB5",  # Sand 3
+    "#E5DFD9",  # Sand 2
+    "#4FA593",  # Forest 1
+]
+
+# ==========================================================
+# HEADER
 # ==========================================================
 icon_path = "assets/icons/data_2_perfromance.png"
 icon_b64 = load_icon_png(icon_path)
@@ -137,12 +133,10 @@ icon_b64 = load_icon_png(icon_path)
 st.markdown(
     f"""
 <div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
-    <img src="data:image/png;base64,{icon_b64}"
-         style="width:56px; height:56px;">
-    <h1 style="font-size:36px; font-weight:600; margin:0; padding:0;">
-        Dashboard
-    </h1>
+    <img src="data:image/png;base64,{icon_b64}" style="width:56px; height:56px;">
+    <h1 style="font-size:36px; font-weight:600; margin:0;">Dashboard</h1>
 </div>
+
 <hr style="margin-top:14px; margin-bottom:26px;">
 """,
     unsafe_allow_html=True,
@@ -152,9 +146,8 @@ st.markdown(
 # LOAD DATA
 # ==========================================================
 @st.cache_data
-def load_data() -> pd.DataFrame:
+def load_data():
     return pd.read_excel("data/Job Profile.xlsx")
-
 
 df = load_data()
 
@@ -183,6 +176,7 @@ with tab_overview:
         "Global Grades": df[COL_GRADE].nunique(),
     }
 
+    # KPI GRID HORIZONTAL
     st.markdown("<div class='kpi-grid'>", unsafe_allow_html=True)
     for label, value in kpis.items():
         st.markdown(
@@ -196,9 +190,7 @@ with tab_overview:
         )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ------------------------------------------------------
-    # Subfamilies per Family — BARRAS VERTICAIS
-    # ------------------------------------------------------
+    # ---------------- Subfamilies per Family (Vertical Bars) -------------
     st.markdown("### Subfamilies per Family")
 
     subf = (
@@ -208,8 +200,7 @@ with tab_overview:
         .sort_values("Count", ascending=False)
     )
 
-    bar_colors = SIG_COLORS * (len(subf) // len(SIG_COLORS) + 1)
-    subf["Color"] = bar_colors[: len(subf)]
+    subf["Color"] = SIG_COLORS * (len(subf) // len(SIG_COLORS) + 1)
 
     bar_chart = (
         alt.Chart(subf)
@@ -217,11 +208,7 @@ with tab_overview:
         .encode(
             x=alt.X(f"{COL_FAMILY}:N", sort="-y", title="Job Family"),
             y=alt.Y("Count:Q", title="Number of Subfamilies"),
-            color=alt.Color(
-                "Color:N",
-                scale=None,
-                legend=None,
-            ),
+            color=alt.Color("Color:N", scale=None, legend=None),
             tooltip=[COL_FAMILY, "Count"],
         )
         .properties(height=420)
@@ -235,21 +222,20 @@ with tab_overview:
 with tab_family:
     st.markdown("## Family Micro-Analysis")
 
-    families = sorted(df[COL_FAMILY].dropna().unique())
+    families = sorted(df[COL_FAMILY].unique())
     selected_family = st.selectbox("Select Job Family:", families)
 
     family_df_all = df[df[COL_FAMILY] == selected_family]
 
-    subfamilies = sorted(family_df_all[COL_SUBFAMILY].dropna().unique())
-    subfamily_options = ["All"] + subfamilies
-    selected_subfamily = st.selectbox("Select Sub Job Family:", subfamily_options)
+    sub_options = ["All"] + sorted(family_df_all[COL_SUBFAMILY].unique())
+    selected_subfamily = st.selectbox("Select Subfamily:", sub_options)
 
     if selected_subfamily != "All":
         family_df = family_df_all[family_df_all[COL_SUBFAMILY] == selected_subfamily]
     else:
-        family_df = family_df_all.copy()
+        family_df = family_df_all
 
-    # KPIs para a família selecionada
+    # KPIs RESTORED HORIZONTAL
     metrics = {
         "Subfamilies in Family": family_df_all[COL_SUBFAMILY].nunique(),
         "Profiles": family_df[COL_PROFILE].nunique(),
@@ -270,9 +256,7 @@ with tab_family:
         )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ------------------------------------------------------
-    # GRADE SPREAD — BARRAS VERTICAIS
-    # ------------------------------------------------------
+    # ------------------ GRADE SPREAD (VERTICAL BARS) ------------------
     st.markdown("### Grade Spread")
 
     if not family_df.empty:
@@ -288,24 +272,20 @@ with tab_family:
             .mark_bar()
             .encode(
                 x=alt.X(f"{COL_GRADE}:O", title="Global Grade"),
-                y=alt.Y("Profiles:Q", title="Number of Profiles"),
+                y=alt.Y("Profiles:Q", title="Profiles"),
                 color=alt.value("#145EFC"),
                 tooltip=[COL_GRADE, "Profiles"],
             )
-            .properties(height=360)
+            .properties(height=420)
         )
 
         st.altair_chart(grade_chart, use_container_width=True)
     else:
-        st.info("No profiles found for the selected combination.")
+        st.info("No profiles for this selection.")
 
-    # ------------------------------------------------------
-    # TABELA DE PERFIS
-    # ------------------------------------------------------
+    # TABELA FINAL
     st.markdown("### Profiles in Selection")
-
-    table_cols = [COL_PROFILE, COL_SUBFAMILY, COL_CAREER_PATH, COL_GRADE]
     st.dataframe(
-        family_df[table_cols].sort_values([COL_SUBFAMILY, COL_PROFILE]),
+        family_df[[COL_PROFILE, COL_SUBFAMILY, COL_CAREER_PATH, COL_GRADE]],
         use_container_width=True,
     )
