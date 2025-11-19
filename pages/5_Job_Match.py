@@ -623,196 +623,174 @@ if generate:
     # ==========================================================
     best = df_filtered.sort_values("match_score", ascending=False).iloc[0]
     score_pct = int((best["match_score"] / df_filtered["match_score"].max()) * 100)
+
 # ==========================================================
-# PARTE 4 — HTML FINAL (IDÊNTICO AO JOB PROFILE DESCRIPTION)
+# PARTE 4 — HTML FINAL (Fundo branco, sem scroll, SVG ok)
 # ==========================================================
 
-    # ------------------------------------------------------
-    # Campos do metacard
-    # ------------------------------------------------------
-    mc_job_family = best["job_family"]
-    mc_sub_family = best["sub_job_family"]
-    mc_career_path = best["career_path"]
-    mc_full_code = best["full_job_code"]
-    mc_profile = best["job_profile"]
-    mc_grade = best["global_grade"]
+def build_html(job):
 
-    # ------------------------------------------------------
-    # HTML FINAL — layout SIG idêntico
-    # ------------------------------------------------------
+    sections = [
+        "Sub Job Family Description",
+        "Job Profile Description",
+        "Career Band Description",
+        "Role Description",
+        "Grade Differentiator",
+        "Qualifications",
+        "Specific parameters / KPIs",
+        "Competencies 1",
+        "Competencies 2",
+        "Competencies 3",
+    ]
+
     html_code = f"""
 <html>
 <head>
 <meta charset="UTF-8">
+
 <style>
 
 html, body {{
     margin: 0;
     padding: 0;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
     font-family: 'Segoe UI', sans-serif;
-    background: #faf9f7;
 }}
 
 #viewport {{
-    height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    width: 100%;
+    background: white !important;
 }}
 
-/* Top card grid */
 .grid-top {{
     display: grid;
     grid-template-columns: 1fr;
-    gap: 24px;
     width: 100%;
-    padding-right: 8px;
+    gap: 24px;
 }}
 
-/* Full description grid */
 .grid-desc {{
     display: grid;
     grid-template-columns: 1fr;
-    gap: 28px;
     width: 100%;
-    padding-right: 8px;
+    gap: 32px;
+    margin-top: 24px;
 }}
 
-/* Metacard */
 .card-top {{
-    background: #f5f3ee;
+    background: #ffffff !important;
     border-radius: 16px;
     padding: 22px 24px;
     border: 1px solid #e3e1dd;
 }}
 
 .title {{
-    font-size: 20px;
+    font-size: 26px;
     font-weight: 700;
+    line-height: 1.22;
 }}
 
 .gg {{
     color: #145efc;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
     margin-top: 6px;
 }}
 
 .meta {{
-    background: white;
+    background: #ffffff !important;
     padding: 14px;
-    margin-top: 14px;
+    margin-top: 18px;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    font-size: 14px;
+    border: 1px solid #e8e6e1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    font-size: 16px;
 }}
 
 .section-box {{
-    padding-bottom: 28px;
+    background: white !important;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #e6e4e1;
 }}
 
 .section-title {{
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
-    gap: 6px;
-}}
-
-.section-title svg {{
-    width: 20px;
-    height: 20px;
-}}
-
-.section-line {{
-    height: 1px;
-    background: #e8e6e1;
-    width: 100%;
-    margin: 8px 0 14px 0;
+    gap: 10px;
 }}
 
 .section-text {{
-    font-size: 14px;
-    line-height: 1.45;
+    font-size: 16px;
+    line-height: 1.55;
     white-space: pre-wrap;
 }}
 
-#scroll-area {{
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 4px 32px 4px;
+.icon-inline {{
+    width: 22px;
+    height: 22px;
+    display: inline-block;
 }}
-
 </style>
+
 </head>
 
 <body>
 
 <div id="viewport">
 
-    <!-- METACARD -->
-    <div id="top-area">
-        <div class="grid-top">
-            <div class="card-top">
+    <div class="grid-top">
+        <div class="card-top">
+            <div class="title">{job['Job Profile']}</div>
+            <div class="gg">GG {job['Global Grade']}</div>
 
-                <div class="title">Recommended Match: {html.escape(mc_profile)}</div>
-                <div class="gg">Match Score: {score_pct}%</div>
-
-                <div class="meta">
-                    <b>Job Family:</b> {html.escape(mc_job_family)}<br>
-                    <b>Sub Job Family:</b> {html.escape(mc_sub_family)}<br>
-                    <b>Career Path:</b> {html.escape(mc_career_path)}<br>
-                    <b>Full Job Code:</b> {html.escape(mc_full_code)}
-                </div>
-
+            <div class="meta">
+                <b>Job Family:</b> {job['Job Family']}<br>
+                <b>Sub Job Family:</b> {job['Sub Job Family']}<br>
+                <b>Career Path:</b> {job['Career Path']}<br>
+                <b>Full Job Code:</b> {job['Full Job Code']}
             </div>
         </div>
     </div>
 
-    <!-- MAIN DESCRIPTION -->
-    <div id="scroll-area">
-        <div class="grid-desc">
-    """
+    <div class="grid-desc">
+"""
 
-    # ------------------------------------------------------
-    # MULTI-SEÇÃO — RENDER COM SVG INLINE
-    # ------------------------------------------------------
-    sections = [
-        ("Sub Job Family Description", "desc_sub_family"),
-        ("Job Profile Description", "desc_profile"),
-        ("Career Band Description", "desc_career_band"),
-        ("Role Description", "desc_role"),
-        ("Grade Differentiator", "desc_grade_diff"),
-        ("Qualifications", "desc_qualifications"),
-        ("Specific parameters / KPIs", "desc_kpis"),
-        ("Competencies 1", "desc_comp1"),
-        ("Competencies 2", "desc_comp2"),
-        ("Competencies 3", "desc_comp3"),
-    ]
-
-    for sec_title, col in sections:
-        icon_svg = icons_svg.get(sec_title, "")
-        value = best.get(col, "")
+    # Sections with icons
+    for sec in sections:
+        icon = icons_svg.get(sec, "")
+        text = job.get(sec, "")
 
         html_code += f"""
         <div class="section-box">
-            <div class="section-title">{icon_svg} {html.escape(sec_title)}</div>
-            <div class="section-line"></div>
-            <div class="section-text">{html.escape(str(value))}</div>
+            <div class="section-title">
+                <span class="icon-inline">{icon}</span>
+                {sec}
+            </div>
+            <div class="section-text">{text}</div>
         </div>
         """
 
     html_code += """
-        </div>
     </div>
-
 </div>
 
-</body>
-</html>
+</body></html>
 """
 
-    # ------------------------------------------------------
-    # RENDERIZAÇÃO FINAL
-    # ------------------------------------------------------
-    components.html(html_code, height=1400, scrolling=True)
+    return html_code
+
+
+# Render final recommended job
+if match_result:
+    components.html(
+        build_html(match_result),
+        height=2000,
+        scrolling=False
+    )
