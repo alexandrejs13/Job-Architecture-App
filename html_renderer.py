@@ -43,20 +43,27 @@ SECTIONS_ORDER = [
 ]
 
 
-
 # =====================================================================
-# FUNÇÃO PRINCIPAL — GERA HTML IGUAL AO JOB PROFILE DESCRIPTION
+# FUNÇÃO PRINCIPAL
 # =====================================================================
 def render_job_description(best_match_row: pd.Series, final_score: float) -> str:
 
-    job_title = html.escape(str(best_match_row.get("Job Profile", "")))
-    gg = html.escape(str(best_match_row.get("Global Grade", "")))
-    jf = html.escape(str(best_match_row.get("Job Family", "")))
-    sf = html.escape(str(best_match_row.get("Sub Job Family", "")))
-    cp = html.escape(str(best_match_row.get("Career Path", "")))
-    fc = html.escape(str(best_match_row.get("Full Job Code", "")))
+    def safe_get(col):
+        try:
+            val = best_match_row.get(col, "")
+            if pd.isna(val):
+                return ""
+            return str(val)
+        except:
+            return ""
 
-    # HTML
+    job_title = html.escape(safe_get("Job Profile"))
+    gg = html.escape(safe_get("Global Grade"))
+    jf = html.escape(safe_get("Job Family"))
+    sf = html.escape(safe_get("Sub Job Family"))
+    cp = html.escape(safe_get("Career Path"))
+    fc = html.escape(safe_get("Full Job Code"))
+
     out = []
 
     out.append("""
@@ -67,7 +74,12 @@ body {
     font-family: "Segoe UI", sans-serif;
 }
 
-/* Card principal */
+/* libera scroll total */
+html, body {
+    overflow-y: visible !important;
+}
+
+/* CARD PRINCIPAL */
 .job-card {
     background: #f5f3ee;
     border-radius: 16px;
@@ -82,7 +94,7 @@ body {
     font-weight: 700;
 }
 
-/* GG + Match */
+/* Subtítulo + pílula */
 .job-subtitle {
     font-size: 18px;
     font-weight: 700;
@@ -93,7 +105,7 @@ body {
     gap: 12px;
 }
 
-/* Pílula */
+/* Pílula do score */
 .pill {
     background: #145efc;
     color: white;
@@ -103,7 +115,7 @@ body {
     font-weight: 600;
 }
 
-/* Meta card branco */
+/* Meta-card */
 .meta-card {
     background: white;
     padding: 14px 18px;
@@ -116,15 +128,15 @@ body {
 
 /* Seções */
 .section-box {
-    margin-bottom: 30px;
+    margin-bottom: 28px;
 }
 
 .section-title {
     font-size: 18px;
     font-weight: 700;
     display: flex;
-    align-items: center;
     gap: 8px;
+    align-items: center;
 }
 
 .section-title svg {
@@ -135,7 +147,7 @@ body {
 .section-line {
     height: 1px;
     background: #e8e6e1;
-    margin: 10px 0 14px 0;
+    margin: 8px 0 12px 0;
 }
 
 .section-text {
@@ -144,14 +156,10 @@ body {
     white-space: pre-wrap;
 }
 
-/* Remove scroll interno */
-html, body {
-    overflow-y: auto !important;
-}
-
 </style>
 """)
 
+    # topo
     out.append("<div class='job-card'>")
 
     out.append(f"""
@@ -170,25 +178,20 @@ html, body {
         </div>
     """)
 
-    out.append("</div>")  # job-card
+    out.append("</div>")
 
-    # ===========================
-    # SEÇÕES COMPLETAS
-    # ===========================
+    # seções completas (mesmo se vazias!)
     for sec in SECTIONS_ORDER:
-        text_val = best_match_row.get(sec, "")
-        try:
-            text_val = "" if pd.isna(text_val) else str(text_val)
-        except:
-            text_val = str(text_val)
-
+        raw_text = safe_get(sec)
         icon_svg = ICONS_SVG.get(sec, "")
 
         out.append(f"""
             <div class="section-box">
-                <div class="section-title">{icon_svg} {html.escape(sec)}</div>
+                <div class="section-title">
+                    {icon_svg} {html.escape(sec)}
+                </div>
                 <div class="section-line"></div>
-                <div class="section-text">{html.escape(text_val)}</div>
+                <div class="section-text">{html.escape(raw_text)}</div>
             </div>
         """)
 
