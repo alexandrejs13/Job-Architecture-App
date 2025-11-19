@@ -1,18 +1,20 @@
 # ==========================================================
-# Job Match — WTW Guided Matching (Página Final)
+# PAGE CONFIG + HEADER (PADRÃO SIG)
 # ==========================================================
 import streamlit as st
 import pandas as pd
+import numpy as np
 import base64
 import os
 import html
+import re
+import streamlit.components.v1 as components
 
-st.set_page_config(page_title="WTW Job Match Wizard", layout="wide")
+st.set_page_config(page_title="Job Match", layout="wide")
 
-
-# ==========================================================
-# HEADER — padrão SIG
-# ==========================================================
+# ----------------------------------------------------------
+# LOAD ICON
+# ----------------------------------------------------------
 def load_icon_png(path):
     if not os.path.exists(path):
         return ""
@@ -37,32 +39,30 @@ st.markdown(f"""
         margin:0;
         padding:0;
     ">
-        Job Match (WTW Guided)
+        Job Match
     </h1>
 </div>
 
 <hr style="margin-top:14px; margin-bottom:26px;">
 """, unsafe_allow_html=True)
 
-
-# ==========================================================
-# GLOBAL LAYOUT
-# ==========================================================
+# ----------------------------------------------------------
+# GLOBAL LAYOUT STYLE (SIG)
+# ----------------------------------------------------------
 st.markdown("""
 <style>
-    .main > div {
-        max-width: 1400px;
-        margin-left: auto;
-        margin-right: auto;
-        padding-left: 20px;
-        padding-right: 20px;
-    }
+.main > div {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 20px;
+    padding-right: 20px;
+}
 </style>
 """, unsafe_allow_html=True)
 
-
 # ==========================================================
-# LOAD DATA
+# LOAD JOB PROFILE DATA
 # ==========================================================
 @st.cache_data
 def load_profiles():
@@ -70,127 +70,28 @@ def load_profiles():
 
 df = load_profiles()
 
-
 # ==========================================================
-# 1) FILTERS — Family / Subfamily
+# LOAD SVG ICONS
 # ==========================================================
-st.subheader("Step 1 — Select Job Family")
+def load_svg(svg_name):
+    path = f"assets/icons/sig/{svg_name}"
+    if not os.path.exists(path):
+        return ""
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
 
-c1, c2 = st.columns(2)
-
-with c1:
-    family = st.selectbox(
-        "Job Family",
-        sorted(df["Job Family"].dropna().unique())
-    )
-
-with c2:
-    subfamily_list = df[df["Job Family"] == family]["Sub Job Family"].dropna().unique()
-    subfamily = st.selectbox(
-        "Sub Job Family",
-        sorted(subfamily_list)
-    )
-
-
-# ==========================================================
-# 2) WTW QUESTIONS — EXECUTIVE VS MANAGER VS IC
-# ==========================================================
-st.subheader("Step 2 — Determine Career Band (WTW Guidelines)")
-
-career_band = st.radio(
-    "Select the option that describes the role:",
-    [
-        "Executive — defines long-term strategy, influences business unit strategy, broader org impact",
-        "Manager — manages people, teams, projects or a body of work",
-        "Individual Contributor — applies professional/technical expertise without people management"
-    ]
-)
-
-if "Executive" in career_band:
-    band = "EX"
-elif "Manager" in career_band:
-    band = "M"
-else:
-    band = "P"   # default IC band before refining
-
-
-# ==========================================================
-# 3) IC BAND DETAIL — Professional / Technical / Business Support / Manual Labor
-# ==========================================================
-path = None
-
-if band == "P":
-    st.subheader("Step 3 — Identify the IC Career Path")
-
-    path = st.radio(
-        "For IC, which Career Path best matches?",
-        [
-            "Professional (P)",
-            "Technical Support (T)",
-            "Business Support (U)",
-            "Production / Manual Labor (W)"
-        ]
-    )
-
-    if "Professional" in path:
-        band = "P"
-    elif "Technical" in path:
-        band = "T"
-    elif "Business" in path:
-        band = "U"
-    elif "Production" in path:
-        band = "W"
-
-
-# ==========================================================
-# 4) WTW CAREER LEVEL
-# ==========================================================
-st.subheader("Step 4 — Career Level")
-
-levels_map = {
-    "M": ["M1", "M2", "M3", "M4", "M5"],
-    "P": ["P1", "P2", "P3", "P4", "P5", "P6"],
-    "T": ["T1", "T2", "T3", "T4"],
-    "U": ["U1", "U2", "U3", "U4"],
-    "W": ["W1", "W2", "W3", "W4"],
-    "EX": ["15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25"]
+icons_svg = {
+    "Sub Job Family Description": load_svg("Hierarchy.svg"),
+    "Job Profile Description": load_svg("Content_Book_Phone.svg"),
+    "Career Band Description": load_svg("File_Clipboard_Text.svg"),
+    "Role Description": load_svg("Shopping_Business_Target.svg"),
+    "Grade Differentiator": load_svg("User_Add.svg"),
+    "Qualifications": load_svg("Edit_Pencil.svg"),
+    "Specific parameters / KPIs": load_svg("Graph_Bar.svg"),
+    "Competencies 1": load_svg("Setting_Cog.svg"),
+    "Competencies 2": load_svg("Setting_Cog.svg"),
+    "Competencies 3": load_svg("Setting_Cog.svg"),
 }
-
-career_level = st.selectbox(
-    "Select Career Level",
-    levels_map[band]
-)
-
-
-# ==========================================================
-# 5) MATCHING IN THE JOB PROFILE DATASET
-# ==========================================================
-st.subheader("Step 5 — Recommended Job Profile")
-
-# Filtra DF pelo Family/Subfamily primeiro
-df_f = df[(df["Job Family"] == family) & (df["Sub Job Family"] == subfamily)].copy()
-
-# Career Path (quando existir)
-if band in ["P", "T", "U", "W"]:
-    df_f = df_f[df_f["Career Path"].str.startswith(band)]
-
-# Global Grade
-df_f = df_f[df_f["Global Grade"].astype(str) == str(career_level)]
-
-if df_f.empty:
-    st.error("Nenhum Job Profile encontrado com esses critérios. Ajuste Family/Subfamily/Level.")
-    st.stop()
-
-# pega o primeiro match (único)
-profile = df_f.iloc[0].to_dict()
-
-st.success(f"**Job Profile recomendado:** {profile['Job Profile']} (GG {profile['Global Grade']})")
-
-
-# ==========================================================
-# 6) DISPLAY — SINGLE COLUMN DESCRIPTION (modelo da página anterior)
-# ==========================================================
-st.subheader("Job Profile Description")
 
 sections = [
     "Sub Job Family Description",
@@ -205,21 +106,312 @@ sections = [
     "Competencies 3",
 ]
 
-for sec in sections:
-    st.markdown(f"### {sec}")
-    st.markdown(
-        f"""
-        <div style="
-            background:#f7f6f3;
-            border:1px solid #e2e0dc;
-            padding:18px;
-            border-radius:12px;
-            font-size:15px;
-            line-height:1.45;
-        ">
-            {html.escape(str(profile.get(sec,'')))}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+# ==========================================================
+# HTML RENDER (1 COLUNA, LAYOUT PREMIUM)
+# ==========================================================
+def build_single_profile_html(p):
 
+    job = html.escape(p["Job Profile"])
+    gg = html.escape(str(p["Global Grade"]))
+    jf = html.escape(p["Job Family"])
+    sf = html.escape(p["Sub Job Family"])
+    cp = html.escape(p["Career Path"])
+    fc = html.escape(p["Full Job Code"])
+
+    html_code = f"""
+<html>
+<head>
+<meta charset="UTF-8">
+
+<style>
+html, body {{
+    margin: 0; padding: 0; height: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+}}
+
+#viewport {{
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}}
+
+.card-top {{
+    background: #f5f3ee;
+    border-radius: 16px;
+    padding: 22px 24px;
+    border: 1px solid #e3e1dd;
+}}
+
+.title {{
+    font-size: 20px;
+    font-weight: 700;
+}}
+
+.gg {{
+    color: #145efc;
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 6px;
+}}
+
+.meta {{
+    background: white;
+    padding: 14px;
+    margin-top: 14px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    font-size: 14px;
+}}
+
+#scroll-area {{
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px 4px 32px 0;
+}}
+
+.section-box {{
+    padding-bottom: 26px;
+}}
+
+.section-title {{
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}}
+
+.section-line {{
+    height: 1px;
+    background: #e8e6e1;
+    width: 100%;
+    margin: 8px 0 14px 0;
+}}
+
+.section-text {{
+    font-size: 14px;
+    white-space: pre-wrap;
+}}
+
+.icon-inline {{
+    width: 20px;
+    height: 20px;
+}}
+</style>
+
+</head>
+
+<body>
+<div id="viewport">
+
+    <div id="top-area">
+        <div class="card-top">
+            <div class="title">{job}</div>
+            <div class="gg">GG {gg}</div>
+
+            <div class="meta">
+                <b>Job Family:</b> {jf}<br>
+                <b>Sub Job Family:</b> {sf}<br>
+                <b>Career Path:</b> {cp}<br>
+                <b>Full Job Code:</b> {fc}
+            </div>
+        </div>
+    </div>
+
+    <div id="scroll-area">
+"""
+
+    # sections
+    for sec in sections:
+        val = p.get(sec, "")
+        icon = icons_svg.get(sec, "")
+
+        html_code += f"""
+        <div class="section-box">
+            <div class="section-title">
+                <span class="icon-inline">{icon}</span>
+                {html.escape(sec)}
+            </div>
+            <div class="section-line"></div>
+            <div class="section-text">{html.escape(str(val))}</div>
+        </div>
+        """
+
+    html_code += """
+    </div>
+
+</div>
+</body>
+</html>
+"""
+
+    return html_code
+
+
+# ==========================================================
+# MATCH ENGINE: TAGGING + SCORING
+# ==========================================================
+
+def clean_text(t):
+    if pd.isna(t): return ""
+    t = str(t).lower()
+    t = re.sub(r"[^a-z0-9\s]", " ", t)
+    return t
+
+def extract_keywords(text):
+    text = clean_text(text)
+    words = set(text.split())
+    return words
+
+def score_match(user_tags, job_profile_row):
+    """ Weighted scoring model """
+
+    weights = {
+        "Grade Differentiator": 25,
+        "Qualifications": 20,
+        "Specific parameters / KPIs": 15,
+        "Competencies 1": 10,
+        "Competencies 2": 10,
+        "Competencies 3": 10,
+        "Job Profile Description": 5,
+        "Role Description": 3,
+        "Career Band Description": 2,
+    }
+
+    total = 0
+    for col, w in weights.items():
+        text = job_profile_row.get(col, "")
+        kw = extract_keywords(text)
+
+        overlap = len(user_tags.intersection(kw))
+        total += overlap * w
+
+    return total
+
+
+# ==========================================================
+# FORM QUESTIONS → TAG GENERATOR
+# ==========================================================
+
+st.subheader("Informações do cargo")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    family = st.selectbox("Job Family", sorted(df["Job Family"].dropna().unique()))
+
+with col2:
+    sublist = df[df["Job Family"] == family]["Sub Job Family"].dropna().unique()
+    subfamily = st.selectbox("Sub Job Family", sorted(sublist))
+
+flt = df[(df["Job Family"] == family) & (df["Sub Job Family"] == subfamily)]
+
+if flt.empty:
+    st.stop()
+
+# ------------------------------
+# PERGUNTAS (GENÉRICAS + DECISIVAS)
+# ------------------------------
+
+st.markdown("### Características da função")
+
+# Autonomia
+aut = st.radio("Nível de autonomia do cargo:",
+               ["Baixa", "Moderada", "Alta"])
+
+# Impacto
+impact = st.radio("Impacto das decisões:",
+                  ["Local", "Área/Unidade", "Organizacional/Global"])
+
+# Complexidade do trabalho
+complexity = st.radio("Complexidade do trabalho:",
+                      ["Rotineiro", "Moderado", "Complexo"])
+
+# Experiência
+exp = st.radio("Nível de experiência típico:",
+               ["Até 3 anos", "3-7 anos", "7-12 anos", "12+ anos"])
+
+# Educação
+edu = st.radio("Nível educacional típico:",
+               ["Ensino Médio", "Técnico", "Graduação", "Pós/Especialização", "Mestrado/Doutorado"])
+
+# Tipo de KPIs
+kpi = st.multiselect(
+    "Quais tipos de KPIs esse cargo acompanha?",
+    ["Financeiros", "Clientes", "Operacionais", "Processos", "Projetos", "Segurança"]
+)
+
+# Competências comportamentais
+comp = st.multiselect(
+    "Competências comportamentais chave:",
+    ["Trabalho em equipe", "Comunicação", "Influência", "Análise", "Orientação a resultados", "Inovação"]
+)
+
+# ----------------------------------------------------------
+# BUILD USER TAGS
+# ----------------------------------------------------------
+user_tags = set()
+
+# autonomia
+if aut == "Alta": user_tags.update(["independent", "autonomy", "minimal", "self"])
+if aut == "Moderada": user_tags.update(["guided", "partial"])
+if aut == "Baixa": user_tags.update(["close supervision", "instructions"])
+
+# impacto
+if impact == "Local": user_tags.update(["local"])
+if impact == "Área/Unidade": user_tags.update(["business unit", "cross functional"])
+if impact == "Organizacional/Global": user_tags.update(["global", "enterprise"])
+
+# complexidade
+if complexity == "Complexo": user_tags.update(["complex", "advanced"])
+if complexity == "Moderado": user_tags.update(["moderate"])
+if complexity == "Rotineiro": user_tags.update(["routine"])
+
+# educação
+mapping_edu = {
+    "Ensino Médio": ["basic"],
+    "Técnico": ["technical"],
+    "Graduação": ["degree", "bachelor"],
+    "Pós/Especialização": ["specialist", "advanced"],
+    "Mestrado/Doutorado": ["master", "doctorate", "phd"]
+}
+user_tags.update(mapping_edu.get(edu, []))
+
+# experiência
+mapping_exp = {
+    "Até 3 anos": ["junior"],
+    "3-7 anos": ["intermediate"],
+    "7-12 anos": ["senior"],
+    "12+ anos": ["expert", "leader"]
+}
+user_tags.update(mapping_exp.get(exp, []))
+
+# KPIs
+for k in kpi:
+    user_tags.add(k.lower())
+
+# competências
+for c in comp:
+    user_tags.add(c.lower())
+
+
+# ==========================================================
+# SCORE PROFILES
+# ==========================================================
+flt = flt.copy()
+flt["score"] = flt.apply(lambda row: score_match(user_tags, row), axis=1)
+
+best = flt.sort_values("score", ascending=False).iloc[0].to_dict()
+
+st.success(f"Cargo identificado: **{best['Job Profile']}** — GG {best['Global Grade']}")
+
+# ==========================================================
+# RENDER FINAL DESCRIPTION (LAYOUT PREMIUM)
+# ==========================================================
+components.html(
+    build_single_profile_html(best),
+    height=900,
+    scrolling=False
+)
