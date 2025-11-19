@@ -625,7 +625,32 @@ if generate:
     score_pct = int((best["match_score"] / df_filtered["match_score"].max()) * 100)
 
 # ==========================================================
-# PARTE 4 — HTML FINAL (Fundo branco, sem scroll, SVG ok)
+# PARTE 4 — HTML FINAL + Correções
+# ==========================================================
+
+# 🔵 CSS EXTRA PARA O BOTÃO AZUL LARGO
+st.markdown("""
+<style>
+.stButton > button {
+    background-color: #145efc !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 18px !important;
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+    border-radius: 10px !important;
+    width: 280px !important;
+    white-space: nowrap !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+
+# ==========================================================
+# 🔥 FUNÇÃO QUE CONSTRÓI O HTML FINAL
 # ==========================================================
 
 def build_html(job):
@@ -660,9 +685,9 @@ html, body {{
 }}
 
 #viewport {{
+    width: 100%;
     display: flex;
     flex-direction: column;
-    width: 100%;
     background: white !important;
 }}
 
@@ -677,19 +702,19 @@ html, body {{
     display: grid;
     grid-template-columns: 1fr;
     width: 100%;
-    gap: 32px;
-    margin-top: 24px;
+    gap: 34px;
+    margin-top: 32px;
 }}
 
 .card-top {{
     background: #ffffff !important;
     border-radius: 16px;
-    padding: 22px 24px;
+    padding: 22px 26px;
     border: 1px solid #e3e1dd;
 }}
 
 .title {{
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
     line-height: 1.22;
 }}
@@ -703,7 +728,7 @@ html, body {{
 
 .meta {{
     background: #ffffff !important;
-    padding: 14px;
+    padding: 14px 16px;
     margin-top: 18px;
     border-radius: 12px;
     border: 1px solid #e8e6e1;
@@ -713,7 +738,7 @@ html, body {{
 
 .section-box {{
     background: white !important;
-    padding-bottom: 32px;
+    padding-bottom: 30px;
     border-bottom: 1px solid #e6e4e1;
 }}
 
@@ -762,7 +787,7 @@ html, body {{
     <div class="grid-desc">
 """
 
-    # Sections with icons
+    # 🔥 Construção das seções
     for sec in sections:
         icon = icons_svg.get(sec, "")
         text = job.get(sec, "")
@@ -779,6 +804,7 @@ html, body {{
 
     html_code += """
     </div>
+
 </div>
 
 </body></html>
@@ -787,10 +813,16 @@ html, body {{
     return html_code
 
 
-# Render final recommended job
-if match_result:
+
+# ==========================================================
+# 🔥 RENDERIZAÇÃO FINAL (sem NameError)
+# ==========================================================
+
+match_obj = locals().get("match_result", None)
+
+if isinstance(match_obj, dict):
     components.html(
-        build_html(match_result),
-        height=2000,
+        build_html(match_obj),
+        height=2600,
         scrolling=False
     )
